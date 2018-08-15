@@ -1,0 +1,18 @@
+
+OBJS=finder_gui.o
+
+CXXFLAGS=-O2 -Wall `fox-config-1.6 --cflags`
+
+LDFLAGS=
+
+LIBS=
+
+all: finder_gui.a
+
+finder_gui.a: $(OBJS)
+	$(AR) rvu finder_gui.a $(OBJS)
+	ranlib finder_gui.a
+
+clean:
+	rm -f finder_gui.a $(OBJS)
+
