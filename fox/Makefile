@@ -1,7 +1,7 @@
 
 OBJS=finder_gui.o
 
-CXXFLAGS=-O2 -Wall `fox-config-1.6 --cflags`
+CXXFLAGS=-O2 -Wall `fox-config-1.6 --cflags` -fvisibility=hidden -fPIC
 
 LDFLAGS=
 

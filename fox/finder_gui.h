@@ -1,6 +1,6 @@
 
-#if !defined(FINDER_H)
-#define FINDER_H
+#if !defined(FINDER_GUI_H)
+#define FINDER_GUI_H
 
 #ifdef __cplusplus
 extern "C" {
