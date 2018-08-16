@@ -1,7 +1,7 @@
 
 OBJS=finder.o
 
-CFLAGS=-O2 -Wall -fvisibility=hidden -fPIC
+CFLAGS=-O2 -Wall -Ifox -fvisibility=hidden -fPIC
 
 LDFLAGS=
 

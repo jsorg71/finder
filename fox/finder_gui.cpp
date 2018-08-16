@@ -5,6 +5,7 @@
 
 #include <fx.h>
 
+#include "finder.h"
 #include "finder_gui.h"
 
 class MsgObject;

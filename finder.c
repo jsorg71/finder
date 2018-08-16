@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "fox/finder_gui.h"
+#include "finder.h"
+#include "finder_gui.h"
 
 /*****************************************************************************/
 int
