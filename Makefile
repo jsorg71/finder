@@ -5,7 +5,7 @@ CFLAGS=-O2 -Wall -Ifox -fvisibility=hidden -fPIC
 
 LDFLAGS=
 
-LIBS=fox/finder_gui.a `fox-config-1.6 --libs` -lstdc++
+LIBS=fox/finder_gui.a `fox-config --libs` -lstdc++
 
 all:
 	$(MAKE) -C fox

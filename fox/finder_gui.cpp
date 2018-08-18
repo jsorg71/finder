@@ -14,14 +14,16 @@ struct app_data
     FXMainWindow* mw;
     FXButton* but1;
     FXButton* but2;
-    FXTabBar* tb;
     FXTabItem* ti1;
     FXTabItem* ti2;
     FXTabItem* ti3;
+    FXGroupBox* gb1;
     FXFoldingList* fl;
     FXGroupBox* gb;
     FXTabBook* tab_book;
-    FXVerticalFrame* tabframe;
+    FXVerticalFrame* tabframe1;
+    FXVerticalFrame* tabframe2;
+    FXVerticalFrame* tabframe3;
     class MsgObject* mo;
     int width;
     int height;
@@ -41,7 +43,7 @@ public:
     enum _ids
     {
         ID_BUTTON = 0,
-        ID_TABBAR,
+        ID_TABBOOK,
         ID_FOLDINGLIST,
         ID_MAINWINDOW,
         ID_LAST
@@ -70,12 +72,13 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     if (obj == ap->but1)
     {
         printf("but1\n");
+        ap->fl->clearItems();
     }
     else
     {
         printf("but2\n");
     }
-    return 0; 
+    return 0;
 }
 
 /*****************************************************************************/
@@ -110,17 +113,17 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         ap->width = width;
         ap->height = height;
 
-        ap->gb->move(10, 10);
-        ap->gb->resize(width - 20, height - 20);
+        ap->gb->move(0, 0);
+        ap->gb->resize(width - 120, 200);
 
-        ap->but1->move(width - 100, height - 100);
-        ap->but1->resize(100, 100);
+        ap->gb1->move(0, 200);
+        ap->gb1->resize(width, height - 230);
 
-        ap->but2->move(width - 100, height - 200);
-        ap->but2->resize(100, 100);
+        ap->but1->move(width - 110, 10);
+        ap->but1->resize(100, 30);
 
-        ap->fl->move(width - 100, height - 300);
-        ap->fl->resize(100, 100);
+        ap->but2->move(width - 110, 50);
+        ap->but2->resize(100, 30);
 
     }
     return 0;
@@ -129,7 +132,7 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 FXDEFMAP(MsgObject) MsgObjectMap[] =
 {
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_BUTTON, MsgObject::onPress),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_TABBAR, MsgObject::onTabChange),
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_TABBOOK, MsgObject::onTabChange),
     FXMAPFUNC(SEL_CONFIGURE, MsgObject::ID_MAINWINDOW, MsgObject::onConfigure),
     FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout)
 };
@@ -153,37 +156,41 @@ gui_create(int argc, char** argv)
     ap->mw->setTarget(ap->mo);
     ap->mw->setSelector(MsgObject::ID_MAINWINDOW);
 
-    flags = FRAME_GROOVE | LAYOUT_EXPLICIT;
-    ap->gb = new FXGroupBox(ap->mw, "hi", flags);
+    flags = LAYOUT_EXPLICIT;
+    ap->gb = new FXGroupBox(ap->mw, "", flags);
 
-    ap->tab_book = new FXTabBook(ap->gb,NULL,0,LAYOUT_FILL_X|LAYOUT_FILL_Y,0,0,0,0,0,0,0,0);
-    ap->ti1 = new FXTabItem(ap->tab_book, "Name & Location1");
-    ap->tabframe = new FXVerticalFrame(ap->tab_book,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_THICK|FRAME_RAISED);
-    ap->ti1 = new FXTabItem(ap->tab_book, "Name & Location2");
-    ap->tabframe = new FXVerticalFrame(ap->tab_book,LAYOUT_FILL_X|LAYOUT_FILL_Y);
-    ap->ti1 = new FXTabItem(ap->tab_book, "Name & Location3");
-    ap->tabframe = new FXVerticalFrame(ap->tab_book,LAYOUT_FILL_X|LAYOUT_FILL_Y|FRAME_THICK|FRAME_RAISED);
-    //ap->ti2 = new FXTabItem(ap->tab_book, "Date Modified", 0, flags);
-    //ap->ti3 = new FXTabItem(ap->tab_book, "Advanced", 0, flags);
+    sel = MsgObject::ID_TABBOOK;
+    flags = LAYOUT_FILL_X | LAYOUT_FILL_Y;
+    ap->tab_book = new FXTabBook(ap->gb, ap->mo, sel, flags);
+    ap->ti1 = new FXTabItem(ap->tab_book, "Name/&Location1");
+    flags = LAYOUT_FILL_X | LAYOUT_FILL_Y | FRAME_THICK | FRAME_RAISED;
+    ap->tabframe1 = new FXVerticalFrame(ap->tab_book, flags);
+    ap->ti2 = new FXTabItem(ap->tab_book, "&Date Modified");
+    ap->tabframe2 = new FXVerticalFrame(ap->tab_book, flags);
+    ap->ti3 = new FXTabItem(ap->tab_book, "&Advanced");
+    ap->tabframe3 = new FXVerticalFrame(ap->tab_book, flags);
 
-#if 0
-    sel = MsgObject::ID_TABBAR;
-    flags = TABBOOK_NORMAL;
-    ap->tb = new FXTabBar(ap->gb, ap->mo, sel, flags);
-    //flags = TAB_TOP_NORMAL | LAYOUT_EXPLICIT;
-    flags = TAB_TOP_NORMAL;
-    ap->ti1 = new FXTabItem(ap->tb, "Name & Location", 0, flags);
-    ap->ti2 = new FXTabItem(ap->tb, "Date Modified", 0, flags);
-    ap->ti3 = new FXTabItem(ap->tb, "Advanced", 0, flags);
-#endif
+    new FXLabel(ap->tabframe1, "&Named:");
+    new FXTextField(ap->tabframe1, 10);
+    new FXLabel(ap->tabframe1, "Look &in:");
+    new FXTextField(ap->tabframe1, 10);
+    new FXCheckButton(ap->tabframe1, "Include subfolders");
+
     sel = MsgObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
-    ap->but1 = new FXButton(ap->mw, "but1", NULL, ap->mo, sel, flags);
-    ap->but2 = new FXButton(ap->mw, "but2", NULL, ap->mo, sel, flags);
+    ap->but1 = new FXButton(ap->mw, "&Find", NULL, ap->mo, sel, flags);
+    ap->but2 = new FXButton(ap->mw, "&Stop", NULL, ap->mo, sel, flags);
+
+    flags = LAYOUT_EXPLICIT;
+    ap->gb1 = new FXGroupBox(ap->mw, "", flags);
 
     sel = MsgObject::ID_FOLDINGLIST;
-    flags = FOLDINGLIST_NORMAL | LAYOUT_EXPLICIT;
-    ap->fl = new FXFoldingList(ap->mw, ap->mo, sel, flags);
+    flags = FOLDINGLIST_NORMAL | LAYOUT_FILL_X | LAYOUT_FILL_Y;
+    ap->fl = new FXFoldingList(ap->gb1, ap->mo, sel, flags);
+    ap->fl->appendHeader("Name", 0, 100);
+    ap->fl->appendHeader("In Subfolder", 0, 100);
+    ap->fl->appendHeader("Size", 0, 100);
+    ap->fl->appendHeader("Modified", 0, 100);
 
     ap->app->create();
     ap->mw->show(PLACEMENT_SCREEN);
