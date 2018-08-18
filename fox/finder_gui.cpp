@@ -24,6 +24,13 @@ struct app_data
     FXVerticalFrame* tabframe1;
     FXVerticalFrame* tabframe2;
     FXVerticalFrame* tabframe3;
+    FXLabel* label1;
+    FXLabel* label2;
+    FXCheckButton* cb1;
+    FXCheckButton* cb2;
+    FXCheckButton* cb3;
+    FXComboBox* combo1;
+    FXComboBox* combo2;
     class MsgObject* mo;
     int width;
     int height;
@@ -39,6 +46,7 @@ public:
     long onTabChange(FXObject* obj, FXSelector sel, void* ptr);
     long onConfigure(FXObject* obj, FXSelector sel, void* ptr);
     long onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr);
+    //long onNext(FXObject* obj, FXSelector sel, void* ptr) { printf("hhh\n"); return 0; }
     struct app_data* ap;
     enum _ids
     {
@@ -59,8 +67,8 @@ MsgObject::MsgObject()
 long
 MsgObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //static int i1;
-    //printf("%d onDefault obj %p sel %d ptr %p\n", i1++, obj, sel, ptr);
+    static int i1;
+    printf("%d onDefault obj %p sel 0x%8.8x ptr %p\n", i1++, obj, sel, ptr);
     return FXObject::onDefault(obj, sel, ptr);
 }
 
@@ -125,6 +133,27 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         ap->but2->move(width - 110, 50);
         ap->but2->resize(100, 30);
 
+        ap->label1->move(8, 8);
+        ap->label1->resize(100, 22);
+
+        ap->combo1->move(85, 8);
+        ap->combo1->resize(400, 22);
+
+        ap->label2->move(8, 41);
+        ap->label2->resize(100, 22);
+
+        ap->combo2->move(85, 41);
+        ap->combo2->resize(400, 22);
+
+        ap->cb1->move(8, 74);
+        ap->cb1->resize(200, 22);
+
+        ap->cb2->move(8, 107);
+        ap->cb2->resize(200, 22);
+
+        ap->cb3->move(216, 74);
+        ap->cb3->resize(200, 22);
+
     }
     return 0;
 }
@@ -135,6 +164,8 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_TABBOOK, MsgObject::onTabChange),
     FXMAPFUNC(SEL_CONFIGURE, MsgObject::ID_MAINWINDOW, MsgObject::onConfigure),
     FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout)
+    //FXMAPFUNC(SEL_FOCUS_NEXT, MsgObject::ID_TABBOOK, MsgObject::onNext),
+    //FXMAPFUNC(SEL_FOCUS_NEXT, MsgObject::ID_MAINWINDOW, MsgObject::onNext)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -170,11 +201,22 @@ gui_create(int argc, char** argv)
     ap->ti3 = new FXTabItem(ap->tab_book, "&Advanced");
     ap->tabframe3 = new FXVerticalFrame(ap->tab_book, flags);
 
-    new FXLabel(ap->tabframe1, "&Named:");
-    new FXTextField(ap->tabframe1, 10);
-    new FXLabel(ap->tabframe1, "Look &in:");
-    new FXTextField(ap->tabframe1, 10);
-    new FXCheckButton(ap->tabframe1, "Include subfolders");
+    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ap->label1 = new FXLabel(ap->tabframe1, "&Named:", NULL, flags);
+
+    flags = COMBOBOX_NORMAL | LAYOUT_EXPLICIT;
+    ap->combo1 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
+
+    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ap->label2 = new FXLabel(ap->tabframe1, "Look &in:", NULL, flags);
+
+    flags = COMBOBOX_NORMAL | LAYOUT_EXPLICIT;
+    ap->combo2 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
+
+    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ap->cb1 = new FXCheckButton(ap->tabframe1, "Include subfolders", NULL, 0, flags);
+    ap->cb2 = new FXCheckButton(ap->tabframe1, "Case sensitive search", NULL, 0, flags);
+    ap->cb3 = new FXCheckButton(ap->tabframe1, "Show hidden files", NULL, 0, flags);
 
     sel = MsgObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
