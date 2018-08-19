@@ -15,16 +15,17 @@ struct app_data
     FXMainWindow* mw;
     FXButton* but1;
     FXButton* but2;
+    FXButton* but3;
     FXTabItem* ti1;
     FXTabItem* ti2;
     FXTabItem* ti3;
-    FXGroupBox* gb1;
+    FXGroupBox* gb2;
     FXFoldingList* fl;
-    FXGroupBox* gb;
+    FXGroupBox* gb1;
     FXTabBook* tab_book;
-    FXVerticalFrame* tabframe1;
-    FXVerticalFrame* tabframe2;
-    FXVerticalFrame* tabframe3;
+    FXGroupBox* tabframe1;
+    FXGroupBox* tabframe2;
+    FXGroupBox* tabframe3;
     FXLabel* label1;
     FXLabel* label2;
     FXCheckButton* cb1;
@@ -32,6 +33,8 @@ struct app_data
     FXCheckButton* cb3;
     FXComboBox* combo1;
     FXComboBox* combo2;
+    FXTextField* text1;
+    FXStatusBar* sb;
     class MsgObject* mo;
     int width;
     int height;
@@ -47,9 +50,6 @@ public:
     long onTabChange(FXObject* obj, FXSelector sel, void* ptr);
     long onConfigure(FXObject* obj, FXSelector sel, void* ptr);
     long onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr);
-    long onNext(FXObject* obj, FXSelector sel, void* ptr) { printf("onNext\n"); return 0; }
-    long onKeyPress(FXObject* obj, FXSelector sel, void* ptr);
-    long onFocusOut(FXObject* obj, FXSelector sel, void* ptr) { printf("onFocusOut\n"); return 0; }
     struct app_data* ap;
     enum _ids
     {
@@ -57,7 +57,6 @@ public:
         ID_TABBOOK,
         ID_FOLDINGLIST,
         ID_MAINWINDOW,
-        ID_COMBOBOX,
         ID_LAST
     } ids;
 };
@@ -71,16 +70,8 @@ MsgObject::MsgObject()
 long
 MsgObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
 {
-    static int i1;
-    printf("%d onDefault obj %p sel 0x%8.8x ptr %p\n", i1++, obj, sel, ptr);
-    if (obj == ap->combo1)
-    {
-        printf("----%d onDefault obj %p sel 0x%8.8x ptr %p\n", i1++, obj, sel, ptr);
-        if (sel == SEL_KEYPRESS)
-        {
-            printf("here\n");
-        }
-    }
+    //static int i1;
+    //printf("%d onDefault obj %p sel 0x%8.8x ptr %p\n", i1++, obj, sel, ptr);
     return FXObject::onDefault(obj, sel, ptr);
 }
 
@@ -94,9 +85,14 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         printf("but1\n");
         ap->fl->clearItems();
     }
-    else
+    if (obj == ap->but2)
     {
         printf("but2\n");
+    }
+    if (obj == ap->but3)
+    {
+        printf("but3\n");
+        ap->app->stop(0);
     }
     return 0;
 }
@@ -133,11 +129,11 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         ap->width = width;
         ap->height = height;
 
-        ap->gb->move(0, 0);
-        ap->gb->resize(width - 120, 200);
+        ap->gb1->move(0, 0);
+        ap->gb1->resize(width - 120, 200);
 
-        ap->gb1->move(0, 200);
-        ap->gb1->resize(width, height - 230);
+        ap->gb2->move(0, 200);
+        ap->gb2->resize(width, height - 225);
 
         ap->but1->move(width - 110, 10);
         ap->but1->resize(100, 30);
@@ -145,57 +141,33 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         ap->but2->move(width - 110, 50);
         ap->but2->resize(100, 30);
 
+        ap->but3->move(width - 110, 165);
+        ap->but3->resize(100, 30);
+
         ap->label1->move(8, 8);
-        ap->label1->resize(100, 22);
+        ap->label1->resize(100, 24);
 
         ap->combo1->move(85, 8);
-        ap->combo1->resize(400, 22);
+        ap->combo1->resize(400, 24);
 
         ap->label2->move(8, 41);
-        ap->label2->resize(100, 22);
+        ap->label2->resize(100, 24);
 
         ap->combo2->move(85, 41);
-        ap->combo2->resize(400, 22);
+        ap->combo2->resize(400, 24);
 
         ap->cb1->move(8, 74);
-        ap->cb1->resize(200, 22);
+        ap->cb1->resize(200, 24);
 
         ap->cb2->move(8, 107);
-        ap->cb2->resize(200, 22);
+        ap->cb2->resize(200, 24);
 
         ap->cb3->move(216, 74);
-        ap->cb3->resize(200, 22);
+        ap->cb3->resize(200, 24);
 
-    }
-    return 0;
-}
+        ap->text1->move(85, 8);
+        ap->text1->resize(400, 24);
 
-/*****************************************************************************/
-long
-MsgObject::onKeyPress(FXObject* obj, FXSelector sel, void* ptr)
-{
-    FXEvent* event=(FXEvent*)ptr;
-
-    printf("onKeyPress\n");
-
-    //long rv = handle(obj, sel, ptr);
-    //printf("=== %ld\n", rv);
-    //return 1;
-
-    switch (MKUINT(event->code, event->state & (SHIFTMASK |CONTROLMASK | ALTMASK | METAMASK)))
-    {
-        case KEY_Tab:
-            FXWindow *child;
-            if (obj == ap->combo1)
-            {
-                child = ap->combo1->getFocus()->getNext();
-                if (child == NULL)
-                {
-                    ap->cb2->setFocus();
-                    return 1;
-                }
-            }
-            return 0;
     }
     return 0;
 }
@@ -205,11 +177,7 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_BUTTON, MsgObject::onPress),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_TABBOOK, MsgObject::onTabChange),
     FXMAPFUNC(SEL_CONFIGURE, MsgObject::ID_MAINWINDOW, MsgObject::onConfigure),
-    FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout),
-    //FXMAPFUNC(SEL_FOCUS_NEXT, MsgObject::ID_TABBOOK, MsgObject::onNext),
-    FXMAPFUNC(SEL_FOCUS_NEXT, MsgObject::ID_COMBOBOX, MsgObject::onNext),
-    FXMAPFUNC(SEL_FOCUSOUT, MsgObject::ID_COMBOBOX, MsgObject::onFocusOut),
-    FXMAPFUNC(SEL_KEYPRESS, MsgObject::ID_COMBOBOX, MsgObject::onKeyPress)
+    FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -232,51 +200,61 @@ gui_create(int argc, char** argv)
     ap->mw->setSelector(MsgObject::ID_MAINWINDOW);
 
     flags = LAYOUT_EXPLICIT;
-    ap->gb = new FXGroupBox(ap->mw, "", flags);
+    ap->gb1 = new FXGroupBox(ap->mw, "", flags);
 
     sel = MsgObject::ID_TABBOOK;
     flags = LAYOUT_FILL_X | LAYOUT_FILL_Y;
-    ap->tab_book = new FXTabBook(ap->gb, ap->mo, sel, flags);
-    ap->ti1 = new FXTabItem(ap->tab_book, "Name/&Location1");
+    ap->tab_book = new FXTabBook(ap->gb1, ap->mo, sel, flags);
+    ap->ti1 = new FXTabItem(ap->tab_book, "Name/&Location");
     flags = LAYOUT_FILL_X | LAYOUT_FILL_Y | FRAME_THICK | FRAME_RAISED;
-    ap->tabframe1 = new FXVerticalFrame(ap->tab_book, flags);
+    ap->tabframe1 = new FXGroupBox(ap->tab_book, "", flags);
     ap->ti2 = new FXTabItem(ap->tab_book, "&Date Modified");
-    ap->tabframe2 = new FXVerticalFrame(ap->tab_book, flags);
+    ap->tabframe2 = new FXGroupBox(ap->tab_book, "", flags);
     ap->ti3 = new FXTabItem(ap->tab_book, "&Advanced");
-    ap->tabframe3 = new FXVerticalFrame(ap->tab_book, flags);
+    ap->tabframe3 = new FXGroupBox(ap->tab_book, "", flags);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
     ap->label1 = new FXLabel(ap->tabframe1, "&Named:", NULL, flags);
 
-    flags = COMBOBOX_NORMAL | LAYOUT_EXPLICIT;
-    ap->combo1 = new FXComboBox(ap->tabframe1, 0, ap->mo, MsgObject::ID_COMBOBOX, flags);
+    flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
+    ap->combo1 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
     ap->label2 = new FXLabel(ap->tabframe1, "Look &in:", NULL, flags);
 
-    flags = COMBOBOX_NORMAL | LAYOUT_EXPLICIT;
-    ap->combo2 = new FXComboBox(ap->tabframe1, 0, ap->mo, MsgObject::ID_COMBOBOX, flags);
+    flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
+    ap->combo2 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
     ap->cb1 = new FXCheckButton(ap->tabframe1, "Include subfolders", NULL, 0, flags);
+    ap->cb1->setCheck(TRUE);
     ap->cb2 = new FXCheckButton(ap->tabframe1, "Case sensitive search", NULL, 0, flags);
     ap->cb3 = new FXCheckButton(ap->tabframe1, "Show hidden files", NULL, 0, flags);
+
+    flags = TEXTFIELD_NORMAL;
+    ap->text1 = new FXTextField(ap->tabframe2, 0, NULL, 0, flags);
 
     sel = MsgObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
     ap->but1 = new FXButton(ap->mw, "&Find", NULL, ap->mo, sel, flags);
     ap->but2 = new FXButton(ap->mw, "&Stop", NULL, ap->mo, sel, flags);
+    ap->but2->disable();
+    ap->but3 = new FXButton(ap->mw, "Exit", NULL, ap->mo, sel, flags);
 
     flags = LAYOUT_EXPLICIT;
-    ap->gb1 = new FXGroupBox(ap->mw, "", flags);
+    ap->gb2 = new FXGroupBox(ap->mw, "", flags);
 
     sel = MsgObject::ID_FOLDINGLIST;
     flags = FOLDINGLIST_NORMAL | LAYOUT_FILL_X | LAYOUT_FILL_Y;
-    ap->fl = new FXFoldingList(ap->gb1, ap->mo, sel, flags);
+    ap->fl = new FXFoldingList(ap->gb2, ap->mo, sel, flags);
     ap->fl->appendHeader("Name", 0, 100);
     ap->fl->appendHeader("In Subfolder", 0, 100);
     ap->fl->appendHeader("Size", 0, 100);
     ap->fl->appendHeader("Modified", 0, 100);
+
+    flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER |
+            FRAME_RAISED;
+    ap->sb = new FXStatusBar(ap->mw, flags);
 
     ap->app->create();
     ap->mw->show(PLACEMENT_SCREEN);
@@ -289,6 +267,7 @@ gui_main_loop(void* han)
 {
     struct app_data* ap;
 
+    printf("gui_main_loop\n");
     ap = (struct app_data*)han;
     ap->app->run();
     return 0;
@@ -300,6 +279,7 @@ gui_delete(void* han)
 {
     struct app_data* ap;
 
+    printf("gui_delete\n");
     ap = (struct app_data*)han;
     delete ap->app;
     delete ap->mo;
