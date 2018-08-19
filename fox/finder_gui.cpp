@@ -34,6 +34,11 @@ struct app_data
     FXComboBox* combo1;
     FXComboBox* combo2;
     FXTextField* text1;
+    FXDockSite* topdock;
+    FXToolBarShell* tbs;
+    FXMenuBar* mb;
+    FXMenuPane* filemenu;
+    FXMenuPane* helpmenu;
     FXStatusBar* sb;
     class MsgObject* mo;
     int width;
@@ -50,6 +55,8 @@ public:
     long onTabChange(FXObject* obj, FXSelector sel, void* ptr);
     long onConfigure(FXObject* obj, FXSelector sel, void* ptr);
     long onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr);
+    long onCmdExit(FXObject* obj, FXSelector sel, void* ptr);
+    long onCmdHelp(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
     enum _ids
     {
@@ -57,6 +64,8 @@ public:
         ID_TABBOOK,
         ID_FOLDINGLIST,
         ID_MAINWINDOW,
+        ID_EXIT,
+        ID_HELP,
         ID_LAST
     } ids;
 };
@@ -129,16 +138,16 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         ap->width = width;
         ap->height = height;
 
-        ap->gb1->move(0, 0);
-        ap->gb1->resize(width - 120, 200);
+        ap->gb1->move(0, 22);
+        ap->gb1->resize(width - 120, 180);
 
         ap->gb2->move(0, 200);
         ap->gb2->resize(width, height - 225);
 
-        ap->but1->move(width - 110, 10);
+        ap->but1->move(width - 110, 32);
         ap->but1->resize(100, 30);
 
-        ap->but2->move(width - 110, 50);
+        ap->but2->move(width - 110, 72);
         ap->but2->resize(100, 30);
 
         ap->but3->move(width - 110, 165);
@@ -172,12 +181,31 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
     return 0;
 }
 
+/*****************************************************************************/
+long
+MsgObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
+{
+    printf("MsgObject::onCmdExit:\n");
+    ap->app->stop(0);
+    return 0;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
+{
+    printf("MsgObject::onCmdHelp:\n");
+    return 0;
+}
+
 FXDEFMAP(MsgObject) MsgObjectMap[] =
 {
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_BUTTON, MsgObject::onPress),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_TABBOOK, MsgObject::onTabChange),
     FXMAPFUNC(SEL_CONFIGURE, MsgObject::ID_MAINWINDOW, MsgObject::onConfigure),
-    FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout)
+    FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout),
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_EXIT, MsgObject::onCmdExit),
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_HELP, MsgObject::onCmdHelp)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -251,6 +279,25 @@ gui_create(int argc, char** argv)
     ap->fl->appendHeader("In Subfolder", 0, 100);
     ap->fl->appendHeader("Size", 0, 100);
     ap->fl->appendHeader("Modified", 0, 100);
+
+    flags = LAYOUT_SIDE_TOP | LAYOUT_FILL_X;
+    ap->topdock = new FXDockSite(ap->mw, flags);
+
+    flags = FRAME_RAISED;
+    ap->tbs = new FXToolBarShell(ap->mw, flags);
+
+    flags = LAYOUT_DOCK_NEXT | LAYOUT_SIDE_TOP | LAYOUT_FILL_X | FRAME_RAISED;
+    ap->mb = new FXMenuBar(ap->topdock, ap->tbs, flags);
+
+    ap->filemenu = new FXMenuPane(ap->mw);
+    new FXMenuTitle(ap->mb, "&File", NULL, ap->filemenu);
+    sel = MsgObject::ID_EXIT;
+    new FXMenuCommand(ap->filemenu, "&Exit\t\tExit the application.", NULL, ap->mo, sel);
+
+    ap->helpmenu = new FXMenuPane(ap->mw);
+    new FXMenuTitle(ap->mb, "&Help", NULL, ap->helpmenu);
+    sel = MsgObject::ID_HELP;
+    new FXMenuCommand(ap->helpmenu, "&Help...\t\tDisplay help information.", NULL, ap->mo, sel);
 
     flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER |
             FRAME_RAISED;
