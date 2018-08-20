@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include <fx.h>
-#include "fxkeys.h"
 
 #include "finder.h"
 #include "finder_gui.h"
@@ -57,6 +56,7 @@ public:
     long onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdExit(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdHelp(FXObject* obj, FXSelector sel, void* ptr);
+    long onCmdAbout(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
     enum _ids
     {
@@ -66,6 +66,7 @@ public:
         ID_MAINWINDOW,
         ID_EXIT,
         ID_HELP,
+        ID_ABOUT,
         ID_LAST
     } ids;
 };
@@ -198,6 +199,14 @@ MsgObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
     return 0;
 }
 
+/*****************************************************************************/
+long
+MsgObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
+{
+    printf("MsgObject::onCmdAbout:\n");
+    return 0;
+}
+
 FXDEFMAP(MsgObject) MsgObjectMap[] =
 {
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_BUTTON, MsgObject::onPress),
@@ -205,7 +214,8 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_CONFIGURE, MsgObject::ID_MAINWINDOW, MsgObject::onConfigure),
     FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_EXIT, MsgObject::onCmdExit),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_HELP, MsgObject::onCmdHelp)
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_HELP, MsgObject::onCmdHelp),
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -217,12 +227,15 @@ gui_create(int argc, char** argv)
     struct app_data* ap;
     FXuint flags;
     FXSelector sel;
+    FXCursor* cur;
 
     ap = (struct app_data*)calloc(sizeof(struct app_data), 1);
-    ap->app = new FXApp("Find", "Find");
-    ap->app->init(argc, argv);
     ap->mo = new MsgObject();
     ap->mo->ap = ap;
+    ap->app = new FXApp("Find", "Find");
+    cur = new FXCursor(ap->app, FX::CURSOR_ARROW);
+    ap->app->setDefaultCursor(DEF_RARROW_CURSOR, cur);
+    ap->app->init(argc, argv);
     ap->mw = new FXMainWindow(ap->app, "Find", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
     ap->mw->setTarget(ap->mo);
     ap->mw->setSelector(MsgObject::ID_MAINWINDOW);
@@ -298,9 +311,10 @@ gui_create(int argc, char** argv)
     new FXMenuTitle(ap->mb, "&Help", NULL, ap->helpmenu);
     sel = MsgObject::ID_HELP;
     new FXMenuCommand(ap->helpmenu, "&Help...\t\tDisplay help information.", NULL, ap->mo, sel);
+    sel = MsgObject::ID_ABOUT;
+    new FXMenuCommand(ap->helpmenu, "&About\t\tDisplay version information.", NULL, ap->mo, sel);
 
-    flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER |
-            FRAME_RAISED;
+    flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER | FRAME_RAISED;
     ap->sb = new FXStatusBar(ap->mw, flags);
 
     ap->app->create();
