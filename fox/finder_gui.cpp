@@ -268,11 +268,11 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->mo->ap = ap;
     ap->fi = *fi;
     ap->fi->gui_obj = ap;
-    ap->app = new FXApp("Find", "Find");
+    ap->app = new FXApp("Finder", "Finder");
     cur = new FXCursor(ap->app, FX::CURSOR_ARROW);
     ap->app->setDefaultCursor(DEF_RARROW_CURSOR, cur);
     ap->app->init(argc, argv);
-    ap->mw = new FXMainWindow(ap->app, "Find", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
+    ap->mw = new FXMainWindow(ap->app, "Finder", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
     ap->mw->setTarget(ap->mo);
     ap->mw->setSelector(MsgObject::ID_MAINWINDOW);
 

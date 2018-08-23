@@ -7,6 +7,7 @@
 
 #include "finder.h"
 #include "finder_gui.h"
+#include "finder_list.h"
 
 /*****************************************************************************/
 int

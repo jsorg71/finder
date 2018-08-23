@@ -1,5 +1,5 @@
 
-OBJS=finder.o finder_event.o
+OBJS=finder.o finder_event.o finder_list.o
 
 CFLAGS=-O2 -Wall -Ifox -fvisibility=hidden -fPIC
 
