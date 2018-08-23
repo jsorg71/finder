@@ -1,20 +1,16 @@
 
-OBJS=finder.o
+OBJS=finder.o finder_event.o
 
 CFLAGS=-O2 -Wall -Ifox -fvisibility=hidden -fPIC
 
 LDFLAGS=
 
-LIBS=fox/finder_gui.a `fox-config --libs` -lstdc++
+LIBS=
 
-all:
-	$(MAKE) -C fox
-	$(MAKE) finder
-
-finder: $(OBJS) fox/finder_gui.a
-	$(CC) -o finder $(OBJS) $(LDFLAGS) $(LIBS)
+finder.a: $(OBJS)
+	$(AR) rvu finder.a $(OBJS)
+	ranlib finder.a
 
 clean:
-	$(MAKE) -C fox clean
-	rm -f finder $(OBJS)
+	rm -f finder.a $(OBJS)
 

@@ -5,14 +5,16 @@ CXXFLAGS=-O2 -Wall -I.. `fox-config --cflags` -fvisibility=hidden -fPIC
 
 LDFLAGS=
 
-LIBS=
+LIBS=`fox-config --libs` ../finder.a
 
-all: finder_gui.a
+all:
+	$(MAKE) -C ..
+	$(MAKE) finder
 
-finder_gui.a: $(OBJS)
-	$(AR) rvu finder_gui.a $(OBJS)
-	ranlib finder_gui.a
+finder: $(OBJS) ../finder.a
+	$(CXX) -o finder $(OBJS) $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f finder_gui.a $(OBJS)
+	$(MAKE) -C .. clean
+	rm -f finder $(OBJS)
 

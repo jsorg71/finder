@@ -6,12 +6,8 @@
 extern "C" {
 #endif
 
-void*
-gui_create(int argc, char** argv);
 int
-gui_main_loop(void* han);
-int
-gui_delete(void* han);
+gui_set_event(struct finder_info* fi);
 
 #ifdef __cplusplus
 }

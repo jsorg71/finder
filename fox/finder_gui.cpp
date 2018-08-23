@@ -6,10 +6,12 @@
 #include <fx.h>
 
 #include "finder.h"
+#include "finder_event.h"
 #include "finder_gui.h"
 
 struct app_data
 {
+    struct finder_info* fi;
     FXApp* app;
     FXMainWindow* mw;
     FXButton* but1;
@@ -42,6 +44,7 @@ struct app_data
     class MsgObject* mo;
     int width;
     int height;
+    struct finder_event gui_event;
 };
 
 class MsgObject : public FXObject
@@ -57,6 +60,7 @@ public:
     long onCmdExit(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdHelp(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdAbout(FXObject* obj, FXSelector sel, void* ptr);
+    long onEvent1(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
     enum _ids
     {
@@ -67,6 +71,7 @@ public:
         ID_EXIT,
         ID_HELP,
         ID_ABOUT,
+        ID_SOCKET,
         ID_LAST
     } ids;
 };
@@ -89,19 +94,34 @@ MsgObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
 {
-    printf("onPress obj %p sel %d ptr %p\n", obj, sel, ptr);
+    FXString str1;
+
+    writeln(ap->fi, "onPress obj %p sel %d ptr %p", obj, sel, ptr);
     if (obj == ap->but1)
     {
-        printf("but1\n");
+        writeln(ap->fi, "but1");
         ap->fl->clearItems();
+        str1 = ap->combo1->getText();
+        snprintf(ap->fi->named, sizeof(ap->fi->named), "%s", str1.text());
+        str1 = ap->combo2->getText();
+        snprintf(ap->fi->look_in, sizeof(ap->fi->look_in), "%s", str1.text());
+        ap->fi->include_subfolders = ap->cb1->getCheck();
+        ap->fi->case_sensitive = ap->cb2->getCheck();
+        ap->fi->show_hidden = ap->cb3->getCheck();
+        start_find(ap->fi);
+        ap->but1->disable();
+        ap->but2->enable();
     }
     if (obj == ap->but2)
     {
-        printf("but2\n");
+        writeln(ap->fi, "but2");
+        stop_find(ap->fi);
+        ap->but1->enable();
+        ap->but2->disable();
     }
     if (obj == ap->but3)
     {
-        printf("but3\n");
+        writeln(ap->fi, "but3");
         ap->app->stop(0);
     }
     return 0;
@@ -111,7 +131,7 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onTabChange(FXObject* obj, FXSelector sel, void* ptr)
 {
-    printf("onTabChange obj %p sel %d ptr %p\n", obj, sel, ptr);
+    writeln(ap->fi, "onTabChange obj %p sel %d ptr %p", obj, sel, ptr);
     return 0;
 }
 
@@ -134,8 +154,8 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
     height = ap->mw->getHeight();
     if ((width != ap->width) || (height != ap->height))
     {
-        printf("MsgObject::onResizeTimeout: resized to %dx%d, was %dx%d\n",
-               width, height, ap->width, ap->height);
+        writeln(ap->fi, "MsgObject::onResizeTimeout: resized to %dx%d, was %dx%d",
+                width, height, ap->width, ap->height);
         ap->width = width;
         ap->height = height;
 
@@ -186,7 +206,7 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 {
-    printf("MsgObject::onCmdExit:\n");
+    writeln(ap->fi, "MsgObject::onCmdExit:");
     ap->app->stop(0);
     return 0;
 }
@@ -195,7 +215,7 @@ MsgObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
 {
-    printf("MsgObject::onCmdHelp:\n");
+    writeln(ap->fi, "MsgObject::onCmdHelp:");
     return 0;
 }
 
@@ -203,7 +223,17 @@ MsgObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 {
-    printf("MsgObject::onCmdAbout:\n");
+    writeln(ap->fi, "MsgObject::onCmdAbout:");
+    return 0;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
+{
+    writeln(ap->fi, "MsgObject::onEvent1: ptr %p", ptr);
+    finder_event_clear(&(ap->gui_event));
+    event_callback(ap->fi);
     return 0;
 }
 
@@ -215,23 +245,29 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_EXIT, MsgObject::onCmdExit),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_HELP, MsgObject::onCmdHelp),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout)
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout),
+    FXMAPFUNC(SEL_IO_READ, MsgObject::ID_SOCKET, MsgObject::onEvent1)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
 
 /*****************************************************************************/
-void*
-gui_create(int argc, char** argv)
+static int
+gui_create(int argc, char** argv, struct finder_info** fi)
 {
     struct app_data* ap;
     FXuint flags;
     FXSelector sel;
     FXCursor* cur;
+    FXInputHandle ih;
 
-    ap = (struct app_data*)calloc(sizeof(struct app_data), 1);
+    *fi = (struct finder_info*)calloc(1, sizeof(struct finder_info));
+    ap = (struct app_data*)calloc(1, sizeof(struct app_data));
+    (*fi)->gui_obj = ap;
     ap->mo = new MsgObject();
     ap->mo->ap = ap;
+    ap->fi = *fi;
+    ap->fi->gui_obj = ap;
     ap->app = new FXApp("Find", "Find");
     cur = new FXCursor(ap->app, FX::CURSOR_ARROW);
     ap->app->setDefaultCursor(DEF_RARROW_CURSOR, cur);
@@ -319,32 +355,63 @@ gui_create(int argc, char** argv)
 
     ap->app->create();
     ap->mw->show(PLACEMENT_SCREEN);
-    return ap;
+
+    finder_event_init(&(ap->gui_event));
+    ih = (FXInputHandle)finder_event_get_wait_obj(&(ap->gui_event));
+    ap->app->addInput(ih, INPUT_READ, ap->mo, MsgObject::ID_SOCKET);
+
+    return 0;
 }
 
 /*****************************************************************************/
-int
-gui_main_loop(void* han)
+static int
+gui_main_loop(struct finder_info* fi)
 {
     struct app_data* ap;
 
-    printf("gui_main_loop\n");
-    ap = (struct app_data*)han;
+    ap = (struct app_data*)(fi->gui_obj);
+    writeln(ap->fi, "gui_main_loop");
     ap->app->run();
     return 0;
 }
 
 /*****************************************************************************/
-int
-gui_delete(void* han)
+static int
+gui_delete(struct finder_info* fi)
 {
     struct app_data* ap;
 
-    printf("gui_delete\n");
-    ap = (struct app_data*)han;
+    ap = (struct app_data*)(fi->gui_obj);
+    writeln(ap->fi, "gui_delete");
     delete ap->app;
     delete ap->mo;
+    finder_event_deinit(&(ap->gui_event));
     free(ap);
+    free(fi);
+    return 0;
+}
+
+/*****************************************************************************/
+int
+gui_set_event(struct finder_info* fi)
+{
+    struct app_data* ap;
+
+    ap = (struct app_data*)(fi->gui_obj);
+    writeln(ap->fi, "gui_set_event");
+    finder_event_set(&(ap->gui_event));
+    return 0;
+}
+
+/*****************************************************************************/
+int
+main(int argc, char** argv)
+{
+    struct finder_info* fi;
+
+    gui_create(argc, argv, &fi);
+    gui_main_loop(fi);
+    gui_delete(fi);
     return 0;
 }
 
