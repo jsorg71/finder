@@ -12,12 +12,21 @@ struct finder_info
     int show_hidden;
     int search_in_files;
     char text[256];
+
+    void* work_term_event;
+    void* list_mutex;
+    struct finder_list* main_to_work_list;
+    struct finder_list* work_to_main_list;
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+int
+gui_init(struct finder_info* fi);
+int
+gui_deinit(struct finder_info* fi);
 int
 writeln(struct finder_info* fi, const char* format, ...);
 int

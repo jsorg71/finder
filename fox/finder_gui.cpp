@@ -17,6 +17,7 @@ struct app_data
     FXButton* but1;
     FXButton* but2;
     FXButton* but3;
+    FXButton* but4;
     FXTabItem* ti1;
     FXTabItem* ti2;
     FXTabItem* ti3;
@@ -44,7 +45,7 @@ struct app_data
     class MsgObject* mo;
     int width;
     int height;
-    struct finder_event gui_event;
+    void* gui_event;
 };
 
 class MsgObject : public FXObject
@@ -124,6 +125,13 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         writeln(ap->fi, "but3");
         ap->app->stop(0);
     }
+    if (obj == ap->but4)
+    {
+        writeln(ap->fi, "but4");
+        str1 = FXDirDialog::getOpenDirectory(ap->mw, "Select Look In directory", "/home/jay");
+        ap->combo2->setText(str1);
+    }
+
     return 0;
 }
 
@@ -184,7 +192,10 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         ap->label2->resize(100, 24);
 
         ap->combo2->move(85, 41);
-        ap->combo2->resize(400, 24);
+        ap->combo2->resize(340, 24);
+
+        ap->but4->move(340 + 85 + 2, 41);
+        ap->but4->resize(60, 24);
 
         ap->cb1->move(8, 74);
         ap->cb1->resize(200, 24);
@@ -232,7 +243,7 @@ long
 MsgObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 {
     writeln(ap->fi, "MsgObject::onEvent1: ptr %p", ptr);
-    finder_event_clear(&(ap->gui_event));
+    finder_event_clear(ap->gui_event);
     event_callback(ap->fi);
     return 0;
 }
@@ -302,6 +313,10 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
     ap->combo2 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
 
+    sel = MsgObject::ID_BUTTON;
+    flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
+    ap->but4 = new FXButton(ap->tabframe1, "&Browse", NULL, ap->mo, sel, flags);
+
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
     ap->cb1 = new FXCheckButton(ap->tabframe1, "Include subfolders", NULL, 0, flags);
     ap->cb1->setCheck(TRUE);
@@ -356,8 +371,8 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->app->create();
     ap->mw->show(PLACEMENT_SCREEN);
 
-    finder_event_init(&(ap->gui_event));
-    ih = (FXInputHandle)finder_event_get_wait_obj(&(ap->gui_event));
+    finder_event_create(&(ap->gui_event));
+    ih = (FXInputHandle)finder_event_get_wait_obj(ap->gui_event);
     ap->app->addInput(ih, INPUT_READ, ap->mo, MsgObject::ID_SOCKET);
 
     return 0;
@@ -371,7 +386,9 @@ gui_main_loop(struct finder_info* fi)
 
     ap = (struct app_data*)(fi->gui_obj);
     writeln(ap->fi, "gui_main_loop");
+    gui_init(ap->fi);
     ap->app->run();
+    gui_deinit(ap->fi);
     return 0;
 }
 
@@ -385,7 +402,7 @@ gui_delete(struct finder_info* fi)
     writeln(ap->fi, "gui_delete");
     delete ap->app;
     delete ap->mo;
-    finder_event_deinit(&(ap->gui_event));
+    finder_event_delete(ap->gui_event);
     free(ap);
     free(fi);
     return 0;
@@ -399,7 +416,7 @@ gui_set_event(struct finder_info* fi)
 
     ap = (struct app_data*)(fi->gui_obj);
     writeln(ap->fi, "gui_set_event");
-    finder_event_set(&(ap->gui_event));
+    finder_event_set(ap->gui_event);
     return 0;
 }
 

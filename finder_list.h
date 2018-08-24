@@ -14,6 +14,10 @@ struct finder_list
     int auto_free;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct finder_list*
 finder_list_create(void);
 void
@@ -30,6 +34,10 @@ void
 finder_list_remove_item(struct finder_list* self, int index);
 void
 finder_list_insert_item(struct finder_list* self, int index, ITYPE item);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
