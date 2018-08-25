@@ -13,10 +13,9 @@ finder_thread_create(start_routine_proc start_routine, void* arg)
     int rv;
     pthread_t thread;
 
-    rv = 0;
     memset(&thread, 0, sizeof(pthread_t));
     /* pthread_create returns error */
-    rv = pthread_create(&thread, 0, start_routine, arg);
+    rv = pthread_create(&thread, NULL, start_routine, arg);
     if (rv == 0)
     {
         rv = pthread_detach(thread);
@@ -28,10 +27,14 @@ finder_thread_create(start_routine_proc start_routine, void* arg)
 int
 finder_mutex_create(void** mutex)
 {
-    pthread_mutex_t *lmutex;
+    pthread_mutex_t* lmutex;
 
     lmutex = (pthread_mutex_t*)calloc(1, sizeof(pthread_mutex_t));
-    pthread_mutex_init(lmutex, 0);
+    if (lmutex == NULL)
+    {
+        return 1;
+    }
+    pthread_mutex_init(lmutex, NULL);
     *mutex = lmutex;
     return 0;
 }
@@ -40,7 +43,7 @@ finder_mutex_create(void** mutex)
 int
 finder_mutex_delete(void* mutex)
 {
-    pthread_mutex_t *lmutex;
+    pthread_mutex_t* lmutex;
 
     lmutex = (pthread_mutex_t*)mutex;
     pthread_mutex_destroy(lmutex);

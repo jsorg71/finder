@@ -86,8 +86,6 @@ MsgObject::MsgObject()
 long
 MsgObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //static int i1;
-    //printf("%d onDefault obj %p sel 0x%8.8x ptr %p\n", i1++, obj, sel, ptr);
     return FXObject::onDefault(obj, sel, ptr);
 }
 
@@ -117,8 +115,6 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     {
         writeln(ap->fi, "but2");
         stop_find(ap->fi);
-        ap->but1->enable();
-        ap->but2->disable();
     }
     if (obj == ap->but3)
     {
@@ -128,7 +124,8 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     if (obj == ap->but4)
     {
         writeln(ap->fi, "but4");
-        str1 = FXDirDialog::getOpenDirectory(ap->mw, "Select Look In directory", "/home/jay");
+        str1 = ap->combo2->getText();
+        str1 = FXDirDialog::getOpenDirectory(ap->mw, "Select Look In directory", str1);
         ap->combo2->setText(str1);
     }
 
@@ -162,8 +159,8 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
     height = ap->mw->getHeight();
     if ((width != ap->width) || (height != ap->height))
     {
-        writeln(ap->fi, "MsgObject::onResizeTimeout: resized to %dx%d, was %dx%d",
-                width, height, ap->width, ap->height);
+        //writeln(ap->fi, "MsgObject::onResizeTimeout: resized to %dx%d, was %dx%d",
+        //        width, height, ap->width, ap->height);
         ap->width = width;
         ap->height = height;
 
@@ -242,9 +239,10 @@ MsgObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(ap->fi, "MsgObject::onEvent1: ptr %p", ptr);
     finder_event_clear(ap->gui_event);
     event_callback(ap->fi);
+    ap->app->flush(1);
+    ap->app->runWhileEvents();
     return 0;
 }
 
@@ -414,8 +412,8 @@ gui_set_event(struct finder_info* fi)
 {
     struct app_data* ap;
 
+    //writeln(fi, "gui_set_event");
     ap = (struct app_data*)(fi->gui_obj);
-    writeln(ap->fi, "gui_set_event");
     finder_event_set(ap->gui_event);
     return 0;
 }
@@ -432,3 +430,29 @@ main(int argc, char** argv)
     return 0;
 }
 
+/*****************************************************************************/
+int
+gui_find_done(struct finder_info* fi)
+{
+    struct app_data* ap;
+
+    writeln(fi, "gui_find_done");
+    ap = (struct app_data*)(fi->gui_obj);
+    ap->but1->enable();
+    ap->but2->disable();
+    return 0;
+}
+
+/*****************************************************************************/
+int
+gui_add_one(struct finder_info* fi, const char* filename)
+{
+    struct app_data* ap;
+    FXFoldingItem* folding_item;
+
+    //writeln(fi, "gui_add_one");
+    ap = (struct app_data*)(fi->gui_obj);
+    folding_item = new FXFoldingItem(filename);
+    ap->fl->appendItem(NULL, folding_item);
+    return 0;
+}

@@ -8,6 +8,10 @@ extern "C" {
 
 int
 gui_set_event(struct finder_info* fi);
+int
+gui_find_done(struct finder_info* fi);
+int
+gui_add_one(struct finder_info* fi, const char* filename);
 
 #ifdef __cplusplus
 }

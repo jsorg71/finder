@@ -5,25 +5,60 @@
 
 #include "finder_list.h"
 
-/*****************************************************************************/
-struct finder_list*
-finder_list_create(void)
+/* finder_list */
+struct finder_list
 {
-    struct finder_list *self;
+    ITYPE* items;
+    int count;
+    int alloc_size;
+    int grow_by;
+    int auto_free;
+};
+
+/*****************************************************************************/
+int
+finder_list_create(int grow_by, int alloc_size, void** list1)
+{
+    struct finder_list* self;
 
     self = (struct finder_list*)calloc(1, sizeof(struct finder_list));
-    self->grow_by = 10;
-    self->alloc_size = 10;
-    self->items = (ITYPE*)calloc(1, sizeof(ITYPE) * 10);
-    return self;
+    if (self == NULL)
+    {
+        return 1;
+    }
+    if ((grow_by == 0) && (alloc_size == 0))
+    {
+        grow_by = 10;
+        alloc_size = 10;
+    }
+    if (grow_by < 1)
+    {
+        grow_by = 1;
+    }
+    if (alloc_size < 1)
+    {
+        alloc_size = 1;
+    }
+    self->grow_by = grow_by;
+    self->alloc_size = alloc_size;
+    self->items = (ITYPE*)calloc(self->alloc_size, sizeof(ITYPE));
+    if (self->items == NULL)
+    {
+        free(self);
+        return 2;
+    }
+    *list1 = self;
+    return 0;
 }
 
 /*****************************************************************************/
 void
-finder_list_delete(struct finder_list* self)
+finder_list_delete(void* list1)
 {
+    struct finder_list* self;
     int i;
 
+    self = (struct finder_list*)list1;
     if (self == NULL)
     {
         return;
@@ -41,29 +76,39 @@ finder_list_delete(struct finder_list* self)
 }
 
 /*****************************************************************************/
-void
-finder_list_add_item(struct finder_list* self, ITYPE item)
+int
+finder_list_add_item(void* list1, ITYPE item)
 {
+    struct finder_list* self;
     ITYPE* p;
     int i;
 
+    self = (struct finder_list*)list1;
     if (self->count >= self->alloc_size)
     {
         i = self->alloc_size;
         self->alloc_size += self->grow_by;
-        p = (ITYPE*)calloc(1, sizeof(ITYPE) * self->alloc_size);
+        p = (ITYPE*)calloc(self->alloc_size, sizeof(ITYPE));
+        if (p == NULL)
+        {
+            return 1;
+        }
         memcpy(p, self->items, sizeof(ITYPE) * i);
         free(self->items);
         self->items = p;
     }
     self->items[self->count] = item;
     self->count++;
+    return 0;
 }
 
 /*****************************************************************************/
 ITYPE
-finder_list_get_item(const struct finder_list *self, int index)
+finder_list_get_item(const void* list1, int index)
 {
+    const struct finder_list* self;
+
+    self = (const struct finder_list*)list1;
     if ((index < 0) || (index >= self->count))
     {
         return 0;
@@ -72,11 +117,13 @@ finder_list_get_item(const struct finder_list *self, int index)
 }
 
 /*****************************************************************************/
-void
-finder_list_clear(struct finder_list* self)
+int
+finder_list_clear(void* list1, int grow_by, int alloc_size)
 {
+    struct finder_list* self;
     int i;
 
+    self = (struct finder_list*)list1;
     if (self->auto_free)
     {
         for (i = 0; i < self->count; i++)
@@ -86,18 +133,38 @@ finder_list_clear(struct finder_list* self)
         }
     }
     free(self->items);
+    if ((grow_by == 0) && (alloc_size == 0))
+    {
+        grow_by = 10;
+        alloc_size = 10;
+    }
+    if (grow_by < 1)
+    {
+        grow_by = 1;
+    }
+    if (alloc_size < 1)
+    {
+        alloc_size = 1;
+    }
     self->count = 0;
-    self->grow_by = 10;
-    self->alloc_size = 10;
-    self->items = (ITYPE*)calloc(1, sizeof(ITYPE) * 10);
+    self->grow_by = grow_by;
+    self->alloc_size = alloc_size;
+    self->items = (ITYPE*)calloc(self->alloc_size, sizeof(ITYPE));
+    if (self->items == NULL)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /*****************************************************************************/
 int
-finder_list_index_of(struct finder_list* self, ITYPE item)
+finder_list_index_of(const void* list1, ITYPE item)
 {
+    const struct finder_list* self;
     int i;
 
+    self = (const struct finder_list*)list1;
     for (i = 0; i < self->count; i++)
     {
         if (self->items[i] == item)
@@ -110,10 +177,12 @@ finder_list_index_of(struct finder_list* self, ITYPE item)
 
 /*****************************************************************************/
 void
-finder_list_remove_item(struct finder_list* self, int index)
+finder_list_remove_item(void* list1, int index)
 {
+    struct finder_list* self;
     int i;
 
+    self = (struct finder_list*)list1;
     if (index >= 0 && index < self->count)
     {
         if (self->auto_free)
@@ -130,16 +199,17 @@ finder_list_remove_item(struct finder_list* self, int index)
 }
 
 /*****************************************************************************/
-void
-finder_list_insert_item(struct finder_list* self, int index, ITYPE item)
+int
+finder_list_insert_item(void* list1, int index, ITYPE item)
 {
+    struct finder_list* self;
     ITYPE* p;
     int i;
 
+    self = (struct finder_list*)list1;
     if (index == self->count)
     {
-        finder_list_add_item(self, item);
-        return;
+        return finder_list_add_item(self, item);
     }
     if ((index >= 0) && (index < self->count))
     {
@@ -148,7 +218,11 @@ finder_list_insert_item(struct finder_list* self, int index, ITYPE item)
         {
             i = self->alloc_size;
             self->alloc_size += self->grow_by;
-            p = (ITYPE*)calloc(1, sizeof(ITYPE) * self->alloc_size);
+            p = (ITYPE*)calloc(self->alloc_size, sizeof(ITYPE));
+            if (p == NULL)
+            {
+                return 1;
+            }
             memcpy(p, self->items, sizeof(ITYPE) * i);
             free(self->items);
             self->items = p;
@@ -159,4 +233,15 @@ finder_list_insert_item(struct finder_list* self, int index, ITYPE item)
         }
         self->items[index] = item;
     }
+    return 0;
+}
+
+/*****************************************************************************/
+int
+finder_list_get_count(const void* list1)
+{
+    const struct finder_list* self;
+
+    self = (const struct finder_list*)list1;
+    return self->count;
 }

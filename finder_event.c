@@ -2,13 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <unistd.h>
 #include <fcntl.h>
+#endif
 #include "finder_event.h"
 
 struct finder_event
 {
+#if defined(_WIN32)
+    HANDLE event;
+#else
     int pipe[2];
+#endif
 };
 
 /*****************************************************************************/
@@ -22,7 +30,11 @@ finder_event_create(void** event1)
     {
         return 1;
     }
-    pipe(levent->pipe);
+    if (pipe(levent->pipe) != 0)
+    {
+        free(levent);
+        return 2;
+    }
     *event1 = levent;
     return 0;
 }

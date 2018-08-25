@@ -14,9 +14,10 @@ struct finder_info
     char text[256];
 
     void* work_term_event;
+    void* main_to_work_event;
     void* list_mutex;
-    struct finder_list* main_to_work_list;
-    struct finder_list* work_to_main_list;
+    void* main_to_work_list;
+    void* work_to_main_list;
 };
 
 #ifdef __cplusplus
