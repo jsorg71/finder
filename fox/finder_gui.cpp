@@ -13,6 +13,7 @@ struct app_data
 {
     struct finder_info* fi;
     FXApp* app;
+    FXMutex* mutex1;
     FXMainWindow* mw;
     FXButton* but1;
     FXButton* but2;
@@ -62,6 +63,7 @@ public:
     long onCmdHelp(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdAbout(FXObject* obj, FXSelector sel, void* ptr);
     long onEvent1(FXObject* obj, FXSelector sel, void* ptr);
+    long onEventTimeout(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
     enum _ids
     {
@@ -69,6 +71,7 @@ public:
         ID_TABBOOK,
         ID_FOLDINGLIST,
         ID_MAINWINDOW,
+        ID_MAINWINDOW1,
         ID_EXIT,
         ID_HELP,
         ID_ABOUT,
@@ -239,11 +242,19 @@ MsgObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 {
+    //writeln(ap->fi, "MsgObject::onEvent1:");
     finder_event_clear(ap->gui_event);
+    ap->app->addTimeout(ap->mo, MsgObject::ID_MAINWINDOW1, 0, NULL);
+    return 1;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onEventTimeout(FXObject* obj, FXSelector sel, void* ptr)
+{
+    //writeln(ap->fi, "MsgObject::onEventTimeout:");
     event_callback(ap->fi);
-    ap->app->flush(1);
-    ap->app->runWhileEvents();
-    return 0;
+    return 1;
 }
 
 FXDEFMAP(MsgObject) MsgObjectMap[] =
@@ -252,6 +263,7 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_TABBOOK, MsgObject::onTabChange),
     FXMAPFUNC(SEL_CONFIGURE, MsgObject::ID_MAINWINDOW, MsgObject::onConfigure),
     FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout),
+    FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW1, MsgObject::onEventTimeout),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_EXIT, MsgObject::onCmdExit),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_HELP, MsgObject::onCmdHelp),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout),
@@ -278,6 +290,7 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->fi = *fi;
     ap->fi->gui_obj = ap;
     ap->app = new FXApp("Finder", "Finder");
+    ap->mutex1 = new FXMutex();
     cur = new FXCursor(ap->app, FX::CURSOR_ARROW);
     ap->app->setDefaultCursor(DEF_RARROW_CURSOR, cur);
     ap->app->init(argc, argv);
@@ -400,6 +413,7 @@ gui_delete(struct finder_info* fi)
     writeln(ap->fi, "gui_delete");
     delete ap->app;
     delete ap->mo;
+    delete ap->mutex1;
     finder_event_delete(ap->gui_event);
     free(ap);
     free(fi);
@@ -407,6 +421,7 @@ gui_delete(struct finder_info* fi)
 }
 
 /*****************************************************************************/
+/* any thread */
 int
 gui_set_event(struct finder_info* fi)
 {
@@ -414,7 +429,9 @@ gui_set_event(struct finder_info* fi)
 
     //writeln(fi, "gui_set_event");
     ap = (struct app_data*)(fi->gui_obj);
+    ap->mutex1->lock();
     finder_event_set(ap->gui_event);
+    ap->mutex1->unlock();
     return 0;
 }
 
@@ -445,14 +462,24 @@ gui_find_done(struct finder_info* fi)
 
 /*****************************************************************************/
 int
-gui_add_one(struct finder_info* fi, const char* filename)
+gui_add_one(struct finder_info* fi, const char* filename,
+            const char* in_subfolder, const char* size,
+            const char* modified)
 {
     struct app_data* ap;
     FXFoldingItem* folding_item;
+    FXString str1;
 
     //writeln(fi, "gui_add_one");
     ap = (struct app_data*)(fi->gui_obj);
-    folding_item = new FXFoldingItem(filename);
+    str1 = filename;
+    str1 += "\t";
+    str1 += in_subfolder;
+    str1 += "\t";
+    str1 += size;
+    str1 += "\t";
+    str1 += modified;
+    folding_item = new FXFoldingItem(str1);
     ap->fl->appendItem(NULL, folding_item);
     return 0;
 }
