@@ -14,6 +14,10 @@ int
 gui_add_one(struct finder_info* fi, const char* filename,
             const char* in_subfolder, const char* size,
             const char* modified);
+int
+gui_add_many(struct finder_info* fi, const char** filename,
+             const char** in_subfolder, const char** size,
+             const char** modified, int count);
 
 #ifdef __cplusplus
 }

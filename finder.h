@@ -2,6 +2,22 @@
 #if !defined(FINDER_H)
 #define FINDER_H
 
+/* main to work */
+#define FINDER_CMD_START        1
+/* work to main */
+#define FINDER_CMD_DONE         101
+#define FINDER_CMD_ADD_ONE      102
+
+struct work_item
+{
+    int cmd;
+    int pad0;
+    char* filename;
+    char* in_subfolder;
+    char* size;
+    char* modified;
+};
+
 struct finder_info
 {
     void* gui_obj;
@@ -11,6 +27,7 @@ struct finder_info
     int case_sensitive;
     int show_hidden;
     int search_in_files;
+    int search_in_case_sensitive;
     char text[256];
 
     void* work_term_event;

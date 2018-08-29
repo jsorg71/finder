@@ -34,8 +34,11 @@ struct app_data
     FXCheckButton* cb1;
     FXCheckButton* cb2;
     FXCheckButton* cb3;
+    FXCheckButton* cb4;
+    FXCheckButton* cb5;
     FXComboBox* combo1;
     FXComboBox* combo2;
+    FXComboBox* combo3;
     FXTextField* text1;
     FXDockSite* topdock;
     FXToolBarShell* tbs;
@@ -110,6 +113,10 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         ap->fi->include_subfolders = ap->cb1->getCheck();
         ap->fi->case_sensitive = ap->cb2->getCheck();
         ap->fi->show_hidden = ap->cb3->getCheck();
+        ap->fi->search_in_files = ap->cb4->getCheck();
+        ap->fi->search_in_case_sensitive = ap->cb5->getCheck();
+        str1 = ap->combo3->getText();
+        snprintf(ap->fi->text, sizeof(ap->fi->text), "%s", str1.text());
         start_find(ap->fi);
         ap->but1->disable();
         ap->but2->enable();
@@ -129,7 +136,10 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         writeln(ap->fi, "but4");
         str1 = ap->combo2->getText();
         str1 = FXDirDialog::getOpenDirectory(ap->mw, "Select Look In directory", str1);
-        ap->combo2->setText(str1);
+        if (str1 != "")
+        {
+            ap->combo2->setText(str1); 
+        }
     }
 
     return 0;
@@ -205,6 +215,15 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 
         ap->cb3->move(216, 74);
         ap->cb3->resize(200, 24);
+
+        ap->cb4->move(10, 10);
+        ap->cb4->resize(120, 24);
+
+        ap->combo3->move(10, 40);
+        ap->combo3->resize(340, 24);
+
+        ap->cb5->move(10, 74);
+        ap->cb5->resize(160, 24);
 
         ap->text1->move(85, 8);
         ap->text1->resize(400, 24);
@@ -379,6 +398,17 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER | FRAME_RAISED;
     ap->sb = new FXStatusBar(ap->mw, flags);
 
+
+    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ap->cb4 = new FXCheckButton(ap->tabframe3, "Search in files");
+
+    flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
+    ap->combo3 = new FXComboBox(ap->tabframe3, 0, NULL, 0, flags);
+
+    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ap->cb5 = new FXCheckButton(ap->tabframe3, "Case sesitive search");
+
+
     ap->app->create();
     ap->mw->show(PLACEMENT_SCREEN);
 
@@ -483,3 +513,31 @@ gui_add_one(struct finder_info* fi, const char* filename,
     ap->fl->appendItem(NULL, folding_item);
     return 0;
 }
+
+/*****************************************************************************/
+int
+gui_add_many(struct finder_info* fi, const char** filename,
+             const char** in_subfolder, const char** size,
+             const char** modified, int count)
+{
+    struct app_data* ap;
+    FXString strs;
+    int index;
+
+    ap = (struct app_data*)(fi->gui_obj);
+    strs = "";
+    for (index = 0; index < count; index++)
+    {
+        strs += filename[index];
+        strs += "\t";
+        strs += in_subfolder[index];
+        strs += "\t";
+        strs += size[index];
+        strs += "\t";
+        strs += modified[index];
+        strs += "\n";
+    }
+    ap->fl->fillItems(NULL, strs);
+    return 0;
+}
+
