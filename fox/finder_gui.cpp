@@ -406,7 +406,7 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->combo3 = new FXComboBox(ap->tabframe3, 0, NULL, 0, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->cb5 = new FXCheckButton(ap->tabframe3, "Case sesitive search");
+    ap->cb5 = new FXCheckButton(ap->tabframe3, "Case sensitive search");
 
 
     ap->app->create();

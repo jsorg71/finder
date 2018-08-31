@@ -28,6 +28,7 @@ struct finder_info
     int show_hidden;
     int search_in_files;
     int search_in_case_sensitive;
+    int pad0;
     char text[256];
 
     void* work_term_event;

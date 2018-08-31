@@ -15,6 +15,82 @@
 #include "finder_event.h"
 #include "finder_search.h"
 
+#define SEARCH_IN_READ_CHUCK 4096
+#define FINDER_MAX_PATH 4096
+
+/*****************************************************************************/
+static int
+myfnmatch(const char* pattern, const char* string, int flags)
+{
+    char c;
+    char chr1;
+    char chr2;
+
+    while (1)
+    {
+        switch (c = *(pattern++))
+        {
+            case 0:
+                return (*string) == 0 ? 0 : 1;
+            case '?':
+                if (*string == 0)
+                {
+                    return 1; /* not found */
+                }
+                ++string;
+                break;
+            case '*':
+                c = *pattern;
+                /* multiple stars */
+                while (c == '*')
+                {
+                    c = *(++pattern);
+                }
+                if (c == 0)
+                {
+                    return 0; /* found */
+                }
+                /* General case, use recursion. */
+                while ((*string) != 0)
+                {
+                    if (!myfnmatch(pattern, string, flags))
+                    {
+                        return 0; /* found */
+                    }
+                    ++string;
+                }
+                return 1; /* not found */
+            default:
+                if (flags & 1)
+                {
+                    chr1 = c;
+                    if ((chr1 >= 'a') && (chr1 <= 'z'))
+                    {
+                        chr1 &= 0xDF;
+                    }
+                    chr2 = *(string++);
+                    if ((chr2 >= 'a') && (chr2 <= 'z'))
+                    {
+                        chr2 &= 0xDF;
+                    }
+                    if (chr1 != chr2)
+                    {
+                        return 1; /* not found */
+                    }
+                }
+                else
+                {
+                    if (c != *(string++))
+                    {
+                        return 1; /* not found */
+                    }
+                }
+                break;
+        }
+    }
+    return 1; /* not found */
+}
+
 /*****************************************************************************/
 static int
 format_commas(off_t n, char* out)
@@ -23,6 +99,10 @@ format_commas(off_t n, char* out)
     char buf[64];
     char* p;
 
+    if (out == NULL)
+    {
+        return 1;
+    }
     snprintf(buf, 64, "%lld", (long long)n);
     c = 2 - (strlen(buf) % 3);
     for (p = buf; *p != 0; p++)
@@ -58,7 +138,7 @@ lcasememcmp(const void* ptr1, const void* ptr2, int bytes)
             chr1 &= 0xDF;
         }
         chr2 = ptr28[index];
-        if ((chr1 >= 'a') && (chr1 <= 'z'))
+        if ((chr2 >= 'a') && (chr2 <= 'z'))
         {
             chr2 &= 0xDF;
         }
@@ -113,10 +193,14 @@ find_in_file(int fd, struct finder_info* fi, int* afound_in_file)
     int count;
     char* data;
 
-    data = (char*)malloc(4096);
+    data = (char*)malloc(SEARCH_IN_READ_CHUCK);
+    if (data == NULL)
+    {
+        return 1;
+    }
     found_in_file = 0;
     text_bytes = strlen(fi->text);
-    readed = read(fd, data, 4096);
+    readed = read(fd, data, SEARCH_IN_READ_CHUCK);
     while (readed > 0)
     {
         count = readed - text_bytes;
@@ -147,16 +231,75 @@ find_in_file(int fd, struct finder_info* fi, int* afound_in_file)
         {
             break;
         }
-        if (readed == 4096)
+        if (readed == SEARCH_IN_READ_CHUCK)
         {
             /* only rewind a bit when we got a full read last time */
             lseek(fd, SEEK_CUR, -text_bytes);
         }
-        readed = read(fd, data, 4096);
+        readed = read(fd, data, SEARCH_IN_READ_CHUCK);
     }
     free(data);
     *afound_in_file = found_in_file;
     return 0;
+}
+
+/*****************************************************************************/
+/* return 0 if match */
+static int
+check_file_name(struct finder_info* fi, const char* filename)
+{
+
+    const char* p1;
+    const char* p2;
+    char* text;
+    int len1;
+
+    text = (char*)malloc(1024);
+    p1 = fi->named;
+    while (p1 != NULL)
+    {
+        p2 = strstr(p1 + 1, ";");
+        if (p2 == NULL)
+        {
+            strncpy(text, p1, 1023);
+            text[1023] = 0;
+        }
+        else
+        {
+            len1 = p2 - p1;
+            //writeln(fi, "len1 %d", len1);
+            if (len1 > 1023)
+            {
+                len1 = 1023;
+            }
+            strncpy(text, p1, len1);
+            text[len1] = 0;
+            p2++;
+        }
+        if (text[0] != 0)
+        {
+            //writeln(fi, "%s", text);
+            if (fi->case_sensitive)
+            {
+                if (myfnmatch(text, filename, 0) == 0)
+                {
+                    free(text);
+                    return 0;
+                }
+            }
+            else
+            {
+                if (myfnmatch(text, filename, 1) == 0)
+                {
+                    free(text);
+                    return 0;
+                }
+            }
+        }
+        p1 = p2;
+    }
+    free(text);
+    return 1;
 }
 
 /*****************************************************************************/
@@ -193,7 +336,13 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
     }
 
     look_in_text_alloc_bytes = name_bytes - look_in_bytes + 1;
-    look_in_text = (char *)calloc(look_in_text_alloc_bytes, 1);
+    look_in_text = (char*)calloc(look_in_text_alloc_bytes, 1);
+    if (look_in_text == NULL)
+    {
+        writeln(fi, "%s", "error");
+        return;
+    }
+
     if (name_bytes > look_in_bytes)
     {
         snprintf(look_in_text, look_in_text_alloc_bytes, "%s", name + look_in_bytes + 1);
@@ -227,8 +376,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                 {
                     continue;
                 }
-                path = (char*)malloc(4096);
-                snprintf(path, 4096, "%s/%s", name, entry->d_name);
+                path = (char*)malloc(FINDER_MAX_PATH);
+                snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry->d_name);
                 listdir(fi, wi, path);
                 free(path);
             }
@@ -239,8 +388,18 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             {
                 continue;
             }
-            path = (char*)malloc(4096);
-            snprintf(path, 4096, "%s/%s", name, entry->d_name);
+
+            if (check_file_name(fi, entry->d_name) != 0)
+            {
+                continue;
+            }
+
+            path = (char*)malloc(FINDER_MAX_PATH);
+            if (path == NULL)
+            {
+                continue;
+            }
+            snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry->d_name); 
             if (fi->search_in_files)
             {
                 fd = open(path, O_RDONLY);
@@ -281,7 +440,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                 }
             }
             free(path);
-            lwi = (struct work_item *)calloc(1, sizeof(struct work_item));
+            lwi = (struct work_item*)calloc(1, sizeof(struct work_item));
             if (lwi != NULL)
             {
                 lwi->cmd = FINDER_CMD_ADD_ONE;
