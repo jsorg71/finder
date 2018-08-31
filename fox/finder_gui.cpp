@@ -24,6 +24,7 @@ struct app_data
     FXTabItem* ti3;
     FXGroupBox* gb2;
     FXFoldingList* fl;
+    FXHeader* flh;
     FXGroupBox* gb1;
     FXTabBook* tab_book;
     FXGroupBox* tabframe1;
@@ -46,11 +47,29 @@ struct app_data
     FXMenuPane* filemenu;
     FXMenuPane* helpmenu;
     FXStatusBar* sb;
+    FXLabel* sbl1;
     class MsgObject* mo;
     int width;
     int height;
     void* gui_event;
+    int sort_order;
 };
+
+class ItemObject : public FXObject
+{
+    FXDECLARE(ItemObject)
+public:
+    FXString filename;
+    FXString in_subfolder;
+    FINDER_I64 size;
+    FXString modified;
+};
+
+FXDEFMAP(ItemObject) ItemObjectMap[] =
+{
+};
+
+FXIMPLEMENT(ItemObject, FXObject, ItemObjectMap, ARRAYNUMBER(ItemObjectMap))
 
 class MsgObject : public FXObject
 {
@@ -67,6 +86,8 @@ public:
     long onCmdAbout(FXObject* obj, FXSelector sel, void* ptr);
     long onEvent1(FXObject* obj, FXSelector sel, void* ptr);
     long onEventTimeout(FXObject* obj, FXSelector sel, void* ptr);
+    long onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr);
+    long onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
     enum _ids
     {
@@ -79,6 +100,7 @@ public:
         ID_HELP,
         ID_ABOUT,
         ID_SOCKET,
+        ID_FOLDINGLISTHEADER,
         ID_LAST
     } ids;
 };
@@ -105,7 +127,7 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     if (obj == ap->but1)
     {
         writeln(ap->fi, "but1");
-        ap->fl->clearItems();
+        ap->fl->clearItems(TRUE);
         str1 = ap->combo1->getText();
         snprintf(ap->fi->named, sizeof(ap->fi->named), "%s", str1.text());
         str1 = ap->combo2->getText();
@@ -138,7 +160,7 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         str1 = FXDirDialog::getOpenDirectory(ap->mw, "Select Look In directory", str1);
         if (str1 != "")
         {
-            ap->combo2->setText(str1); 
+            ap->combo2->setText(str1);
         }
     }
 
@@ -276,6 +298,257 @@ MsgObject::onEventTimeout(FXObject* obj, FXSelector sel, void* ptr)
     return 1;
 }
 
+/*****************************************************************************/
+static FXint
+sort00(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->filename < bo->filename)
+            {
+                return -1;
+            }
+            if (ao->filename > bo->filename)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static FXint
+sort01(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->filename < bo->filename)
+            {
+                return 1;
+            }
+            if (ao->filename > bo->filename)
+            {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static FXint
+sort10(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->in_subfolder < bo->in_subfolder)
+            {
+                return -1;
+            }
+            if (ao->in_subfolder > bo->in_subfolder)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static FXint
+sort11(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->in_subfolder < bo->in_subfolder)
+            {
+                return 1;
+            }
+            if (ao->in_subfolder > bo->in_subfolder)
+            {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static FXint
+sort20(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->size < bo->size)
+            {
+                return -1;
+            }
+            if (ao->size > bo->size)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static FXint
+sort21(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->size < bo->size)
+            {
+                return 1;
+            }
+            if (ao->size > bo->size)
+            {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static FXint
+sort30(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->modified < bo->modified)
+            {
+                return -1;
+            }
+            if (ao->modified > bo->modified)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static FXint
+sort31(const FXFoldingItem* a, const FXFoldingItem* b)
+{
+    ItemObject* ao;
+    ItemObject* bo;
+
+    ao = (ItemObject*)(a->getData());
+    bo = (ItemObject*)(b->getData());
+    if (ao != NULL)
+    {
+        if (bo != NULL)
+        {
+            if (ao->modified < bo->modified)
+            {
+                return 1;
+            }
+            if (ao->modified > bo->modified)
+            {
+                return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr)
+{
+    int index;
+    FXFoldingListSortFunc sf1[4] = { sort00, sort10, sort20, sort30 };
+    FXFoldingListSortFunc sf2[4] = { sort01, sort11, sort21, sort31 };
+
+    index = (int)(FXival)ptr;
+    index &= 3;
+    if ((ap->sort_order & (1 << index)) == 0)
+    {
+        ap->fl->setSortFunc(sf1[index]);
+        ap->sort_order |= 1 << index;
+    }
+    else
+    {
+        ap->fl->setSortFunc(sf2[index]);
+        ap->sort_order &= ~(1 << index);
+    }
+    ap->fl->sortItems();
+    return 1;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
+{
+    ItemObject* io;
+    FXFoldingItem* item;
+
+    item = (FXFoldingItem*)ptr;
+    if (item != NULL)
+    {
+        io = (ItemObject*)(item->getData());
+        if (io != NULL)
+        {
+            delete io;
+        }
+    }
+    return 1;
+}
+
 FXDEFMAP(MsgObject) MsgObjectMap[] =
 {
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_BUTTON, MsgObject::onPress),
@@ -286,7 +559,9 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_EXIT, MsgObject::onCmdExit),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_HELP, MsgObject::onCmdHelp),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout),
-    FXMAPFUNC(SEL_IO_READ, MsgObject::ID_SOCKET, MsgObject::onEvent1)
+    FXMAPFUNC(SEL_IO_READ, MsgObject::ID_SOCKET, MsgObject::onEvent1),
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeader),
+    FXMAPFUNC(SEL_DELETED, MsgObject::ID_FOLDINGLIST, MsgObject::onFoldingListItemDelete)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -356,6 +631,15 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     flags = TEXTFIELD_NORMAL;
     ap->text1 = new FXTextField(ap->tabframe2, 0, NULL, 0, flags);
 
+    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ap->cb4 = new FXCheckButton(ap->tabframe3, "Search in files");
+
+    flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
+    ap->combo3 = new FXComboBox(ap->tabframe3, 0, NULL, 0, flags);
+
+    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ap->cb5 = new FXCheckButton(ap->tabframe3, "Case sensitive search");
+
     sel = MsgObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
     ap->but1 = new FXButton(ap->mw, "&Find", NULL, ap->mo, sel, flags);
@@ -373,6 +657,9 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->fl->appendHeader("In Subfolder", 0, 100);
     ap->fl->appendHeader("Size", 0, 100);
     ap->fl->appendHeader("Modified", 0, 100);
+    ap->flh = ap->fl->getHeader();
+    ap->flh->setTarget(ap->mo);
+    ap->flh->setSelector(MsgObject::ID_FOLDINGLISTHEADER);
 
     flags = LAYOUT_SIDE_TOP | LAYOUT_FILL_X;
     ap->topdock = new FXDockSite(ap->mw, flags);
@@ -398,16 +685,7 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER | FRAME_RAISED;
     ap->sb = new FXStatusBar(ap->mw, flags);
 
-
-    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->cb4 = new FXCheckButton(ap->tabframe3, "Search in files");
-
-    flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    ap->combo3 = new FXComboBox(ap->tabframe3, 0, NULL, 0, flags);
-
-    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->cb5 = new FXCheckButton(ap->tabframe3, "Case sensitive search");
-
+    ap->sbl1 = new FXLabel(ap->sb, "", NULL,LAYOUT_RIGHT | LAYOUT_CENTER_Y);
 
     ap->app->create();
     ap->mw->show(PLACEMENT_SCREEN);
@@ -482,23 +760,30 @@ int
 gui_find_done(struct finder_info* fi)
 {
     struct app_data* ap;
+    int count;
+    FXString str1;
 
     writeln(fi, "gui_find_done");
     ap = (struct app_data*)(fi->gui_obj);
     ap->but1->enable();
     ap->but2->disable();
+    count = ap->fl->getNumItems();
+    str1.format("%d Items found", count);
+    ap->sbl1->setText(str1);
     return 0;
 }
 
 /*****************************************************************************/
 int
 gui_add_one(struct finder_info* fi, const char* filename,
-            const char* in_subfolder, const char* size,
+            const char* in_subfolder, FINDER_I64 size,
             const char* modified)
 {
     struct app_data* ap;
     FXFoldingItem* folding_item;
     FXString str1;
+    ItemObject* io;
+    char text[128];
 
     //writeln(fi, "gui_add_one");
     ap = (struct app_data*)(fi->gui_obj);
@@ -506,38 +791,19 @@ gui_add_one(struct finder_info* fi, const char* filename,
     str1 += "\t";
     str1 += in_subfolder;
     str1 += "\t";
-    str1 += size;
+    format_commas(size, text);
+    str1 += text;
     str1 += "\t";
     str1 += modified;
     folding_item = new FXFoldingItem(str1);
-    ap->fl->appendItem(NULL, folding_item);
+    ap->fl->appendItem(NULL, folding_item, TRUE);
+
+    io = new ItemObject();
+    io->filename = filename;
+    io->in_subfolder = in_subfolder;
+    io->size = size;
+    io->modified = modified;
+    folding_item->setData(io);
+
     return 0;
 }
-
-/*****************************************************************************/
-int
-gui_add_many(struct finder_info* fi, const char** filename,
-             const char** in_subfolder, const char** size,
-             const char** modified, int count)
-{
-    struct app_data* ap;
-    FXString strs;
-    int index;
-
-    ap = (struct app_data*)(fi->gui_obj);
-    strs = "";
-    for (index = 0; index < count; index++)
-    {
-        strs += filename[index];
-        strs += "\t";
-        strs += in_subfolder[index];
-        strs += "\t";
-        strs += size[index];
-        strs += "\t";
-        strs += modified[index];
-        strs += "\n";
-    }
-    ap->fl->fillItems(NULL, strs);
-    return 0;
-}
-

@@ -8,13 +8,16 @@
 #define FINDER_CMD_DONE         101
 #define FINDER_CMD_ADD_ONE      102
 
+#define FINDER_I64 long long
+#define FINDER_INTPTR ssize_t
+
 struct work_item
 {
     int cmd;
     int pad0;
     char* filename;
     char* in_subfolder;
-    char* size;
+    FINDER_I64 size;
     char* modified;
 };
 
@@ -54,6 +57,8 @@ int
 stop_find(struct finder_info* fi);
 int
 event_callback(struct finder_info* fi);
+int
+format_commas(FINDER_I64 n, char* out);
 
 #ifdef __cplusplus
 }

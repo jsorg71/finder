@@ -19,6 +19,7 @@
 #define FINDER_MAX_PATH 4096
 
 /*****************************************************************************/
+/* return 0 found, 1 not found */
 static int
 myfnmatch(const char* pattern, const char* string, int flags)
 {
@@ -33,7 +34,7 @@ myfnmatch(const char* pattern, const char* string, int flags)
             case 0:
                 return (*string) == 0 ? 0 : 1;
             case '?':
-                if (*string == 0)
+                if ((*string) == 0)
                 {
                     return 1; /* not found */
                 }
@@ -63,6 +64,7 @@ myfnmatch(const char* pattern, const char* string, int flags)
             default:
                 if (flags & 1)
                 {
+                    /* not case sensitive */
                     chr1 = c;
                     if ((chr1 >= 'a') && (chr1 <= 'z'))
                     {
@@ -80,6 +82,7 @@ myfnmatch(const char* pattern, const char* string, int flags)
                 }
                 else
                 {
+                    /* case sensitive */
                     if (c != *(string++))
                     {
                         return 1; /* not found */
@@ -89,33 +92,6 @@ myfnmatch(const char* pattern, const char* string, int flags)
         }
     }
     return 1; /* not found */
-}
-
-/*****************************************************************************/
-static int
-format_commas(off_t n, char* out)
-{
-    int c;
-    char buf[64];
-    char* p;
-
-    if (out == NULL)
-    {
-        return 1;
-    }
-    snprintf(buf, 64, "%lld", (long long)n);
-    c = 2 - (strlen(buf) % 3);
-    for (p = buf; *p != 0; p++)
-    {
-       *(out++) = *p;
-       if (c == 1)
-       {
-           *(out++) = ',';
-       }
-       c = (c + 1) % 3;
-    }
-    *(--out) = 0;
-    return 0;
 }
 
 /*****************************************************************************/
@@ -151,7 +127,7 @@ lcasememcmp(const void* ptr1, const void* ptr2, int bytes)
             return 1;
         }
     }
-    return 0; 
+    return 0;
 }
 
 /*****************************************************************************/
@@ -179,7 +155,7 @@ lmemcmp(const void* ptr1, const void* ptr2, int bytes)
             return 1;
         }
     }
-    return 0; 
+    return 0;
 }
 
 /*****************************************************************************/
@@ -399,7 +375,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             {
                 continue;
             }
-            snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry->d_name); 
+            snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry->d_name);
             if (fi->search_in_files)
             {
                 fd = open(path, O_RDONLY);
@@ -409,7 +385,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                     free(path);
                     continue;
                 }
-                if (fstat(fd, &lstat) != 0) 
+                if (fstat(fd, &lstat) != 0)
                 {
                     writeln(fi, "fstat error %s", path);
                     free(path);
@@ -446,8 +422,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                 lwi->cmd = FINDER_CMD_ADD_ONE;
                 lwi->filename = strdup(entry->d_name);
                 lwi->in_subfolder = strdup(look_in_text);
-                lwi->size = (char*)malloc(1024);
-                format_commas(lstat.st_size, lwi->size);
+                lwi->size = lstat.st_size;
                 finder_mutex_lock(fi->list_mutex);
                 finder_list_add_item(fi->work_to_main_list, (ITYPE)lwi);
                 finder_mutex_unlock(fi->list_mutex);

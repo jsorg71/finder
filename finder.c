@@ -264,7 +264,6 @@ main_process_work_item(struct finder_info* fi, struct work_item* wi)
         gui_add_one(fi, wi->filename, wi->in_subfolder, wi->size, wi->modified);
         free(wi->filename);
         free(wi->in_subfolder);
-        free(wi->size);
         free(wi->modified);
     }
     //writeln(fi, "main_process_work_item: free item");
@@ -313,3 +312,29 @@ event_callback(struct finder_info* fi)
     return 0;
 }
 
+/*****************************************************************************/
+int
+format_commas(FINDER_I64 n, char* out)
+{
+    int c;
+    char buf[64];
+    char* p;
+
+    if (out == NULL)
+    {
+        return 1;
+    }
+    snprintf(buf, 64, "%lld", (long long)n);
+    c = 2 - (strlen(buf) % 3);
+    for (p = buf; *p != 0; p++)
+    {
+       *(out++) = *p;
+       if (c == 1)
+       {
+           *(out++) = ',';
+       }
+       c = (c + 1) % 3;
+    }
+    *(--out) = 0;
+    return 0;
+}
