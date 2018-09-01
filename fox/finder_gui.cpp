@@ -48,6 +48,7 @@ struct app_data
     FXMenuPane* helpmenu;
     FXStatusBar* sb;
     FXLabel* sbl1;
+    FXMenuPane* fl_popup;
     class MsgObject* mo;
     int width;
     int height;
@@ -88,6 +89,7 @@ public:
     long onEventTimeout(FXObject* obj, FXSelector sel, void* ptr);
     long onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr);
     long onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr);
+    long onFLRightMouse(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
     enum _ids
     {
@@ -549,6 +551,22 @@ MsgObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
     return 1;
 }
 
+/*****************************************************************************/
+long
+MsgObject::onFLRightMouse(FXObject* obj, FXSelector sel, void* ptr)
+{
+    FXEvent* event;
+
+    writeln(ap->fi, "MsgObject::onFLRightMouse:");
+    event = (FXEvent*)ptr;
+    if (!event->moved)
+    {
+        ap->fl_popup->popup(NULL, event->root_x, event->root_y);
+        ap->app->runModalWhileShown(ap->fl_popup);
+    }
+    return 1;
+}
+
 FXDEFMAP(MsgObject) MsgObjectMap[] =
 {
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_BUTTON, MsgObject::onPress),
@@ -561,7 +579,9 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout),
     FXMAPFUNC(SEL_IO_READ, MsgObject::ID_SOCKET, MsgObject::onEvent1),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeader),
-    FXMAPFUNC(SEL_DELETED, MsgObject::ID_FOLDINGLIST, MsgObject::onFoldingListItemDelete)
+    FXMAPFUNC(SEL_DELETED, MsgObject::ID_FOLDINGLIST, MsgObject::onFoldingListItemDelete),
+    FXMAPFUNC(SEL_RIGHTBUTTONRELEASE, MsgObject::ID_FOLDINGLIST, MsgObject::onFLRightMouse)
+
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -660,6 +680,9 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->flh = ap->fl->getHeader();
     ap->flh->setTarget(ap->mo);
     ap->flh->setSelector(MsgObject::ID_FOLDINGLISTHEADER);
+
+    ap->fl_popup = new FXMenuPane(ap->fl);
+    new FXMenuSeparator(ap->fl_popup);
 
     flags = LAYOUT_SIDE_TOP | LAYOUT_FILL_X;
     ap->topdock = new FXDockSite(ap->mw, flags);
