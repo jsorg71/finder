@@ -772,7 +772,17 @@ main(int argc, char** argv)
 {
     struct finder_info* fi;
 
-    gui_create(argc, argv, &fi);
+    if (sizeof(FINDER_I64) != 8)
+    {
+        printf("main: bad FINDER_I64\n");
+        return 1;
+    }
+    if (sizeof(FINDER_INTPTR) != sizeof(void*))
+    {
+        printf("main: bad FINDER_INTPTR\n");
+        return 1;
+    }
+    gui_create(argc, argv, &fi); 
     gui_main_loop(fi);
     gui_delete(fi);
     return 0;
