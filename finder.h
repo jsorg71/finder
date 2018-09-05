@@ -59,6 +59,8 @@ int
 event_callback(struct finder_info* fi);
 int
 format_commas(FINDER_I64 n, char* out);
+int
+get_mstime(void);
 
 #ifdef __cplusplus
 }

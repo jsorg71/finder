@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/time.h>
 
 #include "finder.h"
 #include "finder_gui.h"
@@ -338,3 +339,14 @@ format_commas(FINDER_I64 n, char* out)
     *(--out) = 0;
     return 0;
 }
+
+/*****************************************************************************/
+int
+get_mstime(void)
+{
+    struct timeval tp;
+
+    gettimeofday(&tp, 0);
+    return (tp.tv_sec * 1000) + (tp.tv_usec / 1000);
+}
+

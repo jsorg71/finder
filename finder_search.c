@@ -348,7 +348,10 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             }
             if (fi->include_subfolders)
             {
-                if ((entry->d_name[0] == '.') && (fi->show_hidden == 0))
+                if ((entry->d_name[0] == '.') && fi->show_hidden == 0)
+                //{
+                //}
+                //else
                 {
                     continue;
                 }
@@ -360,7 +363,10 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
         }
         else
         {
-            if ((entry->d_name[0] == '.') && (fi->show_hidden == 0))
+            if ((entry->d_name[0] == '.') && fi->show_hidden == 0)
+            //{
+            //}
+            //else
             {
                 continue;
             }

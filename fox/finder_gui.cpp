@@ -54,6 +54,7 @@ struct app_data
     int height;
     void* gui_event;
     int sort_order;
+    int last_header_click_mstime;
 };
 
 class ItemObject : public FXObject
@@ -63,6 +64,7 @@ public:
     FXString filename;
     FXString in_subfolder;
     FINDER_I64 size;
+    FXString size_text;
     FXString modified;
 };
 
@@ -88,8 +90,11 @@ public:
     long onEvent1(FXObject* obj, FXSelector sel, void* ptr);
     long onEventTimeout(FXObject* obj, FXSelector sel, void* ptr);
     long onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr);
+    long onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr);
     long onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr);
     long onFLRightMouse(FXObject* obj, FXSelector sel, void* ptr);
+    long onCopyFilename(FXObject* obj, FXSelector sel, void* ptr);
+    long onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
     enum _ids
     {
@@ -103,6 +108,8 @@ public:
         ID_ABOUT,
         ID_SOCKET,
         ID_FOLDINGLISTHEADER,
+        ID_COPY_FILENAME,
+        ID_COPY_FULL_PATH,
         ID_LAST
     } ids;
 };
@@ -116,7 +123,75 @@ MsgObject::MsgObject()
 long
 MsgObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
 {
+    //if (obj == ap->flh)
+    //{
+    //    writeln(ap->fi, "onDefault obj %p sel %d ptr %p", obj, sel, ptr); 
+    //}
     return FXObject::onDefault(obj, sel, ptr);
+}
+
+/*****************************************************************************/
+static int
+save_combo(struct app_data* ap, FXComboBox* cb,
+           const char* section, const char* key_prefix)
+{
+    FXString str1;
+    FXString str2;
+    FXint index;
+    FXint count;
+    FXRegistry* reg;
+
+    reg = &(ap->app->reg());
+    str1 = cb->getText();
+    index = cb->findItem(str1);
+    if (index < 0)
+    {
+        cb->insertItem(0, str1);
+    }
+    else if (index > 0)
+    {
+        cb->removeItem(index);
+        cb->insertItem(0, str1);
+    }
+    cb->setCurrentItem(0, TRUE);
+    for (index = 0; index < 100; index++)
+    {
+        str2.format("%s%2.2d", key_prefix, index);
+        reg->deleteEntry(section, str2.text());
+    }
+    count = cb->getNumItems();
+    if (count > 100)
+    {
+        count = 100;
+    }
+    for (index = 0; index < count; index++)
+    {
+        str1 = cb->getItem(index);
+        str2.format("%s%2.2d", key_prefix, index);
+        reg->writeStringEntry(section, str2.text(), str1.text());
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static int
+save_checkbox(struct app_data* ap, FXCheckButton* cb,
+              const char* section, const char* key, FXbool default_checked)
+{
+    FXbool bool1;
+    FXRegistry* reg;
+
+    reg = &(ap->app->reg());
+    bool1 = cb->getCheck();
+    if ((!bool1) == (!default_checked))
+    {
+        reg->deleteEntry(section, key);
+    }
+    else
+    {
+        reg->writeStringEntry(section, key, default_checked ? "0" : "1");
+    }
+    return 1;
 }
 
 /*****************************************************************************/
@@ -141,6 +216,13 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         ap->fi->search_in_case_sensitive = ap->cb5->getCheck();
         str1 = ap->combo3->getText();
         snprintf(ap->fi->text, sizeof(ap->fi->text), "%s", str1.text());
+
+        save_combo(ap, ap->combo1, "NameLocation", "Named");
+        save_combo(ap, ap->combo2, "NameLocation", "LookIn");
+        save_checkbox(ap, ap->cb1, "NameLocation", "IncludeSubfolders", 1);
+        save_checkbox(ap, ap->cb2, "NameLocation", "CaseSensitiveSearch", 0);
+        save_checkbox(ap, ap->cb3, "NameLocation", "ShowHiddenFiles", 0);
+
         start_find(ap->fi);
         ap->but1->disable();
         ap->but2->enable();
@@ -285,7 +367,6 @@ MsgObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "MsgObject::onEvent1:");
     finder_event_clear(ap->gui_event);
     ap->app->addTimeout(ap->mo, MsgObject::ID_MAINWINDOW1, 0, NULL);
     return 1;
@@ -295,7 +376,6 @@ MsgObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onEventTimeout(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "MsgObject::onEventTimeout:");
     event_callback(ap->fi);
     return 1;
 }
@@ -308,9 +388,9 @@ sort00(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->filename < bo->filename)
@@ -334,9 +414,9 @@ sort01(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->filename < bo->filename)
@@ -360,9 +440,9 @@ sort10(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->in_subfolder < bo->in_subfolder)
@@ -386,9 +466,9 @@ sort11(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->in_subfolder < bo->in_subfolder)
@@ -412,9 +492,9 @@ sort20(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->size < bo->size)
@@ -438,9 +518,9 @@ sort21(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->size < bo->size)
@@ -464,9 +544,9 @@ sort30(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->modified < bo->modified)
@@ -490,9 +570,9 @@ sort31(const FXFoldingItem* a, const FXFoldingItem* b)
     ItemObject* bo;
 
     ao = (ItemObject*)(a->getData());
-    bo = (ItemObject*)(b->getData());
     if (ao != NULL)
     {
+        bo = (ItemObject*)(b->getData());
         if (bo != NULL)
         {
             if (ao->modified < bo->modified)
@@ -532,6 +612,104 @@ MsgObject::onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr)
     return 1;
 }
 
+
+/*****************************************************************************/
+int
+best_fit_column(struct app_data* ap, int column)
+{
+    int width;
+    int max_width;
+    FXFont* ft;
+    ItemObject* io;
+    FXFoldingItem* folding_item;
+
+    ft = ap->fl->getFont();
+    switch (column)
+    {
+        case 0:
+            max_width = ft->getTextWidth("Name");
+            folding_item = ap->fl->getFirstItem();
+            while (folding_item != NULL)
+            {
+                io = (ItemObject*)(folding_item->getData());
+                width = ft->getTextWidth(io->filename);
+                if (width > max_width)
+                {
+                    max_width = width;
+                }
+                folding_item = folding_item->getNext();
+            }
+            ap->fl->setHeaderSize(0, max_width + 8);
+            break;
+        case 1:
+            max_width = ft->getTextWidth("In Subfolder");
+            folding_item = ap->fl->getFirstItem();
+            while (folding_item != NULL)
+            {
+                io = (ItemObject*)(folding_item->getData());
+                width = ft->getTextWidth(io->in_subfolder);
+                if (width > max_width)
+                {
+                    max_width = width;
+                }
+                folding_item = folding_item->getNext();
+            }
+            ap->fl->setHeaderSize(1, max_width + 8);
+            break;
+        case 2:
+            max_width = ft->getTextWidth("Size");
+            folding_item = ap->fl->getFirstItem();
+            while (folding_item != NULL)
+            {
+                io = (ItemObject*)(folding_item->getData());
+                width = ft->getTextWidth(io->size_text);
+                if (width > max_width)
+                {
+                    max_width = width;
+                }
+                folding_item = folding_item->getNext();
+            }
+            ap->fl->setHeaderSize(2, max_width + 8);
+
+            break;
+        case 3:
+            max_width = ft->getTextWidth("Modified");
+            folding_item = ap->fl->getFirstItem();
+            while (folding_item != NULL)
+            {
+                io = (ItemObject*)(folding_item->getData());
+                width = ft->getTextWidth(io->modified);
+                if (width > max_width)
+                {
+                    max_width = width;
+                }
+                folding_item = folding_item->getNext();
+            }
+            ap->fl->setHeaderSize(3, max_width + 8);
+            break;
+    }
+    return 0; 
+}
+
+/*****************************************************************************/
+long
+MsgObject::onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr)
+{
+    int time;
+    int diff;
+    int index;
+
+    time = get_mstime();
+    diff = time - ap->last_header_click_mstime;
+    if ((diff > 0) && (diff < 500))
+    {
+        index = (int)(FXival)ptr;
+        best_fit_column(ap, index);
+    }
+    ap->last_header_click_mstime = time;
+    return 1;
+}
+
 /*****************************************************************************/
 long
 MsgObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
@@ -556,13 +734,84 @@ long
 MsgObject::onFLRightMouse(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event;
+    FXFoldingItem* rci;
 
     writeln(ap->fi, "MsgObject::onFLRightMouse:");
     event = (FXEvent*)ptr;
-    if (!event->moved)
+    if (event->moved == FALSE)
     {
-        ap->fl_popup->popup(NULL, event->root_x, event->root_y);
-        ap->app->runModalWhileShown(ap->fl_popup);
+        rci = ap->fl->getItemAt(event->click_x, event->click_y);
+        if (rci != NULL)
+        {
+            if (ap->fl->isItemSelected(rci) == FALSE)
+            {
+                ap->fl->killSelection(TRUE);
+                ap->fl->setCurrentItem(rci, TRUE);
+                ap->fl->selectItem(rci, TRUE); 
+            }
+            ap->fl_popup->popup(NULL, event->root_x, event->root_y); 
+            ap->app->runModalWhileShown(ap->fl_popup);
+        }
+    }
+    return 1;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
+{
+    FXFoldingItem* fi;
+    ItemObject* io;
+    FXString str1;
+
+    writeln(ap->fi, "MsgObject::onCopyFilename:");
+    fi = ap->fl->getFirstItem();
+    while (fi != NULL)
+    {
+        if (fi->isSelected())
+        {
+            io = (ItemObject*)(fi->getData());
+            str1 = io->filename;
+            writeln(ap->fi, "%s", str1.text());
+        }
+        fi = fi->getNext(); 
+    }
+    return 1; 
+}
+
+/*****************************************************************************/
+long
+MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
+{
+    FXFoldingItem* fi;
+    ItemObject* io;
+    FXString str1;
+
+    writeln(ap->fi, "MsgObject::onCopyFullPath:");
+    fi = ap->fl->getFirstItem();
+    while (fi != NULL)
+    {
+        if (fi->isSelected())
+        {
+            io = (ItemObject*)(fi->getData());
+            if (io->in_subfolder.length() < 1)
+            {
+                str1 = ap->fi->look_in;
+                str1 += "/";
+                str1 += io->filename;
+                writeln(ap->fi, "%s", str1.text());
+            }
+            else
+            {
+                str1 = ap->fi->look_in;
+                str1 += "/";
+                str1 += io->in_subfolder;
+                str1 += "/";
+                str1 += io->filename;
+                writeln(ap->fi, "%s", str1.text());
+            }
+        }
+        fi = fi->getNext(); 
     }
     return 1;
 }
@@ -579,9 +828,11 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout),
     FXMAPFUNC(SEL_IO_READ, MsgObject::ID_SOCKET, MsgObject::onEvent1),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeader),
+    FXMAPFUNC(SEL_CLICKED, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeaderClick),
     FXMAPFUNC(SEL_DELETED, MsgObject::ID_FOLDINGLIST, MsgObject::onFoldingListItemDelete),
-    FXMAPFUNC(SEL_RIGHTBUTTONRELEASE, MsgObject::ID_FOLDINGLIST, MsgObject::onFLRightMouse)
-
+    FXMAPFUNC(SEL_RIGHTBUTTONRELEASE, MsgObject::ID_FOLDINGLIST, MsgObject::onFLRightMouse),
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_COPY_FILENAME, MsgObject::onCopyFilename),
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_COPY_FULL_PATH, MsgObject::onCopyFullPath)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -631,12 +882,14 @@ gui_create(int argc, char** argv, struct finder_info** fi)
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
     ap->combo1 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
+    ap->combo1->setNumVisible(10);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
     ap->label2 = new FXLabel(ap->tabframe1, "Look &in:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
     ap->combo2 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
+    ap->combo2->setNumVisible(10);
 
     sel = MsgObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
@@ -682,7 +935,11 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->flh->setSelector(MsgObject::ID_FOLDINGLISTHEADER);
 
     ap->fl_popup = new FXMenuPane(ap->fl);
+    sel = MsgObject::ID_COPY_FILENAME;
+    new FXMenuCommand(ap->fl_popup, "&Copy filename\t\tCopy the filename to clipboard.", NULL, ap->mo, sel);
     new FXMenuSeparator(ap->fl_popup);
+    sel = MsgObject::ID_COPY_FULL_PATH;
+    new FXMenuCommand(ap->fl_popup, "&Copy full path\t\tCopy the full path to clipboard.", NULL, ap->mo, sel);
 
     flags = LAYOUT_SIDE_TOP | LAYOUT_FILL_X;
     ap->topdock = new FXDockSite(ap->mw, flags);
@@ -722,6 +979,53 @@ gui_create(int argc, char** argv, struct finder_info** fi)
 
 /*****************************************************************************/
 static int
+load_stuff(struct app_data* ap)
+{
+    FXint index;
+    FXRegistry* reg;
+    FXString key;
+    FXString val;
+
+    reg = &(ap->app->reg());
+    for (index = 0; index < 100; index++)
+    {
+        key.format("Named%2.2d", index);
+        val = reg->readStringEntry("NameLocation", key.text(), "_NoWay_");
+        if (val != "_NoWay_")
+        {
+            ap->combo1->appendItem(val);
+        }
+    }
+    for (index = 0; index < 100; index++)
+    {
+        key.format("LookIn%2.2d", index);
+        val = reg->readStringEntry("NameLocation", key.text(), "_NoWay_");
+        if (val != "_NoWay_")
+        {
+            ap->combo2->appendItem(val);
+        }
+    }
+    val = reg->readStringEntry("NameLocation", "IncludeSubfolders", "_NoWay_");
+    if (val != "_NoWay_")
+    {
+        ap->cb1->setCheck(atoi(val.text()));
+    }
+    val = reg->readStringEntry("NameLocation", "CaseSensitiveSearch", "_NoWay_");
+    if (val != "_NoWay_")
+    {
+        ap->cb2->setCheck(atoi(val.text()));
+    }
+    val = reg->readStringEntry("NameLocation", "ShowHiddenFiles", "_NoWay_");
+    if (val != "_NoWay_")
+    {
+        ap->cb3->setCheck(atoi(val.text()));
+    }
+
+    return 0; 
+}
+
+/*****************************************************************************/
+static int
 gui_main_loop(struct finder_info* fi)
 {
     struct app_data* ap;
@@ -729,6 +1033,7 @@ gui_main_loop(struct finder_info* fi)
     ap = (struct app_data*)(fi->gui_obj);
     writeln(ap->fi, "gui_main_loop");
     gui_init(ap->fi);
+    load_stuff(ap);
     ap->app->run();
     gui_deinit(ap->fi);
     return 0;
@@ -742,6 +1047,7 @@ gui_delete(struct finder_info* fi)
 
     ap = (struct app_data*)(fi->gui_obj);
     writeln(ap->fi, "gui_delete");
+    ap->app->exit(); /* close display, write registry */
     delete ap->app;
     delete ap->mo;
     delete ap->mutex1;
@@ -794,7 +1100,12 @@ gui_find_done(struct finder_info* fi)
 {
     struct app_data* ap;
     int count;
+    int width;
+    int max_width[4];
     FXString str1;
+    FXFont* ft;
+    ItemObject* io;
+    FXFoldingItem* folding_item;
 
     writeln(fi, "gui_find_done");
     ap = (struct app_data*)(fi->gui_obj);
@@ -803,7 +1114,45 @@ gui_find_done(struct finder_info* fi)
     count = ap->fl->getNumItems();
     str1.format("%d Items found", count);
     ap->sbl1->setText(str1);
-    return 0;
+
+    /* resize the columns */
+    ft = ap->fl->getFont();
+    max_width[0] = ft->getTextWidth("Name");
+    max_width[1] = ft->getTextWidth("In Subfolder");
+    max_width[2] = ft->getTextWidth("Size");
+    max_width[3] = ft->getTextWidth("Modified");
+    folding_item = ap->fl->getFirstItem();
+    while (folding_item != NULL)
+    {
+        io = (ItemObject*)(folding_item->getData());
+        width = ft->getTextWidth(io->filename);
+        if (width > max_width[0])
+        {
+            max_width[0] = width;
+        }
+        width = ft->getTextWidth(io->in_subfolder);
+        if (width > max_width[1])
+        {
+            max_width[1] = width;
+        }
+        width = ft->getTextWidth(io->size_text);
+        if (width > max_width[2])
+        {
+            max_width[2] = width;
+        }
+        width = ft->getTextWidth(io->modified);
+        if (width > max_width[3])
+        {
+            max_width[3] = width;
+        }
+        folding_item = folding_item->getNext();
+    }
+    ap->fl->setHeaderSize(0, max_width[0] + 8);
+    ap->fl->setHeaderSize(1, max_width[1] + 8);
+    ap->fl->setHeaderSize(2, max_width[2] + 8);
+    ap->fl->setHeaderSize(3, max_width[3] + 8);
+
+    return 0; 
 }
 
 /*****************************************************************************/
@@ -818,25 +1167,25 @@ gui_add_one(struct finder_info* fi, const char* filename,
     ItemObject* io;
     char text[128];
 
+    io = new ItemObject();
+
     //writeln(fi, "gui_add_one");
     ap = (struct app_data*)(fi->gui_obj);
     str1 = filename;
+    io->filename = filename;
     str1 += "\t";
     str1 += in_subfolder;
+    io->in_subfolder = in_subfolder;
     str1 += "\t";
     format_commas(size, text);
+    io->size = size;
+    io->size_text = text;
     str1 += text;
     str1 += "\t";
     str1 += modified;
+    io->modified = modified;
     folding_item = new FXFoldingItem(str1);
     ap->fl->appendItem(NULL, folding_item, TRUE);
-
-    io = new ItemObject();
-    io->filename = filename;
-    io->in_subfolder = in_subfolder;
-    io->size = size;
-    io->modified = modified;
     folding_item->setData(io);
-
     return 0;
 }
