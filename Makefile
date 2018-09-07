@@ -1,7 +1,7 @@
 
 OBJS=finder.o finder_event.o finder_list.o finder_thread.o finder_search.o finder_file.o
 
-CFLAGS=-O2 -Wall -Ifox -fvisibility=hidden -fPIC
+CFLAGS=-O2 -g -Wall -Ifox -fvisibility=hidden -fPIC
 
 LDFLAGS=
 
