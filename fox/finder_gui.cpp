@@ -55,6 +55,9 @@ struct app_data
     void* gui_event;
     int sort_order;
     int last_header_click_mstime;
+
+    FXDragType dnd_types[8];
+
 };
 
 class ItemObject : public FXObject
@@ -92,10 +95,17 @@ public:
     long onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr);
     long onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr);
     long onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr);
-    long onFLRightMouse(FXObject* obj, FXSelector sel, void* ptr);
+    long onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr);
+    long onFLLeftMouseDown(FXObject* obj, FXSelector sel, void* ptr);
+//    long onFLMouseMove(FXObject* obj, FXSelector sel, void* ptr);
     long onCopyFilename(FXObject* obj, FXSelector sel, void* ptr);
     long onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr);
+    long onClose(FXObject* obj, FXSelector sel, void* ptr);
+    long onClipboardLost(FXObject* obj, FXSelector sel, void* ptr);
+    long onClipboardGained(FXObject* obj, FXSelector sel, void* ptr);
+    long onClipboardRequest(FXObject* obj, FXSelector sel, void* ptr);
     struct app_data* ap;
+    FXString clipstr;
     enum _ids
     {
         ID_BUTTON = 0,
@@ -125,7 +135,7 @@ MsgObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
 {
     //if (obj == ap->flh)
     //{
-    //    writeln(ap->fi, "onDefault obj %p sel %d ptr %p", obj, sel, ptr); 
+    //    writeln(ap->fi, "onDefault obj %p sel %d ptr %p", obj, sel, ptr);
     //}
     return FXObject::onDefault(obj, sel, ptr);
 }
@@ -223,6 +233,7 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         save_checkbox(ap, ap->cb2, "NameLocation", "CaseSensitiveSearch", 0);
         save_checkbox(ap, ap->cb3, "NameLocation", "ShowHiddenFiles", 0);
 
+        //ap->fl->hide();
         start_find(ap->fi);
         ap->but1->disable();
         ap->but2->enable();
@@ -235,7 +246,7 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     if (obj == ap->but3)
     {
         writeln(ap->fi, "but3");
-        ap->app->stop(0);
+        //ap->app->stop(0);
     }
     if (obj == ap->but4)
     {
@@ -255,8 +266,7 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
 long
 MsgObject::onTabChange(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(ap->fi, "onTabChange obj %p sel %d ptr %p", obj, sel, ptr);
-    return 0;
+    return 1;
 }
 
 /*****************************************************************************/
@@ -343,8 +353,8 @@ long
 MsgObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 {
     writeln(ap->fi, "MsgObject::onCmdExit:");
-    ap->app->stop(0);
-    return 0;
+    ap->mw->close(TRUE);
+    return 1;
 }
 
 /*****************************************************************************/
@@ -688,7 +698,7 @@ best_fit_column(struct app_data* ap, int column)
             ap->fl->setHeaderSize(3, max_width + 8);
             break;
     }
-    return 0; 
+    return 0;
 }
 
 /*****************************************************************************/
@@ -731,12 +741,12 @@ MsgObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onFLRightMouse(FXObject* obj, FXSelector sel, void* ptr)
+MsgObject::onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event;
     FXFoldingItem* rci;
 
-    writeln(ap->fi, "MsgObject::onFLRightMouse:");
+    writeln(ap->fi, "MsgObject::onFLRightMouseUp:");
     event = (FXEvent*)ptr;
     if (event->moved == FALSE)
     {
@@ -747,9 +757,9 @@ MsgObject::onFLRightMouse(FXObject* obj, FXSelector sel, void* ptr)
             {
                 ap->fl->killSelection(TRUE);
                 ap->fl->setCurrentItem(rci, TRUE);
-                ap->fl->selectItem(rci, TRUE); 
+                ap->fl->selectItem(rci, TRUE);
             }
-            ap->fl_popup->popup(NULL, event->root_x, event->root_y); 
+            ap->fl_popup->popup(NULL, event->root_x, event->root_y);
             ap->app->runModalWhileShown(ap->fl_popup);
         }
     }
@@ -765,6 +775,7 @@ MsgObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
     FXString str1;
 
     writeln(ap->fi, "MsgObject::onCopyFilename:");
+    clipstr = "";
     fi = ap->fl->getFirstItem();
     while (fi != NULL)
     {
@@ -772,11 +783,16 @@ MsgObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
         {
             io = (ItemObject*)(fi->getData());
             str1 = io->filename;
-            writeln(ap->fi, "%s", str1.text());
+            if (clipstr != "")
+            {
+                clipstr += "\n";
+            }
+            clipstr += str1;
         }
-        fi = fi->getNext(); 
+        fi = fi->getNext();
     }
-    return 1; 
+    ap->mw->acquireClipboard(ap->dnd_types, 1);
+    return 1;
 }
 
 /*****************************************************************************/
@@ -788,6 +804,7 @@ MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
     FXString str1;
 
     writeln(ap->fi, "MsgObject::onCopyFullPath:");
+    clipstr = "";
     fi = ap->fl->getFirstItem();
     while (fi != NULL)
     {
@@ -799,7 +816,6 @@ MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
                 str1 = ap->fi->look_in;
                 str1 += "/";
                 str1 += io->filename;
-                writeln(ap->fi, "%s", str1.text());
             }
             else
             {
@@ -808,13 +824,106 @@ MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
                 str1 += io->in_subfolder;
                 str1 += "/";
                 str1 += io->filename;
-                writeln(ap->fi, "%s", str1.text());
             }
+            if (clipstr != "")
+            {
+                clipstr += "\n";
+            }
+            clipstr += str1;
         }
-        fi = fi->getNext(); 
+        fi = fi->getNext();
+    }
+    ap->mw->acquireClipboard(ap->dnd_types, 1);
+    return 1;
+}
+
+/*****************************************************************************/
+/* return 0 can close, 1 can not close */
+long
+MsgObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
+{
+    FXuint rv;
+
+    writeln(ap->fi, "MsgObject::onClose:");
+    rv = FXMessageBox::warning(ap->mw, MBOX_YES_NO, "Question", "Do you want to exit?");
+    if (rv == MBOX_CLICKED_YES)
+    {
+        ap->fl->clearItems(TRUE);
+        return 0;
     }
     return 1;
 }
+
+/*****************************************************************************/
+long
+MsgObject::onClipboardLost(FXObject* obj, FXSelector sel, void* ptr)
+{
+    writeln(ap->fi, "MsgObject::onClipboardLost:");
+    return 1;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onClipboardGained(FXObject* obj, FXSelector sel, void* ptr)
+{
+    writeln(ap->fi, "MsgObject::onClipboardGained:");
+    return 1;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onClipboardRequest(FXObject* obj, FXSelector sel, void* ptr)
+{
+    FXuchar* data;
+    FXuint len;
+
+    writeln(ap->fi, "MsgObject::onClipboardRequest:");
+    len = clipstr.length() + 1;
+    FXMALLOC(&data, FXuchar, len);
+    memcpy(data, clipstr.text(), len);
+    data[len] = 0;
+    ap->mw->setDNDData(FROM_CLIPBOARD, ap->dnd_types[0], data, len);
+    return 1;
+}
+
+/*****************************************************************************/
+long
+MsgObject::onFLLeftMouseDown(FXObject* obj, FXSelector sel, void* ptr)
+{
+    FXEvent* event;
+    int width;
+    FXFoldingItem* fi;
+
+    //writeln(ap->fi, "MsgObject::onFLLeftMouseDown:");
+    width = ap->fl->getHeaderSize(0);
+    width += ap->fl->getHeaderSize(1);
+    width += ap->fl->getHeaderSize(2);
+    width += ap->fl->getHeaderSize(3);
+    //writeln(ap->fi, "  width %d", width);
+    event = (FXEvent*)ptr;
+    //writeln(ap->fi, "click_x %d click_y %d", event->click_x, event->click_y);
+    if (event->click_x > width)
+    {
+        return 0;
+    }
+    fi = ap->fl->getItemAt(event->click_x, event->click_y);
+    if (fi != NULL)
+    {
+        if (fi->isSelected() && ((event->state & SHIFTMASK) == 0) && ((event->state & CONTROLMASK) == 0))
+        {
+            return 0;
+        }
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+//long
+//MsgObject::onFLMouseMove(FXObject* obj, FXSelector sel, void* ptr)
+//{
+//    writeln(ap->fi, "MsgObject::onFLMouseMove:");
+//    return 0;
+//}
 
 FXDEFMAP(MsgObject) MsgObjectMap[] =
 {
@@ -830,9 +939,15 @@ FXDEFMAP(MsgObject) MsgObjectMap[] =
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeader),
     FXMAPFUNC(SEL_CLICKED, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeaderClick),
     FXMAPFUNC(SEL_DELETED, MsgObject::ID_FOLDINGLIST, MsgObject::onFoldingListItemDelete),
-    FXMAPFUNC(SEL_RIGHTBUTTONRELEASE, MsgObject::ID_FOLDINGLIST, MsgObject::onFLRightMouse),
+    FXMAPFUNC(SEL_RIGHTBUTTONRELEASE, MsgObject::ID_FOLDINGLIST, MsgObject::onFLRightMouseUp),
+    FXMAPFUNC(SEL_LEFTBUTTONPRESS, MsgObject::ID_FOLDINGLIST, MsgObject::onFLLeftMouseDown),
+    //FXMAPFUNC(SEL_MOTION, MsgObject::ID_FOLDINGLIST, MsgObject::onFLMouseMove),
     FXMAPFUNC(SEL_COMMAND, MsgObject::ID_COPY_FILENAME, MsgObject::onCopyFilename),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_COPY_FULL_PATH, MsgObject::onCopyFullPath)
+    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_COPY_FULL_PATH, MsgObject::onCopyFullPath),
+    FXMAPFUNC(SEL_CLOSE, MsgObject::ID_MAINWINDOW, MsgObject::onClose),
+    FXMAPFUNC(SEL_CLIPBOARD_LOST, MsgObject::ID_MAINWINDOW, MsgObject::onClipboardLost),
+    FXMAPFUNC(SEL_CLIPBOARD_GAINED, MsgObject::ID_MAINWINDOW, MsgObject::onClipboardGained),
+    FXMAPFUNC(SEL_CLIPBOARD_REQUEST, MsgObject::ID_MAINWINDOW, MsgObject::onClipboardRequest)
 };
 
 FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
@@ -918,6 +1033,7 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->but1 = new FXButton(ap->mw, "&Find", NULL, ap->mo, sel, flags);
     ap->but2 = new FXButton(ap->mw, "&Stop", NULL, ap->mo, sel, flags);
     ap->but2->disable();
+    sel = MsgObject::ID_EXIT;
     ap->but3 = new FXButton(ap->mw, "Exit", NULL, ap->mo, sel, flags);
 
     flags = LAYOUT_EXPLICIT;
@@ -974,6 +1090,8 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ih = (FXInputHandle)finder_event_get_wait_obj(ap->gui_event);
     ap->app->addInput(ih, INPUT_READ, ap->mo, MsgObject::ID_SOCKET);
 
+    ap->dnd_types[0] = ap->app->registerDragType("UTF8_STRING");
+
     return 0;
 }
 
@@ -1021,7 +1139,7 @@ load_stuff(struct app_data* ap)
         ap->cb3->setCheck(atoi(val.text()));
     }
 
-    return 0; 
+    return 0;
 }
 
 /*****************************************************************************/
@@ -1088,7 +1206,7 @@ main(int argc, char** argv)
         printf("main: bad FINDER_INTPTR\n");
         return 1;
     }
-    gui_create(argc, argv, &fi); 
+    gui_create(argc, argv, &fi);
     gui_main_loop(fi);
     gui_delete(fi);
     return 0;
@@ -1114,6 +1232,8 @@ gui_find_done(struct finder_info* fi)
     count = ap->fl->getNumItems();
     str1.format("%d Items found", count);
     ap->sbl1->setText(str1);
+
+    //ap->fl->show();
 
     /* resize the columns */
     ft = ap->fl->getFont();
@@ -1152,7 +1272,7 @@ gui_find_done(struct finder_info* fi)
     ap->fl->setHeaderSize(2, max_width[2] + 8);
     ap->fl->setHeaderSize(3, max_width[3] + 8);
 
-    return 0; 
+    return 0;
 }
 
 /*****************************************************************************/
@@ -1185,6 +1305,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
     str1 += modified;
     io->modified = modified;
     folding_item = new FXFoldingItem(str1);
+    //folding_item->setDraggable(TRUE);
     ap->fl->appendItem(NULL, folding_item, TRUE);
     folding_item->setData(io);
     return 0;
