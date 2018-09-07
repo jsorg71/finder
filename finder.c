@@ -64,6 +64,7 @@ gui_deinit(struct finder_info* fi)
     writeln(fi, "gui_deinit");
     finder_mutex_delete(fi->list_mutex);
     finder_event_delete(fi->work_term_event);
+    finder_event_delete(fi->main_to_work_event);
     finder_list_delete(fi->main_to_work_list);
     finder_list_delete(fi->work_to_main_list);
     return 0;
