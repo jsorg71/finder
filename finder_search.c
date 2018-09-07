@@ -180,9 +180,9 @@ find_in_file(int fd, struct finder_info* fi, int* afound_in_file)
     while (readed > 0)
     {
         count = readed - text_bytes;
-        for (index = 0; index < count; index++)
+        if (fi->search_in_case_sensitive)
         {
-            if (fi->search_in_case_sensitive)
+            for (index = 0; index < count; index++)
             {
                 if (lmemcmp(fi->text, data + index, text_bytes) == 0)
                 {
@@ -190,7 +190,10 @@ find_in_file(int fd, struct finder_info* fi, int* afound_in_file)
                     break;
                 }
             }
-            else
+        }
+        else
+        {
+            for (index = 0; index < count; index++)
             {
                 if (lcasememcmp(fi->text, data + index, text_bytes) == 0)
                 {
