@@ -9,22 +9,6 @@
 #include "finder_event.h"
 #include "finder_gui.h"
 
-struct app_data
-{
-    struct finder_info* fi;
-    FXTextField* text1;
-    FXDockSite* topdock;
-    FXToolBarShell* tbs;
-    FXMenuBar* mb;
-    FXMenuPane* filemenu;
-    FXMenuPane* helpmenu;
-    FXStatusBar* sb;
-    FXLabel* sbl1;
-    FXMenuPane* fl_popup;
-    class MsgObject* mo;
-    void* gui_event;
-};
-
 class ItemObject : public FXObject
 {
     FXDECLARE(ItemObject)
@@ -42,11 +26,12 @@ FXDEFMAP(ItemObject) ItemObjectMap[] =
 
 FXIMPLEMENT(ItemObject, FXObject, ItemObjectMap, ARRAYNUMBER(ItemObjectMap))
 
-class MsgObject : public FXObject
+class GUIObject : public FXObject
 {
-    FXDECLARE(MsgObject)
+    FXDECLARE(GUIObject)
 public:
-    MsgObject();
+    GUIObject();
+    virtual ~GUIObject();
     long onDefault(FXObject* obj, FXSelector sel, void* ptr);
     long onPress(FXObject* obj, FXSelector sel, void* ptr);
     long onTabChange(FXObject* obj, FXSelector sel, void* ptr);
@@ -61,7 +46,6 @@ public:
     long onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr);
     long onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr);
     long onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr);
-    long onFLLeftMouseDown(FXObject* obj, FXSelector sel, void* ptr);
     long onCopyFilename(FXObject* obj, FXSelector sel, void* ptr);
     long onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr);
     long onClose(FXObject* obj, FXSelector sel, void* ptr);
@@ -89,8 +73,7 @@ public:
         ID_LAST
     };
 public:
-    struct app_data* ap;
-
+    struct finder_info* m_fi;
     FXApp* m_app;
     FXMutex* m_mutex1;
     FXMainWindow* m_mw;
@@ -119,21 +102,28 @@ public:
     FXComboBox* m_combo1;
     FXComboBox* m_combo2;
     FXComboBox* m_combo3;
-
+    FXTextField* m_text1;
+    FXDockSite* m_topdock;
+    FXToolBarShell* m_tbs;
+    FXMenuBar* m_mb;
+    FXMenuPane* m_filemenu;
+    FXMenuPane* m_helpmenu;
+    FXStatusBar* m_sb;
+    FXLabel* m_sbl1;
+    FXMenuPane* m_fl_popup;
+    void* m_gui_event;
     int m_sort_order;
     int m_last_header_click_mstime;
     FXDragType m_dnd_types[8];
     int m_width;
     int m_height;
-
     FXString m_dnd_str;
 };
 
 /*****************************************************************************/
-MsgObject::MsgObject()
+GUIObject::GUIObject():FXObject()
 {
-    ap = NULL;
-
+    m_fi = NULL;
     m_app = NULL;
     m_mutex1 = NULL;
     m_mw = NULL;
@@ -162,30 +152,41 @@ MsgObject::MsgObject()
     m_combo1 = NULL;
     m_combo2 = NULL;
     m_combo3 = NULL;
-
+    m_text1 = NULL;
+    m_topdock = NULL;
+    m_tbs = NULL;
+    m_mb = NULL;
+    m_filemenu = NULL;
+    m_helpmenu = NULL;
+    m_sb = NULL;
+    m_sbl1 = NULL;
+    m_fl_popup = NULL;
+    m_gui_event = NULL;
     m_sort_order = 0;
     m_last_header_click_mstime = 0;
     memset(m_dnd_types, 0, sizeof(m_dnd_types));
     m_width = 0;
     m_height = 0;
-
     m_dnd_str = "";
 }
 
 /*****************************************************************************/
-long
-MsgObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::~GUIObject()
 {
-    //if (obj == ap->flh)
-    //{
-    //    writeln(ap->fi, "onDefault obj %p sel %d ptr %p", obj, sel, ptr);
-    //}
+    writeln(m_fi, "GUIObject::~GUIObject");
+}
+
+/*****************************************************************************/
+long
+GUIObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
+{
+    //writeln(m_fi, "onDefault obj %p sel %d ptr %p", obj, sel, ptr);
     return FXObject::onDefault(obj, sel, ptr);
 }
 
 /*****************************************************************************/
 static int
-save_combo(struct app_data* ap, FXComboBox* cb,
+save_combo(GUIObject* go, FXComboBox* cb,
            const char* section, const char* key_prefix)
 {
     FXString str1;
@@ -194,7 +195,7 @@ save_combo(struct app_data* ap, FXComboBox* cb,
     FXint count;
     FXRegistry* reg;
 
-    reg = &(ap->mo->m_app->reg());
+    reg = &(go->m_app->reg());
     str1 = cb->getText();
     index = cb->findItem(str1);
     if (index < 0)
@@ -228,13 +229,13 @@ save_combo(struct app_data* ap, FXComboBox* cb,
 
 /*****************************************************************************/
 static int
-save_checkbox(struct app_data* ap, FXCheckButton* cb,
+save_checkbox(GUIObject* go, FXCheckButton* cb,
               const char* section, const char* key, FXbool default_checked)
 {
     FXbool bool1;
     FXRegistry* reg;
 
-    reg = &(ap->mo->m_app->reg());
+    reg = &(go->m_app->reg());
     bool1 = cb->getCheck();
     if ((!bool1) == (!default_checked))
     {
@@ -249,51 +250,51 @@ save_checkbox(struct app_data* ap, FXCheckButton* cb,
 
 /*****************************************************************************/
 long
-MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXString str1;
 
-    writeln(ap->fi, "onPress obj %p sel %d ptr %p", obj, sel, ptr);
+    writeln(m_fi, "onPress obj %p sel %d ptr %p", obj, sel, ptr);
     if (obj == m_but1)
     {
-        writeln(ap->fi, "but1");
+        writeln(m_fi, "but1");
         m_fl->clearItems(TRUE);
         str1 = m_combo1->getText();
-        snprintf(ap->fi->named, sizeof(ap->fi->named), "%s", str1.text());
+        snprintf(m_fi->named, sizeof(m_fi->named), "%s", str1.text());
         str1 = m_combo2->getText();
-        snprintf(ap->fi->look_in, sizeof(ap->fi->look_in), "%s", str1.text());
-        ap->fi->include_subfolders = m_cb1->getCheck();
-        ap->fi->case_sensitive = m_cb2->getCheck();
-        ap->fi->show_hidden = m_cb3->getCheck();
-        ap->fi->search_in_files = m_cb4->getCheck();
-        ap->fi->search_in_case_sensitive = m_cb5->getCheck();
+        snprintf(m_fi->look_in, sizeof(m_fi->look_in), "%s", str1.text());
+        m_fi->include_subfolders = m_cb1->getCheck();
+        m_fi->case_sensitive = m_cb2->getCheck();
+        m_fi->show_hidden = m_cb3->getCheck();
+        m_fi->search_in_files = m_cb4->getCheck();
+        m_fi->search_in_case_sensitive = m_cb5->getCheck();
         str1 = m_combo3->getText();
-        snprintf(ap->fi->text, sizeof(ap->fi->text), "%s", str1.text());
+        snprintf(m_fi->text, sizeof(m_fi->text), "%s", str1.text());
 
-        save_combo(ap, m_combo1, "NameLocation", "Named");
-        save_combo(ap, m_combo2, "NameLocation", "LookIn");
-        save_checkbox(ap, m_cb1, "NameLocation", "IncludeSubfolders", 1);
-        save_checkbox(ap, m_cb2, "NameLocation", "CaseSensitiveSearch", 0);
-        save_checkbox(ap, m_cb3, "NameLocation", "ShowHiddenFiles", 0);
+        save_combo(this, m_combo1, "NameLocation", "Named");
+        save_combo(this, m_combo2, "NameLocation", "LookIn");
+        save_checkbox(this, m_cb1, "NameLocation", "IncludeSubfolders", 1);
+        save_checkbox(this, m_cb2, "NameLocation", "CaseSensitiveSearch", 0);
+        save_checkbox(this, m_cb3, "NameLocation", "ShowHiddenFiles", 0);
 
         //ap->fl->hide();
-        start_find(ap->fi);
+        start_find(m_fi);
         m_but1->disable();
         m_but2->enable();
     }
     if (obj == m_but2)
     {
-        writeln(ap->fi, "but2");
-        stop_find(ap->fi);
+        writeln(m_fi, "but2");
+        stop_find(m_fi);
     }
     if (obj == m_but3)
     {
-        writeln(ap->fi, "but3");
+        writeln(m_fi, "but3");
         //ap->app->stop(0);
     }
     if (obj == m_but4)
     {
-        writeln(ap->fi, "but4");
+        writeln(m_fi, "but4");
         str1 = m_combo2->getText();
         str1 = FXDirDialog::getOpenDirectory(m_mw, "Select Look In directory", str1);
         if (str1 != "")
@@ -307,22 +308,22 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onTabChange(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onTabChange(FXObject* obj, FXSelector sel, void* ptr)
 {
     return 1;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onConfigure(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onConfigure(FXObject* obj, FXSelector sel, void* ptr)
 {
-    m_app->addTimeout(ap->mo, MsgObject::ID_MAINWINDOW, 0, NULL);
+    m_app->addTimeout(this, GUIObject::ID_MAINWINDOW, 0, NULL);
     return 0;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXint width;
     FXint height;
@@ -331,7 +332,7 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
     height = m_mw->getHeight();
     if ((width != m_width) || (height != m_height))
     {
-        //writeln(ap->fi, "MsgObject::onResizeTimeout: resized to %dx%d, was %dx%d",
+        //writeln(ap->fi, "GUIObject::onResizeTimeout: resized to %dx%d, was %dx%d",
         //        width, height, ap->width, ap->height);
         m_width = width;
         m_height = height;
@@ -384,8 +385,8 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         m_cb5->move(10, 74);
         m_cb5->resize(160, 24);
 
-        ap->text1->move(85, 8);
-        ap->text1->resize(400, 24);
+        m_text1->move(85, 8);
+        m_text1->resize(400, 24);
 
     }
     return 0;
@@ -393,43 +394,43 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(ap->fi, "MsgObject::onCmdExit:");
+    writeln(m_fi, "GUIObject::onCmdExit:");
     m_mw->close(TRUE);
     return 1;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(ap->fi, "MsgObject::onCmdHelp:");
+    writeln(m_fi, "GUIObject::onCmdHelp:");
     return 0;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(ap->fi, "MsgObject::onCmdAbout:");
+    writeln(m_fi, "GUIObject::onCmdAbout:");
     return 0;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 {
-    finder_event_clear(ap->gui_event);
-    m_app->addTimeout(ap->mo, MsgObject::ID_MAINWINDOW1, 0, NULL);
+    finder_event_clear(m_gui_event);
+    m_app->addTimeout(this, GUIObject::ID_MAINWINDOW1, 0, NULL);
     return 1;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onEventTimeout(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onEventTimeout(FXObject* obj, FXSelector sel, void* ptr)
 {
-    event_callback(ap->fi);
+    event_callback(m_fi);
     return 1;
 }
 
@@ -643,7 +644,7 @@ sort31(const FXFoldingItem* a, const FXFoldingItem* b)
 
 /*****************************************************************************/
 long
-MsgObject::onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr)
 {
     int index;
     FXFoldingListSortFunc sf1[4] = { sort00, sort10, sort20, sort30 };
@@ -668,7 +669,7 @@ MsgObject::onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 int
-best_fit_column(struct app_data* ap, int column)
+best_fit_column(GUIObject* go, int column)
 {
     int width;
     int max_width;
@@ -676,12 +677,12 @@ best_fit_column(struct app_data* ap, int column)
     ItemObject* io;
     FXFoldingItem* folding_item;
 
-    ft = ap->mo->m_fl->getFont();
+    ft = go->m_fl->getFont();
     switch (column)
     {
         case 0:
             max_width = ft->getTextWidth("Name");
-            folding_item = ap->mo->m_fl->getFirstItem();
+            folding_item = go->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -692,11 +693,11 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->mo->m_fl->setHeaderSize(0, max_width + 8);
+            go->m_fl->setHeaderSize(0, max_width + 8);
             break;
         case 1:
             max_width = ft->getTextWidth("In Subfolder");
-            folding_item = ap->mo->m_fl->getFirstItem();
+            folding_item = go->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -707,11 +708,11 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->mo->m_fl->setHeaderSize(1, max_width + 8);
+            go->m_fl->setHeaderSize(1, max_width + 8);
             break;
         case 2:
             max_width = ft->getTextWidth("Size");
-            folding_item = ap->mo->m_fl->getFirstItem();
+            folding_item = go->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -722,12 +723,12 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->mo->m_fl->setHeaderSize(2, max_width + 8);
+            go->m_fl->setHeaderSize(2, max_width + 8);
 
             break;
         case 3:
             max_width = ft->getTextWidth("Modified");
-            folding_item = ap->mo->m_fl->getFirstItem();
+            folding_item = go->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -738,7 +739,7 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->mo->m_fl->setHeaderSize(3, max_width + 8);
+            go->m_fl->setHeaderSize(3, max_width + 8);
             break;
     }
     return 0;
@@ -746,7 +747,7 @@ best_fit_column(struct app_data* ap, int column)
 
 /*****************************************************************************/
 long
-MsgObject::onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr)
 {
     int time;
     int diff;
@@ -757,7 +758,7 @@ MsgObject::onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr)
     if ((diff > 0) && (diff < 500))
     {
         index = (int)(FXival)ptr;
-        best_fit_column(ap, index);
+        best_fit_column(this, index);
     }
     m_last_header_click_mstime = time;
     return 1;
@@ -765,7 +766,7 @@ MsgObject::onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
 {
     ItemObject* io;
     FXFoldingItem* item;
@@ -784,26 +785,26 @@ MsgObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event;
     FXFoldingItem* rci;
 
-    writeln(ap->fi, "MsgObject::onFLRightMouseUp:");
+    writeln(m_fi, "GUIObject::onFLRightMouseUp:");
     event = (FXEvent*)ptr;
     if (event->moved == FALSE)
     {
-        rci = ap->mo->m_fl->getItemAt(event->click_x, event->click_y);
+        rci = m_fl->getItemAt(event->click_x, event->click_y);
         if (rci != NULL)
         {
-            if (ap->mo->m_fl->isItemSelected(rci) == FALSE)
+            if (m_fl->isItemSelected(rci) == FALSE)
             {
-                ap->mo->m_fl->killSelection(TRUE);
-                ap->mo->m_fl->setCurrentItem(rci, TRUE);
-                ap->mo->m_fl->selectItem(rci, TRUE);
+                m_fl->killSelection(TRUE);
+                m_fl->setCurrentItem(rci, TRUE);
+                m_fl->selectItem(rci, TRUE);
             }
-            ap->fl_popup->popup(NULL, event->root_x, event->root_y);
-            m_app->runModalWhileShown(ap->fl_popup);
+            m_fl_popup->popup(NULL, event->root_x, event->root_y);
+            m_app->runModalWhileShown(m_fl_popup);
         }
     }
     return 1;
@@ -811,13 +812,13 @@ MsgObject::onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXFoldingItem* fi;
     ItemObject* io;
     FXString str1;
 
-    writeln(ap->fi, "MsgObject::onCopyFilename:");
+    writeln(m_fi, "GUIObject::onCopyFilename:");
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
     while (fi != NULL)
@@ -840,13 +841,13 @@ MsgObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXFoldingItem* fi;
     ItemObject* io;
     FXString str1;
 
-    writeln(ap->fi, "MsgObject::onCopyFullPath:");
+    writeln(m_fi, "GUIObject::onCopyFullPath:");
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
     while (fi != NULL)
@@ -856,13 +857,13 @@ MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
             io = (ItemObject*)(fi->getData());
             if (io->in_subfolder.length() < 1)
             {
-                str1 = ap->fi->look_in;
+                str1 = m_fi->look_in;
                 str1 += "/";
                 str1 += io->filename;
             }
             else
             {
-                str1 = ap->fi->look_in;
+                str1 = m_fi->look_in;
                 str1 += "/";
                 str1 += io->in_subfolder;
                 str1 += "/";
@@ -883,11 +884,11 @@ MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
 /*****************************************************************************/
 /* return 0 can close, 1 can not close */
 long
-MsgObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXuint rv;
 
-    writeln(ap->fi, "MsgObject::onClose:");
+    writeln(m_fi, "GUIObject::onClose:");
     rv = FXMessageBox::warning(m_mw, MBOX_YES_NO, "Question", "Do you want to exit?");
     if (rv == MBOX_CLICKED_YES)
     {
@@ -899,28 +900,28 @@ MsgObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onClipboardLost(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onClipboardLost(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "MsgObject::onClipboardLost:");
+    //writeln(ap->fi, "GUIObject::onClipboardLost:");
     return 1;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onClipboardGained(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onClipboardGained(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "MsgObject::onClipboardGained:");
+    //writeln(ap->fi, "GUIObject::onClipboardGained:");
     return 1;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onClipboardRequest(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onClipboardRequest(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXuchar* data;
     FXuint len;
 
-    //writeln(ap->fi, "MsgObject::onClipboardRequest:");
+    //writeln(ap->fi, "GUIObject::onClipboardRequest:");
     len = m_dnd_str.length();
     FXMALLOC(&data, FXuchar, len + 8);
     memcpy(data, m_dnd_str.text(), len);
@@ -931,44 +932,13 @@ MsgObject::onClipboardRequest(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onFLLeftMouseDown(FXObject* obj, FXSelector sel, void* ptr)
-{
-    FXEvent* event;
-    int width;
-    FXFoldingItem* fi;
-
-    //writeln(ap->fi, "MsgObject::onFLLeftMouseDown:");
-    width = m_fl->getHeaderSize(0);
-    width += m_fl->getHeaderSize(1);
-    width += m_fl->getHeaderSize(2);
-    width += m_fl->getHeaderSize(3);
-    //writeln(ap->fi, "  width %d", width);
-    event = (FXEvent*)ptr;
-    //writeln(ap->fi, "click_x %d click_y %d", event->click_x, event->click_y);
-    if (event->click_x > width)
-    {
-        return 0;
-    }
-    fi = m_fl->getItemAt(event->click_x, event->click_y);
-    if (fi != NULL)
-    {
-        if (fi->isSelected() && ((event->state & SHIFTMASK) == 0) && ((event->state & CONTROLMASK) == 0))
-        {
-            return 0;
-        }
-    }
-    return 0;
-}
-
-/*****************************************************************************/
-long
-MsgObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXFoldingItem* fi;
     ItemObject* io;
     FXString str1;
 
-    //writeln(ap->fi, "MsgObject::onBeginDrag:");
+    //writeln(ap->fi, "GUIObject::onBeginDrag:");
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
     while (fi != NULL)
@@ -978,13 +948,13 @@ MsgObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
             io = (ItemObject*)(fi->getData());
             if (io->in_subfolder.length() < 1)
             {
-                str1 = ap->fi->look_in;
+                str1 = m_fi->look_in;
                 str1 += "/";
                 str1 += io->filename;
             }
             else
             {
-                str1 = ap->fi->look_in;
+                str1 = m_fi->look_in;
                 str1 += "/";
                 str1 += io->in_subfolder;
                 str1 += "/";
@@ -1001,20 +971,20 @@ MsgObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onEndDrag(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onEndDrag(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "MsgObject::onEndDrag:");
+    //writeln(ap->fi, "GUIObject::onEndDrag:");
     m_mw->endDrag();
     return 1;
 }
 
 /*****************************************************************************/
 long
-MsgObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event;
 
-    //writeln(ap->fi, "MsgObject::onDragged:");
+    //writeln(ap->fi, "GUIObject::onDragged:");
     event = (FXEvent*)ptr;
     m_mw->handleDrag(event->root_x, event->root_y);
 
@@ -1034,12 +1004,12 @@ MsgObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
 
 /*****************************************************************************/
 long
-MsgObject::onDNDRequest(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onDNDRequest(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXuchar* data;
     FXuint len;
 
-    //writeln(ap->fi, "MsgObject::onDNDRequest:");
+    //writeln(ap->fi, "GUIObject::onDNDRequest:");
     len = m_dnd_str.length();
     FXMALLOC(&data, FXuchar, len + 8);
     memcpy(data, m_dnd_str.text(), len);
@@ -1048,197 +1018,193 @@ MsgObject::onDNDRequest(FXObject* obj, FXSelector sel, void* ptr)
     return 1;
 }
 
-FXDEFMAP(MsgObject) MsgObjectMap[] =
+FXDEFMAP(GUIObject) GUIObjectMap[] =
 {
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_BUTTON, MsgObject::onPress),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_TABBOOK, MsgObject::onTabChange),
-    FXMAPFUNC(SEL_CONFIGURE, MsgObject::ID_MAINWINDOW, MsgObject::onConfigure),
-    FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW, MsgObject::onResizeTimeout),
-    FXMAPFUNC(SEL_TIMEOUT, MsgObject::ID_MAINWINDOW1, MsgObject::onEventTimeout),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_EXIT, MsgObject::onCmdExit),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_HELP, MsgObject::onCmdHelp),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_ABOUT, MsgObject::onCmdAbout),
-    FXMAPFUNC(SEL_IO_READ, MsgObject::ID_SOCKET, MsgObject::onEvent1),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeader),
-    FXMAPFUNC(SEL_CLICKED, MsgObject::ID_FOLDINGLISTHEADER, MsgObject::onFoldingListHeaderClick),
-    FXMAPFUNC(SEL_DELETED, MsgObject::ID_FOLDINGLIST, MsgObject::onFoldingListItemDelete),
-    FXMAPFUNC(SEL_RIGHTBUTTONRELEASE, MsgObject::ID_FOLDINGLIST, MsgObject::onFLRightMouseUp),
-    FXMAPFUNC(SEL_LEFTBUTTONPRESS, MsgObject::ID_FOLDINGLIST, MsgObject::onFLLeftMouseDown),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_COPY_FILENAME, MsgObject::onCopyFilename),
-    FXMAPFUNC(SEL_COMMAND, MsgObject::ID_COPY_FULL_PATH, MsgObject::onCopyFullPath),
-    FXMAPFUNC(SEL_CLOSE, MsgObject::ID_MAINWINDOW, MsgObject::onClose),
-    FXMAPFUNC(SEL_CLIPBOARD_LOST, MsgObject::ID_MAINWINDOW, MsgObject::onClipboardLost),
-    FXMAPFUNC(SEL_CLIPBOARD_GAINED, MsgObject::ID_MAINWINDOW, MsgObject::onClipboardGained),
-    FXMAPFUNC(SEL_CLIPBOARD_REQUEST, MsgObject::ID_MAINWINDOW, MsgObject::onClipboardRequest),
-    FXMAPFUNC(SEL_BEGINDRAG, MsgObject::ID_FOLDINGLIST, MsgObject::onBeginDrag),
-    FXMAPFUNC(SEL_ENDDRAG, MsgObject::ID_FOLDINGLIST, MsgObject::onEndDrag),
-    FXMAPFUNC(SEL_DRAGGED, MsgObject::ID_FOLDINGLIST, MsgObject::onDragged),
-    FXMAPFUNC(SEL_DND_REQUEST, MsgObject::ID_MAINWINDOW, MsgObject::onDNDRequest)
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_BUTTON, GUIObject::onPress),
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_TABBOOK, GUIObject::onTabChange),
+    FXMAPFUNC(SEL_CONFIGURE, GUIObject::ID_MAINWINDOW, GUIObject::onConfigure),
+    FXMAPFUNC(SEL_TIMEOUT, GUIObject::ID_MAINWINDOW, GUIObject::onResizeTimeout),
+    FXMAPFUNC(SEL_TIMEOUT, GUIObject::ID_MAINWINDOW1, GUIObject::onEventTimeout),
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_EXIT, GUIObject::onCmdExit),
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_HELP, GUIObject::onCmdHelp),
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_ABOUT, GUIObject::onCmdAbout),
+    FXMAPFUNC(SEL_IO_READ, GUIObject::ID_SOCKET, GUIObject::onEvent1),
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_FOLDINGLISTHEADER, GUIObject::onFoldingListHeader),
+    FXMAPFUNC(SEL_CLICKED, GUIObject::ID_FOLDINGLISTHEADER, GUIObject::onFoldingListHeaderClick),
+    FXMAPFUNC(SEL_DELETED, GUIObject::ID_FOLDINGLIST, GUIObject::onFoldingListItemDelete),
+    FXMAPFUNC(SEL_RIGHTBUTTONRELEASE, GUIObject::ID_FOLDINGLIST, GUIObject::onFLRightMouseUp),
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_COPY_FILENAME, GUIObject::onCopyFilename),
+    FXMAPFUNC(SEL_COMMAND, GUIObject::ID_COPY_FULL_PATH, GUIObject::onCopyFullPath),
+    FXMAPFUNC(SEL_CLOSE, GUIObject::ID_MAINWINDOW, GUIObject::onClose),
+    FXMAPFUNC(SEL_CLIPBOARD_LOST, GUIObject::ID_MAINWINDOW, GUIObject::onClipboardLost),
+    FXMAPFUNC(SEL_CLIPBOARD_GAINED, GUIObject::ID_MAINWINDOW, GUIObject::onClipboardGained),
+    FXMAPFUNC(SEL_CLIPBOARD_REQUEST, GUIObject::ID_MAINWINDOW, GUIObject::onClipboardRequest),
+    FXMAPFUNC(SEL_BEGINDRAG, GUIObject::ID_FOLDINGLIST, GUIObject::onBeginDrag),
+    FXMAPFUNC(SEL_ENDDRAG, GUIObject::ID_FOLDINGLIST, GUIObject::onEndDrag),
+    FXMAPFUNC(SEL_DRAGGED, GUIObject::ID_FOLDINGLIST, GUIObject::onDragged),
+    FXMAPFUNC(SEL_DND_REQUEST, GUIObject::ID_MAINWINDOW, GUIObject::onDNDRequest)
 };
 
-FXIMPLEMENT(MsgObject, FXObject, MsgObjectMap, ARRAYNUMBER(MsgObjectMap))
+FXIMPLEMENT(GUIObject, FXObject, GUIObjectMap, ARRAYNUMBER(GUIObjectMap))
 
 /*****************************************************************************/
 static int
 gui_create(int argc, char** argv, struct finder_info** fi)
 {
-    struct app_data* ap;
+    GUIObject* go;
     FXuint flags;
     FXSelector sel;
     FXCursor* cur;
     FXInputHandle ih;
 
     *fi = (struct finder_info*)calloc(1, sizeof(struct finder_info));
-    ap = (struct app_data*)calloc(1, sizeof(struct app_data));
-    (*fi)->gui_obj = ap;
-    ap->mo = new MsgObject();
-    ap->mo->ap = ap;
-    ap->fi = *fi;
-    ap->fi->gui_obj = ap;
-    ap->mo->m_app = new FXApp("Finder", "Finder");
-    ap->mo->m_mutex1 = new FXMutex();
-    cur = new FXCursor(ap->mo->m_app, FX::CURSOR_ARROW);
-    ap->mo->m_app->setDefaultCursor(DEF_RARROW_CURSOR, cur);
-    ap->mo->m_app->init(argc, argv);
-    ap->mo->m_mw = new FXMainWindow(ap->mo->m_app, "Finder", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
-    ap->mo->m_mw->setTarget(ap->mo);
-    ap->mo->m_mw->setSelector(MsgObject::ID_MAINWINDOW);
+    go = new GUIObject();
+    (*fi)->gui_obj = go;
+    go->m_fi = *fi;
+    go->m_app = new FXApp("Finder", "Finder");
+    go->m_mutex1 = new FXMutex();
+    cur = new FXCursor(go->m_app, FX::CURSOR_ARROW);
+    go->m_app->setDefaultCursor(DEF_RARROW_CURSOR, cur);
+    go->m_app->init(argc, argv);
+    go->m_mw = new FXMainWindow(go->m_app, "Finder", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
+    go->m_mw->setTarget(go);
+    go->m_mw->setSelector(GUIObject::ID_MAINWINDOW);
 
     flags = LAYOUT_EXPLICIT;
-    ap->mo->m_gb1 = new FXGroupBox(ap->mo->m_mw, "", flags);
+    go->m_gb1 = new FXGroupBox(go->m_mw, "", flags);
 
-    sel = MsgObject::ID_TABBOOK;
+    sel = GUIObject::ID_TABBOOK;
     flags = LAYOUT_FILL_X | LAYOUT_FILL_Y;
-    ap->mo->m_tab_book = new FXTabBook(ap->mo->m_gb1, ap->mo, sel, flags);
-    ap->mo->m_ti1 = new FXTabItem(ap->mo->m_tab_book, "Name/&Location");
+    go->m_tab_book = new FXTabBook(go->m_gb1, go, sel, flags);
+    go->m_ti1 = new FXTabItem(go->m_tab_book, "Name/&Location");
     flags = LAYOUT_FILL_X | LAYOUT_FILL_Y | FRAME_THICK | FRAME_RAISED;
-    ap->mo->m_tabframe1 = new FXGroupBox(ap->mo->m_tab_book, "", flags);
-    ap->mo->m_ti2 = new FXTabItem(ap->mo->m_tab_book, "&Date Modified");
-    ap->mo->m_tabframe2 = new FXGroupBox(ap->mo->m_tab_book, "", flags);
-    ap->mo->m_ti3 = new FXTabItem(ap->mo->m_tab_book, "&Advanced");
-    ap->mo->m_tabframe3 = new FXGroupBox(ap->mo->m_tab_book, "", flags);
+    go->m_tabframe1 = new FXGroupBox(go->m_tab_book, "", flags);
+    go->m_ti2 = new FXTabItem(go->m_tab_book, "&Date Modified");
+    go->m_tabframe2 = new FXGroupBox(go->m_tab_book, "", flags);
+    go->m_ti3 = new FXTabItem(go->m_tab_book, "&Advanced");
+    go->m_tabframe3 = new FXGroupBox(go->m_tab_book, "", flags);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->mo->m_label1 = new FXLabel(ap->mo->m_tabframe1, "&Named:", NULL, flags);
+    go->m_label1 = new FXLabel(go->m_tabframe1, "&Named:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    ap->mo->m_combo1 = new FXComboBox(ap->mo->m_tabframe1, 0, NULL, 0, flags);
-    ap->mo->m_combo1->setNumVisible(10);
+    go->m_combo1 = new FXComboBox(go->m_tabframe1, 0, NULL, 0, flags);
+    go->m_combo1->setNumVisible(10);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->mo->m_label2 = new FXLabel(ap->mo->m_tabframe1, "Look &in:", NULL, flags);
+    go->m_label2 = new FXLabel(go->m_tabframe1, "Look &in:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    ap->mo->m_combo2 = new FXComboBox(ap->mo->m_tabframe1, 0, NULL, 0, flags);
-    ap->mo->m_combo2->setNumVisible(10);
+    go->m_combo2 = new FXComboBox(go->m_tabframe1, 0, NULL, 0, flags);
+    go->m_combo2->setNumVisible(10);
 
-    sel = MsgObject::ID_BUTTON;
+    sel = GUIObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
-    ap->mo->m_but4 = new FXButton(ap->mo->m_tabframe1, "&Browse", NULL, ap->mo, sel, flags);
+    go->m_but4 = new FXButton(go->m_tabframe1, "&Browse", NULL, go, sel, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->mo->m_cb1 = new FXCheckButton(ap->mo->m_tabframe1, "Include subfolders", NULL, 0, flags);
-    ap->mo->m_cb1->setCheck(TRUE);
-    ap->mo->m_cb2 = new FXCheckButton(ap->mo->m_tabframe1, "Case sensitive search", NULL, 0, flags);
-    ap->mo->m_cb3 = new FXCheckButton(ap->mo->m_tabframe1, "Show hidden files", NULL, 0, flags);
+    go->m_cb1 = new FXCheckButton(go->m_tabframe1, "Include subfolders", NULL, 0, flags);
+    go->m_cb1->setCheck(TRUE);
+    go->m_cb2 = new FXCheckButton(go->m_tabframe1, "Case sensitive search", NULL, 0, flags);
+    go->m_cb3 = new FXCheckButton(go->m_tabframe1, "Show hidden files", NULL, 0, flags);
 
     flags = TEXTFIELD_NORMAL;
-    ap->text1 = new FXTextField(ap->mo->m_tabframe2, 0, NULL, 0, flags);
+    go->m_text1 = new FXTextField(go->m_tabframe2, 0, NULL, 0, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->mo->m_cb4 = new FXCheckButton(ap->mo->m_tabframe3, "Search in files");
+    go->m_cb4 = new FXCheckButton(go->m_tabframe3, "Search in files");
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    ap->mo->m_combo3 = new FXComboBox(ap->mo->m_tabframe3, 0, NULL, 0, flags);
+    go->m_combo3 = new FXComboBox(go->m_tabframe3, 0, NULL, 0, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->mo->m_cb5 = new FXCheckButton(ap->mo->m_tabframe3, "Case sensitive search");
+    go->m_cb5 = new FXCheckButton(go->m_tabframe3, "Case sensitive search");
 
-    sel = MsgObject::ID_BUTTON;
+    sel = GUIObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
-    ap->mo->m_but1 = new FXButton(ap->mo->m_mw, "&Find", NULL, ap->mo, sel, flags);
-    ap->mo->m_but2 = new FXButton(ap->mo->m_mw, "&Stop", NULL, ap->mo, sel, flags);
-    ap->mo->m_but2->disable();
-    sel = MsgObject::ID_EXIT;
-    ap->mo->m_but3 = new FXButton(ap->mo->m_mw, "Exit", NULL, ap->mo, sel, flags);
+    go->m_but1 = new FXButton(go->m_mw, "&Find", NULL, go, sel, flags);
+    go->m_but2 = new FXButton(go->m_mw, "&Stop", NULL, go, sel, flags);
+    go->m_but2->disable();
+    sel = GUIObject::ID_EXIT;
+    go->m_but3 = new FXButton(go->m_mw, "Exit", NULL, go, sel, flags);
 
     flags = LAYOUT_EXPLICIT;
-    ap->mo->m_gb2 = new FXGroupBox(ap->mo->m_mw, "", flags);
+    go->m_gb2 = new FXGroupBox(go->m_mw, "", flags);
 
-    sel = MsgObject::ID_FOLDINGLIST;
+    sel = GUIObject::ID_FOLDINGLIST;
     flags = FOLDINGLIST_NORMAL | LAYOUT_FILL_X | LAYOUT_FILL_Y;
-    ap->mo->m_fl = new FXFoldingList(ap->mo->m_gb2, ap->mo, sel, flags);
-    ap->mo->m_fl->appendHeader("Name", 0, 100);
-    ap->mo->m_fl->appendHeader("In Subfolder", 0, 100);
-    ap->mo->m_fl->appendHeader("Size", 0, 100);
-    ap->mo->m_fl->appendHeader("Modified", 0, 100);
-    ap->mo->m_flh = ap->mo->m_fl->getHeader();
-    ap->mo->m_flh->setTarget(ap->mo);
-    ap->mo->m_flh->setSelector(MsgObject::ID_FOLDINGLISTHEADER);
+    go->m_fl = new FXFoldingList(go->m_gb2, go, sel, flags);
+    go->m_fl->appendHeader("Name", 0, 100);
+    go->m_fl->appendHeader("In Subfolder", 0, 100);
+    go->m_fl->appendHeader("Size", 0, 100);
+    go->m_fl->appendHeader("Modified", 0, 100);
+    go->m_flh = go->m_fl->getHeader();
+    go->m_flh->setTarget(go);
+    go->m_flh->setSelector(GUIObject::ID_FOLDINGLISTHEADER);
 
-    ap->fl_popup = new FXMenuPane(ap->mo->m_fl);
-    sel = MsgObject::ID_COPY_FILENAME;
-    new FXMenuCommand(ap->fl_popup, "&Copy filename\t\tCopy the filename to clipboard.", NULL, ap->mo, sel);
-    new FXMenuSeparator(ap->fl_popup);
-    sel = MsgObject::ID_COPY_FULL_PATH;
-    new FXMenuCommand(ap->fl_popup, "&Copy full path\t\tCopy the full path to clipboard.", NULL, ap->mo, sel);
+    go->m_fl_popup = new FXMenuPane(go->m_fl);
+    sel = GUIObject::ID_COPY_FILENAME;
+    new FXMenuCommand(go->m_fl_popup, "&Copy filename\t\tCopy the filename to clipboard.", NULL, go, sel);
+    new FXMenuSeparator(go->m_fl_popup);
+    sel = GUIObject::ID_COPY_FULL_PATH;
+    new FXMenuCommand(go->m_fl_popup, "&Copy full path\t\tCopy the full path to clipboard.", NULL, go, sel);
 
     flags = LAYOUT_SIDE_TOP | LAYOUT_FILL_X;
-    ap->topdock = new FXDockSite(ap->mo->m_mw, flags);
+    go->m_topdock = new FXDockSite(go->m_mw, flags);
 
     flags = FRAME_RAISED;
-    ap->tbs = new FXToolBarShell(ap->mo->m_mw, flags);
+    go->m_tbs = new FXToolBarShell(go->m_mw, flags);
 
     flags = LAYOUT_DOCK_NEXT | LAYOUT_SIDE_TOP | LAYOUT_FILL_X | FRAME_RAISED;
-    ap->mb = new FXMenuBar(ap->topdock, ap->tbs, flags);
+    go->m_mb = new FXMenuBar(go->m_topdock, go->m_tbs, flags);
 
-    ap->filemenu = new FXMenuPane(ap->mo->m_mw);
-    new FXMenuTitle(ap->mb, "&File", NULL, ap->filemenu);
-    sel = MsgObject::ID_EXIT;
-    new FXMenuCommand(ap->filemenu, "&Exit\t\tExit the application.", NULL, ap->mo, sel);
+    go->m_filemenu = new FXMenuPane(go->m_mw);
+    new FXMenuTitle(go->m_mb, "&File", NULL, go->m_filemenu);
+    sel = GUIObject::ID_EXIT;
+    new FXMenuCommand(go->m_filemenu, "&Exit\t\tExit the application.", NULL, go, sel);
 
-    ap->helpmenu = new FXMenuPane(ap->mo->m_mw);
-    new FXMenuTitle(ap->mb, "&Help", NULL, ap->helpmenu);
-    sel = MsgObject::ID_HELP;
-    new FXMenuCommand(ap->helpmenu, "&Help...\t\tDisplay help information.", NULL, ap->mo, sel);
-    sel = MsgObject::ID_ABOUT;
-    new FXMenuCommand(ap->helpmenu, "&About\t\tDisplay version information.", NULL, ap->mo, sel);
+    go->m_helpmenu = new FXMenuPane(go->m_mw);
+    new FXMenuTitle(go->m_mb, "&Help", NULL, go->m_helpmenu);
+    sel = GUIObject::ID_HELP;
+    new FXMenuCommand(go->m_helpmenu, "&Help...\t\tDisplay help information.", NULL, go, sel);
+    sel = GUIObject::ID_ABOUT;
+    new FXMenuCommand(go->m_helpmenu, "&About\t\tDisplay version information.", NULL, go, sel);
 
     flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER | FRAME_RAISED;
-    ap->sb = new FXStatusBar(ap->mo->m_mw, flags);
+    go->m_sb = new FXStatusBar(go->m_mw, flags);
 
-    ap->sbl1 = new FXLabel(ap->sb, "", NULL,LAYOUT_RIGHT | LAYOUT_CENTER_Y);
+    go->m_sbl1 = new FXLabel(go->m_sb, "", NULL,LAYOUT_RIGHT | LAYOUT_CENTER_Y);
 
-    ap->mo->m_app->create();
-    ap->mo->m_mw->show(PLACEMENT_SCREEN);
+    go->m_app->create();
+    go->m_mw->show(PLACEMENT_SCREEN);
 
-    finder_event_create(&(ap->gui_event));
-    ih = (FXInputHandle)finder_event_get_wait_obj(ap->gui_event);
-    ap->mo->m_app->addInput(ih, INPUT_READ, ap->mo, MsgObject::ID_SOCKET);
+    finder_event_create(&(go->m_gui_event));
+    ih = (FXInputHandle)finder_event_get_wait_obj(go->m_gui_event);
+    go->m_app->addInput(ih, INPUT_READ, go, GUIObject::ID_SOCKET);
 
-    ap->mo->m_dnd_types[0] = ap->mo->m_app->registerDragType("UTF8_STRING");
-    ap->mo->m_dnd_types[1] = ap->mo->m_app->registerDragType("text/uri-list");
+    go->m_dnd_types[0] = go->m_app->registerDragType("UTF8_STRING");
+    go->m_dnd_types[1] = go->m_app->registerDragType("text/uri-list");
 
     return 0;
 }
 
 /*****************************************************************************/
 static int
-load_stuff(struct app_data* ap)
+load_stuff(GUIObject* go)
 {
     FXint index;
     FXRegistry* reg;
     FXString key;
     FXString val;
 
-    reg = &(ap->mo->m_app->reg());
+    reg = &(go->m_app->reg());
     for (index = 0; index < 100; index++)
     {
         key.format("Named%2.2d", index);
         val = reg->readStringEntry("NameLocation", key.text(), "_NoWay_");
         if (val != "_NoWay_")
         {
-            ap->mo->m_combo1->appendItem(val);
+            go->m_combo1->appendItem(val);
         }
     }
     for (index = 0; index < 100; index++)
@@ -1247,23 +1213,23 @@ load_stuff(struct app_data* ap)
         val = reg->readStringEntry("NameLocation", key.text(), "_NoWay_");
         if (val != "_NoWay_")
         {
-            ap->mo->m_combo2->appendItem(val);
+            go->m_combo2->appendItem(val);
         }
     }
     val = reg->readStringEntry("NameLocation", "IncludeSubfolders", "_NoWay_");
     if (val != "_NoWay_")
     {
-        ap->mo->m_cb1->setCheck(atoi(val.text()));
+        go->m_cb1->setCheck(atoi(val.text()));
     }
     val = reg->readStringEntry("NameLocation", "CaseSensitiveSearch", "_NoWay_");
     if (val != "_NoWay_")
     {
-        ap->mo->m_cb2->setCheck(atoi(val.text()));
+        go->m_cb2->setCheck(atoi(val.text()));
     }
     val = reg->readStringEntry("NameLocation", "ShowHiddenFiles", "_NoWay_");
     if (val != "_NoWay_")
     {
-        ap->mo->m_cb3->setCheck(atoi(val.text()));
+        go->m_cb3->setCheck(atoi(val.text()));
     }
 
     return 0;
@@ -1273,14 +1239,14 @@ load_stuff(struct app_data* ap)
 static int
 gui_main_loop(struct finder_info* fi)
 {
-    struct app_data* ap;
+    GUIObject* go;
 
-    ap = (struct app_data*)(fi->gui_obj);
-    writeln(ap->fi, "gui_main_loop");
-    gui_init(ap->fi);
-    load_stuff(ap);
-    ap->mo->m_app->run();
-    gui_deinit(ap->fi);
+    writeln(fi, "gui_main_loop");
+    go = (GUIObject*)(fi->gui_obj);
+    gui_init(go->m_fi);
+    load_stuff(go);
+    go->m_app->run();
+    gui_deinit(go->m_fi);
     return 0;
 }
 
@@ -1288,16 +1254,15 @@ gui_main_loop(struct finder_info* fi)
 static int
 gui_delete(struct finder_info* fi)
 {
-    struct app_data* ap;
+    GUIObject* go;
 
-    ap = (struct app_data*)(fi->gui_obj);
-    writeln(ap->fi, "gui_delete");
-    ap->mo->m_app->exit(); /* close display, write registry */
-    delete ap->mo->m_app;
-    delete ap->mo;
-    delete ap->mo->m_mutex1;
-    finder_event_delete(ap->gui_event);
-    free(ap);
+    writeln(fi, "gui_delete");
+    go = (GUIObject*)(fi->gui_obj);
+    go->m_app->exit(); /* close display, write registry */
+    delete go->m_app;
+    delete go->m_mutex1;
+    delete go;
+    finder_event_delete(go->m_gui_event);
     free(fi);
     return 0;
 }
@@ -1307,13 +1272,13 @@ gui_delete(struct finder_info* fi)
 int
 gui_set_event(struct finder_info* fi)
 {
-    struct app_data* ap;
+    GUIObject* go;
 
     //writeln(fi, "gui_set_event");
-    ap = (struct app_data*)(fi->gui_obj);
-    ap->mo->m_mutex1->lock();
-    finder_event_set(ap->gui_event);
-    ap->mo->m_mutex1->unlock();
+    go = (GUIObject*)(fi->gui_obj);
+    go->m_mutex1->lock();
+    finder_event_set(go->m_gui_event);
+    go->m_mutex1->unlock();
     return 0;
 }
 
@@ -1343,7 +1308,7 @@ main(int argc, char** argv)
 int
 gui_find_done(struct finder_info* fi)
 {
-    struct app_data* ap;
+    GUIObject* go;
     int count;
     int width;
     int max_width[4];
@@ -1353,22 +1318,22 @@ gui_find_done(struct finder_info* fi)
     FXFoldingItem* folding_item;
 
     writeln(fi, "gui_find_done");
-    ap = (struct app_data*)(fi->gui_obj);
-    ap->mo->m_but1->enable();
-    ap->mo->m_but2->disable();
-    count = ap->mo->m_fl->getNumItems();
+    go = (GUIObject*)(fi->gui_obj);
+    go->m_but1->enable();
+    go->m_but2->disable();
+    count = go->m_fl->getNumItems();
     str1.format("%d Items found", count);
-    ap->sbl1->setText(str1);
+    go->m_sbl1->setText(str1);
 
     //ap->fl->show();
 
     /* resize the columns */
-    ft = ap->mo->m_fl->getFont();
+    ft = go->m_fl->getFont();
     max_width[0] = ft->getTextWidth("Name");
     max_width[1] = ft->getTextWidth("In Subfolder");
     max_width[2] = ft->getTextWidth("Size");
     max_width[3] = ft->getTextWidth("Modified");
-    folding_item = ap->mo->m_fl->getFirstItem();
+    folding_item = go->m_fl->getFirstItem();
     while (folding_item != NULL)
     {
         io = (ItemObject*)(folding_item->getData());
@@ -1394,10 +1359,10 @@ gui_find_done(struct finder_info* fi)
         }
         folding_item = folding_item->getNext();
     }
-    ap->mo->m_fl->setHeaderSize(0, max_width[0] + 8);
-    ap->mo->m_fl->setHeaderSize(1, max_width[1] + 8);
-    ap->mo->m_fl->setHeaderSize(2, max_width[2] + 8);
-    ap->mo->m_fl->setHeaderSize(3, max_width[3] + 8);
+    go->m_fl->setHeaderSize(0, max_width[0] + 8);
+    go->m_fl->setHeaderSize(1, max_width[1] + 8);
+    go->m_fl->setHeaderSize(2, max_width[2] + 8);
+    go->m_fl->setHeaderSize(3, max_width[3] + 8);
 
     return 0;
 }
@@ -1408,7 +1373,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
             const char* in_subfolder, FINDER_I64 size,
             const char* modified)
 {
-    struct app_data* ap;
+    GUIObject* go;
     FXFoldingItem* folding_item;
     FXString str1;
     ItemObject* io;
@@ -1417,7 +1382,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
     io = new ItemObject();
 
     //writeln(fi, "gui_add_one");
-    ap = (struct app_data*)(fi->gui_obj);
+    go = (GUIObject*)(fi->gui_obj);
     str1 = filename;
     io->filename = filename;
     str1 += "\t";
@@ -1433,7 +1398,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
     io->modified = modified;
     folding_item = new FXFoldingItem(str1);
     folding_item->setDraggable(TRUE);
-    ap->mo->m_fl->appendItem(NULL, folding_item, TRUE);
+    go->m_fl->appendItem(NULL, folding_item, TRUE);
     folding_item->setData(io);
     return 0;
 }
