@@ -282,7 +282,7 @@ check_file_name(struct finder_info* fi, const char* filename)
 }
 
 /*****************************************************************************/
-void
+int
 listdir(struct finder_info* fi, struct work_item* wi, const char* name)
 {
     DIR* dir;
@@ -304,14 +304,14 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
     if (name_bytes < look_in_bytes)
     {
         writeln(fi, "%s", "error");
-        return;
+        return 1;
     }
 
     dir = opendir(name);
     if (dir == NULL)
     {
         writeln(fi, "%s", "error");
-        return;
+        return 1;
     }
 
     look_in_text_alloc_bytes = name_bytes - look_in_bytes + 1;
@@ -319,7 +319,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
     if (look_in_text == NULL)
     {
         writeln(fi, "%s", "error");
-        return;
+        return 1;
     }
 
     if (name_bytes > look_in_bytes)
@@ -352,9 +352,6 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             if (fi->include_subfolders)
             {
                 if ((entry->d_name[0] == '.') && fi->show_hidden == 0)
-                //{
-                //}
-                //else
                 {
                     continue;
                 }
@@ -367,9 +364,6 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
         else
         {
             if ((entry->d_name[0] == '.') && fi->show_hidden == 0)
-            //{
-            //}
-            //else
             {
                 continue;
             }
@@ -443,5 +437,6 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
     free(look_in_text);
     closedir(dir);
     gui_set_event(fi);
+    return 0;
 }
 

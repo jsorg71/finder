@@ -123,6 +123,7 @@ public:
 /*****************************************************************************/
 GUIObject::GUIObject():FXObject()
 {
+    writeln(m_fi, "GUIObject::GUIObject");
     m_fi = NULL;
     m_app = NULL;
     m_mutex1 = NULL;
@@ -975,6 +976,7 @@ GUIObject::onEndDrag(FXObject* obj, FXSelector sel, void* ptr)
 {
     //writeln(ap->fi, "GUIObject::onEndDrag:");
     m_mw->endDrag();
+    m_fl->setDragCursor(m_app->getDefaultCursor(DEF_ARROW_CURSOR));
     return 1;
 }
 
@@ -984,19 +986,18 @@ GUIObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event;
 
-    //writeln(ap->fi, "GUIObject::onDragged:");
+    //writeln(m_fi, "GUIObject::onDragged:");
     event = (FXEvent*)ptr;
     m_mw->handleDrag(event->root_x, event->root_y);
-
     if (m_mw->didAccept() != DRAG_REJECT)
     {
-        //setDragCursor(drop_ok_cursor);
-        //writeln(ap->fi, "drop_ok_cursor");
+        //writeln(m_fi, "drop_ok_cursor");
+        m_fl->setDragCursor(m_app->getDefaultCursor(DEF_DNDCOPY_CURSOR));
     }
     else
     {
-        //setDragCursor(drop_not_ok_cursor);
-        //writeln(ap->fi, "drop_not_ok_cursor");
+        //writeln(m_fi, "drop_not_ok_cursor");
+        m_fl->setDragCursor(m_app->getDefaultCursor(DEF_DNDSTOP_CURSOR));
     }
 
     return 1;
