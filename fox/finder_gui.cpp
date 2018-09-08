@@ -12,31 +12,6 @@
 struct app_data
 {
     struct finder_info* fi;
-    FXButton* but1;
-    FXButton* but2;
-    FXButton* but3;
-    FXButton* but4;
-    FXTabItem* ti1;
-    FXTabItem* ti2;
-    FXTabItem* ti3;
-    FXGroupBox* gb2;
-    FXFoldingList* fl;
-    FXHeader* flh;
-    FXGroupBox* gb1;
-    FXTabBook* tab_book;
-    FXGroupBox* tabframe1;
-    FXGroupBox* tabframe2;
-    FXGroupBox* tabframe3;
-    FXLabel* label1;
-    FXLabel* label2;
-    FXCheckButton* cb1;
-    FXCheckButton* cb2;
-    FXCheckButton* cb3;
-    FXCheckButton* cb4;
-    FXCheckButton* cb5;
-    FXComboBox* combo1;
-    FXComboBox* combo2;
-    FXComboBox* combo3;
     FXTextField* text1;
     FXDockSite* topdock;
     FXToolBarShell* tbs;
@@ -119,6 +94,31 @@ public:
     FXApp* m_app;
     FXMutex* m_mutex1;
     FXMainWindow* m_mw;
+    FXButton* m_but1;
+    FXButton* m_but2;
+    FXButton* m_but3;
+    FXButton* m_but4;
+    FXTabItem* m_ti1;
+    FXTabItem* m_ti2;
+    FXTabItem* m_ti3;
+    FXGroupBox* m_gb1;
+    FXGroupBox* m_gb2;
+    FXFoldingList* m_fl;
+    FXHeader* m_flh;
+    FXTabBook* m_tab_book;
+    FXGroupBox* m_tabframe1;
+    FXGroupBox* m_tabframe2;
+    FXGroupBox* m_tabframe3;
+    FXLabel* m_label1;
+    FXLabel* m_label2;
+    FXCheckButton* m_cb1;
+    FXCheckButton* m_cb2;
+    FXCheckButton* m_cb3;
+    FXCheckButton* m_cb4;
+    FXCheckButton* m_cb5;
+    FXComboBox* m_combo1;
+    FXComboBox* m_combo2;
+    FXComboBox* m_combo3;
 
     int m_sort_order;
     int m_last_header_click_mstime;
@@ -137,6 +137,31 @@ MsgObject::MsgObject()
     m_app = NULL;
     m_mutex1 = NULL;
     m_mw = NULL;
+    m_but1 = NULL;
+    m_but2 = NULL;
+    m_but3 = NULL;
+    m_but4 = NULL;
+    m_ti1 = NULL;
+    m_ti2 = NULL;
+    m_ti3 = NULL;
+    m_gb1 = NULL;
+    m_gb2 = NULL;
+    m_fl = NULL;
+    m_flh = NULL;
+    m_tab_book = NULL;
+    m_tabframe1 = NULL;
+    m_tabframe2 = NULL;
+    m_tabframe3 = NULL;
+    m_label1 = NULL;
+    m_label2 = NULL;
+    m_cb1 = NULL;
+    m_cb2 = NULL;
+    m_cb3 = NULL;
+    m_cb4 = NULL;
+    m_cb5 = NULL;
+    m_combo1 = NULL;
+    m_combo2 = NULL;
+    m_combo3 = NULL;
 
     m_sort_order = 0;
     m_last_header_click_mstime = 0;
@@ -229,51 +254,51 @@ MsgObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     FXString str1;
 
     writeln(ap->fi, "onPress obj %p sel %d ptr %p", obj, sel, ptr);
-    if (obj == ap->but1)
+    if (obj == m_but1)
     {
         writeln(ap->fi, "but1");
-        ap->fl->clearItems(TRUE);
-        str1 = ap->combo1->getText();
+        m_fl->clearItems(TRUE);
+        str1 = m_combo1->getText();
         snprintf(ap->fi->named, sizeof(ap->fi->named), "%s", str1.text());
-        str1 = ap->combo2->getText();
+        str1 = m_combo2->getText();
         snprintf(ap->fi->look_in, sizeof(ap->fi->look_in), "%s", str1.text());
-        ap->fi->include_subfolders = ap->cb1->getCheck();
-        ap->fi->case_sensitive = ap->cb2->getCheck();
-        ap->fi->show_hidden = ap->cb3->getCheck();
-        ap->fi->search_in_files = ap->cb4->getCheck();
-        ap->fi->search_in_case_sensitive = ap->cb5->getCheck();
-        str1 = ap->combo3->getText();
+        ap->fi->include_subfolders = m_cb1->getCheck();
+        ap->fi->case_sensitive = m_cb2->getCheck();
+        ap->fi->show_hidden = m_cb3->getCheck();
+        ap->fi->search_in_files = m_cb4->getCheck();
+        ap->fi->search_in_case_sensitive = m_cb5->getCheck();
+        str1 = m_combo3->getText();
         snprintf(ap->fi->text, sizeof(ap->fi->text), "%s", str1.text());
 
-        save_combo(ap, ap->combo1, "NameLocation", "Named");
-        save_combo(ap, ap->combo2, "NameLocation", "LookIn");
-        save_checkbox(ap, ap->cb1, "NameLocation", "IncludeSubfolders", 1);
-        save_checkbox(ap, ap->cb2, "NameLocation", "CaseSensitiveSearch", 0);
-        save_checkbox(ap, ap->cb3, "NameLocation", "ShowHiddenFiles", 0);
+        save_combo(ap, m_combo1, "NameLocation", "Named");
+        save_combo(ap, m_combo2, "NameLocation", "LookIn");
+        save_checkbox(ap, m_cb1, "NameLocation", "IncludeSubfolders", 1);
+        save_checkbox(ap, m_cb2, "NameLocation", "CaseSensitiveSearch", 0);
+        save_checkbox(ap, m_cb3, "NameLocation", "ShowHiddenFiles", 0);
 
         //ap->fl->hide();
         start_find(ap->fi);
-        ap->but1->disable();
-        ap->but2->enable();
+        m_but1->disable();
+        m_but2->enable();
     }
-    if (obj == ap->but2)
+    if (obj == m_but2)
     {
         writeln(ap->fi, "but2");
         stop_find(ap->fi);
     }
-    if (obj == ap->but3)
+    if (obj == m_but3)
     {
         writeln(ap->fi, "but3");
         //ap->app->stop(0);
     }
-    if (obj == ap->but4)
+    if (obj == m_but4)
     {
         writeln(ap->fi, "but4");
-        str1 = ap->combo2->getText();
+        str1 = m_combo2->getText();
         str1 = FXDirDialog::getOpenDirectory(m_mw, "Select Look In directory", str1);
         if (str1 != "")
         {
-            ap->combo2->setText(str1);
+            m_combo2->setText(str1);
         }
     }
 
@@ -311,53 +336,53 @@ MsgObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         m_width = width;
         m_height = height;
 
-        ap->gb1->move(0, 22);
-        ap->gb1->resize(width - 120, 180);
+        m_gb1->move(0, 22);
+        m_gb1->resize(width - 120, 180);
 
-        ap->gb2->move(0, 200);
-        ap->gb2->resize(width, height - 225);
+        m_gb2->move(0, 200);
+        m_gb2->resize(width, height - 225);
 
-        ap->but1->move(width - 110, 32);
-        ap->but1->resize(100, 30);
+        m_but1->move(width - 110, 32);
+        m_but1->resize(100, 30);
 
-        ap->but2->move(width - 110, 72);
-        ap->but2->resize(100, 30);
+        m_but2->move(width - 110, 72);
+        m_but2->resize(100, 30);
 
-        ap->but3->move(width - 110, 165);
-        ap->but3->resize(100, 30);
+        m_but3->move(width - 110, 165);
+        m_but3->resize(100, 30);
 
-        ap->label1->move(8, 8);
-        ap->label1->resize(100, 24);
+        m_label1->move(8, 8);
+        m_label1->resize(100, 24);
 
-        ap->combo1->move(85, 8);
-        ap->combo1->resize(400, 24);
+        m_combo1->move(85, 8);
+        m_combo1->resize(400, 24);
 
-        ap->label2->move(8, 41);
-        ap->label2->resize(100, 24);
+        m_label2->move(8, 41);
+        m_label2->resize(100, 24);
 
-        ap->combo2->move(85, 41);
-        ap->combo2->resize(340, 24);
+        m_combo2->move(85, 41);
+        m_combo2->resize(340, 24);
 
-        ap->but4->move(340 + 85 + 2, 41);
-        ap->but4->resize(60, 24);
+        m_but4->move(340 + 85 + 2, 41);
+        m_but4->resize(60, 24);
 
-        ap->cb1->move(8, 74);
-        ap->cb1->resize(200, 24);
+        m_cb1->move(8, 74);
+        m_cb1->resize(200, 24);
 
-        ap->cb2->move(8, 107);
-        ap->cb2->resize(200, 24);
+        m_cb2->move(8, 107);
+        m_cb2->resize(200, 24);
 
-        ap->cb3->move(216, 74);
-        ap->cb3->resize(200, 24);
+        m_cb3->move(216, 74);
+        m_cb3->resize(200, 24);
 
-        ap->cb4->move(10, 10);
-        ap->cb4->resize(120, 24);
+        m_cb4->move(10, 10);
+        m_cb4->resize(120, 24);
 
-        ap->combo3->move(10, 40);
-        ap->combo3->resize(340, 24);
+        m_combo3->move(10, 40);
+        m_combo3->resize(340, 24);
 
-        ap->cb5->move(10, 74);
-        ap->cb5->resize(160, 24);
+        m_cb5->move(10, 74);
+        m_cb5->resize(160, 24);
 
         ap->text1->move(85, 8);
         ap->text1->resize(400, 24);
@@ -628,15 +653,15 @@ MsgObject::onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr)
     index &= 3;
     if ((m_sort_order & (1 << index)) == 0)
     {
-        ap->fl->setSortFunc(sf1[index]);
+        m_fl->setSortFunc(sf1[index]);
         m_sort_order |= 1 << index;
     }
     else
     {
-        ap->fl->setSortFunc(sf2[index]);
+        m_fl->setSortFunc(sf2[index]);
         m_sort_order &= ~(1 << index);
     }
-    ap->fl->sortItems();
+    m_fl->sortItems();
     return 1;
 }
 
@@ -651,12 +676,12 @@ best_fit_column(struct app_data* ap, int column)
     ItemObject* io;
     FXFoldingItem* folding_item;
 
-    ft = ap->fl->getFont();
+    ft = ap->mo->m_fl->getFont();
     switch (column)
     {
         case 0:
             max_width = ft->getTextWidth("Name");
-            folding_item = ap->fl->getFirstItem();
+            folding_item = ap->mo->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -667,11 +692,11 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->fl->setHeaderSize(0, max_width + 8);
+            ap->mo->m_fl->setHeaderSize(0, max_width + 8);
             break;
         case 1:
             max_width = ft->getTextWidth("In Subfolder");
-            folding_item = ap->fl->getFirstItem();
+            folding_item = ap->mo->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -682,11 +707,11 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->fl->setHeaderSize(1, max_width + 8);
+            ap->mo->m_fl->setHeaderSize(1, max_width + 8);
             break;
         case 2:
             max_width = ft->getTextWidth("Size");
-            folding_item = ap->fl->getFirstItem();
+            folding_item = ap->mo->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -697,12 +722,12 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->fl->setHeaderSize(2, max_width + 8);
+            ap->mo->m_fl->setHeaderSize(2, max_width + 8);
 
             break;
         case 3:
             max_width = ft->getTextWidth("Modified");
-            folding_item = ap->fl->getFirstItem();
+            folding_item = ap->mo->m_fl->getFirstItem();
             while (folding_item != NULL)
             {
                 io = (ItemObject*)(folding_item->getData());
@@ -713,7 +738,7 @@ best_fit_column(struct app_data* ap, int column)
                 }
                 folding_item = folding_item->getNext();
             }
-            ap->fl->setHeaderSize(3, max_width + 8);
+            ap->mo->m_fl->setHeaderSize(3, max_width + 8);
             break;
     }
     return 0;
@@ -768,14 +793,14 @@ MsgObject::onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr)
     event = (FXEvent*)ptr;
     if (event->moved == FALSE)
     {
-        rci = ap->fl->getItemAt(event->click_x, event->click_y);
+        rci = ap->mo->m_fl->getItemAt(event->click_x, event->click_y);
         if (rci != NULL)
         {
-            if (ap->fl->isItemSelected(rci) == FALSE)
+            if (ap->mo->m_fl->isItemSelected(rci) == FALSE)
             {
-                ap->fl->killSelection(TRUE);
-                ap->fl->setCurrentItem(rci, TRUE);
-                ap->fl->selectItem(rci, TRUE);
+                ap->mo->m_fl->killSelection(TRUE);
+                ap->mo->m_fl->setCurrentItem(rci, TRUE);
+                ap->mo->m_fl->selectItem(rci, TRUE);
             }
             ap->fl_popup->popup(NULL, event->root_x, event->root_y);
             m_app->runModalWhileShown(ap->fl_popup);
@@ -794,7 +819,7 @@ MsgObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
 
     writeln(ap->fi, "MsgObject::onCopyFilename:");
     m_dnd_str = "";
-    fi = ap->fl->getFirstItem();
+    fi = m_fl->getFirstItem();
     while (fi != NULL)
     {
         if (fi->isSelected())
@@ -823,7 +848,7 @@ MsgObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
 
     writeln(ap->fi, "MsgObject::onCopyFullPath:");
     m_dnd_str = "";
-    fi = ap->fl->getFirstItem();
+    fi = m_fl->getFirstItem();
     while (fi != NULL)
     {
         if (fi->isSelected())
@@ -866,7 +891,7 @@ MsgObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
     rv = FXMessageBox::warning(m_mw, MBOX_YES_NO, "Question", "Do you want to exit?");
     if (rv == MBOX_CLICKED_YES)
     {
-        ap->fl->clearItems(TRUE);
+        m_fl->clearItems(TRUE);
         return 0;
     }
     return 1;
@@ -913,10 +938,10 @@ MsgObject::onFLLeftMouseDown(FXObject* obj, FXSelector sel, void* ptr)
     FXFoldingItem* fi;
 
     //writeln(ap->fi, "MsgObject::onFLLeftMouseDown:");
-    width = ap->fl->getHeaderSize(0);
-    width += ap->fl->getHeaderSize(1);
-    width += ap->fl->getHeaderSize(2);
-    width += ap->fl->getHeaderSize(3);
+    width = m_fl->getHeaderSize(0);
+    width += m_fl->getHeaderSize(1);
+    width += m_fl->getHeaderSize(2);
+    width += m_fl->getHeaderSize(3);
     //writeln(ap->fi, "  width %d", width);
     event = (FXEvent*)ptr;
     //writeln(ap->fi, "click_x %d click_y %d", event->click_x, event->click_y);
@@ -924,7 +949,7 @@ MsgObject::onFLLeftMouseDown(FXObject* obj, FXSelector sel, void* ptr)
     {
         return 0;
     }
-    fi = ap->fl->getItemAt(event->click_x, event->click_y);
+    fi = m_fl->getItemAt(event->click_x, event->click_y);
     if (fi != NULL)
     {
         if (fi->isSelected() && ((event->state & SHIFTMASK) == 0) && ((event->state & CONTROLMASK) == 0))
@@ -945,7 +970,7 @@ MsgObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
 
     //writeln(ap->fi, "MsgObject::onBeginDrag:");
     m_dnd_str = "";
-    fi = ap->fl->getFirstItem();
+    fi = m_fl->getFirstItem();
     while (fi != NULL)
     {
         if (fi->isSelected())
@@ -1080,78 +1105,78 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     ap->mo->m_mw->setSelector(MsgObject::ID_MAINWINDOW);
 
     flags = LAYOUT_EXPLICIT;
-    ap->gb1 = new FXGroupBox(ap->mo->m_mw, "", flags);
+    ap->mo->m_gb1 = new FXGroupBox(ap->mo->m_mw, "", flags);
 
     sel = MsgObject::ID_TABBOOK;
     flags = LAYOUT_FILL_X | LAYOUT_FILL_Y;
-    ap->tab_book = new FXTabBook(ap->gb1, ap->mo, sel, flags);
-    ap->ti1 = new FXTabItem(ap->tab_book, "Name/&Location");
+    ap->mo->m_tab_book = new FXTabBook(ap->mo->m_gb1, ap->mo, sel, flags);
+    ap->mo->m_ti1 = new FXTabItem(ap->mo->m_tab_book, "Name/&Location");
     flags = LAYOUT_FILL_X | LAYOUT_FILL_Y | FRAME_THICK | FRAME_RAISED;
-    ap->tabframe1 = new FXGroupBox(ap->tab_book, "", flags);
-    ap->ti2 = new FXTabItem(ap->tab_book, "&Date Modified");
-    ap->tabframe2 = new FXGroupBox(ap->tab_book, "", flags);
-    ap->ti3 = new FXTabItem(ap->tab_book, "&Advanced");
-    ap->tabframe3 = new FXGroupBox(ap->tab_book, "", flags);
+    ap->mo->m_tabframe1 = new FXGroupBox(ap->mo->m_tab_book, "", flags);
+    ap->mo->m_ti2 = new FXTabItem(ap->mo->m_tab_book, "&Date Modified");
+    ap->mo->m_tabframe2 = new FXGroupBox(ap->mo->m_tab_book, "", flags);
+    ap->mo->m_ti3 = new FXTabItem(ap->mo->m_tab_book, "&Advanced");
+    ap->mo->m_tabframe3 = new FXGroupBox(ap->mo->m_tab_book, "", flags);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->label1 = new FXLabel(ap->tabframe1, "&Named:", NULL, flags);
+    ap->mo->m_label1 = new FXLabel(ap->mo->m_tabframe1, "&Named:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    ap->combo1 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
-    ap->combo1->setNumVisible(10);
+    ap->mo->m_combo1 = new FXComboBox(ap->mo->m_tabframe1, 0, NULL, 0, flags);
+    ap->mo->m_combo1->setNumVisible(10);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->label2 = new FXLabel(ap->tabframe1, "Look &in:", NULL, flags);
+    ap->mo->m_label2 = new FXLabel(ap->mo->m_tabframe1, "Look &in:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    ap->combo2 = new FXComboBox(ap->tabframe1, 0, NULL, 0, flags);
-    ap->combo2->setNumVisible(10);
+    ap->mo->m_combo2 = new FXComboBox(ap->mo->m_tabframe1, 0, NULL, 0, flags);
+    ap->mo->m_combo2->setNumVisible(10);
 
     sel = MsgObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
-    ap->but4 = new FXButton(ap->tabframe1, "&Browse", NULL, ap->mo, sel, flags);
+    ap->mo->m_but4 = new FXButton(ap->mo->m_tabframe1, "&Browse", NULL, ap->mo, sel, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->cb1 = new FXCheckButton(ap->tabframe1, "Include subfolders", NULL, 0, flags);
-    ap->cb1->setCheck(TRUE);
-    ap->cb2 = new FXCheckButton(ap->tabframe1, "Case sensitive search", NULL, 0, flags);
-    ap->cb3 = new FXCheckButton(ap->tabframe1, "Show hidden files", NULL, 0, flags);
+    ap->mo->m_cb1 = new FXCheckButton(ap->mo->m_tabframe1, "Include subfolders", NULL, 0, flags);
+    ap->mo->m_cb1->setCheck(TRUE);
+    ap->mo->m_cb2 = new FXCheckButton(ap->mo->m_tabframe1, "Case sensitive search", NULL, 0, flags);
+    ap->mo->m_cb3 = new FXCheckButton(ap->mo->m_tabframe1, "Show hidden files", NULL, 0, flags);
 
     flags = TEXTFIELD_NORMAL;
-    ap->text1 = new FXTextField(ap->tabframe2, 0, NULL, 0, flags);
+    ap->text1 = new FXTextField(ap->mo->m_tabframe2, 0, NULL, 0, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->cb4 = new FXCheckButton(ap->tabframe3, "Search in files");
+    ap->mo->m_cb4 = new FXCheckButton(ap->mo->m_tabframe3, "Search in files");
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    ap->combo3 = new FXComboBox(ap->tabframe3, 0, NULL, 0, flags);
+    ap->mo->m_combo3 = new FXComboBox(ap->mo->m_tabframe3, 0, NULL, 0, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    ap->cb5 = new FXCheckButton(ap->tabframe3, "Case sensitive search");
+    ap->mo->m_cb5 = new FXCheckButton(ap->mo->m_tabframe3, "Case sensitive search");
 
     sel = MsgObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
-    ap->but1 = new FXButton(ap->mo->m_mw, "&Find", NULL, ap->mo, sel, flags);
-    ap->but2 = new FXButton(ap->mo->m_mw, "&Stop", NULL, ap->mo, sel, flags);
-    ap->but2->disable();
+    ap->mo->m_but1 = new FXButton(ap->mo->m_mw, "&Find", NULL, ap->mo, sel, flags);
+    ap->mo->m_but2 = new FXButton(ap->mo->m_mw, "&Stop", NULL, ap->mo, sel, flags);
+    ap->mo->m_but2->disable();
     sel = MsgObject::ID_EXIT;
-    ap->but3 = new FXButton(ap->mo->m_mw, "Exit", NULL, ap->mo, sel, flags);
+    ap->mo->m_but3 = new FXButton(ap->mo->m_mw, "Exit", NULL, ap->mo, sel, flags);
 
     flags = LAYOUT_EXPLICIT;
-    ap->gb2 = new FXGroupBox(ap->mo->m_mw, "", flags);
+    ap->mo->m_gb2 = new FXGroupBox(ap->mo->m_mw, "", flags);
 
     sel = MsgObject::ID_FOLDINGLIST;
     flags = FOLDINGLIST_NORMAL | LAYOUT_FILL_X | LAYOUT_FILL_Y;
-    ap->fl = new FXFoldingList(ap->gb2, ap->mo, sel, flags);
-    ap->fl->appendHeader("Name", 0, 100);
-    ap->fl->appendHeader("In Subfolder", 0, 100);
-    ap->fl->appendHeader("Size", 0, 100);
-    ap->fl->appendHeader("Modified", 0, 100);
-    ap->flh = ap->fl->getHeader();
-    ap->flh->setTarget(ap->mo);
-    ap->flh->setSelector(MsgObject::ID_FOLDINGLISTHEADER);
+    ap->mo->m_fl = new FXFoldingList(ap->mo->m_gb2, ap->mo, sel, flags);
+    ap->mo->m_fl->appendHeader("Name", 0, 100);
+    ap->mo->m_fl->appendHeader("In Subfolder", 0, 100);
+    ap->mo->m_fl->appendHeader("Size", 0, 100);
+    ap->mo->m_fl->appendHeader("Modified", 0, 100);
+    ap->mo->m_flh = ap->mo->m_fl->getHeader();
+    ap->mo->m_flh->setTarget(ap->mo);
+    ap->mo->m_flh->setSelector(MsgObject::ID_FOLDINGLISTHEADER);
 
-    ap->fl_popup = new FXMenuPane(ap->fl);
+    ap->fl_popup = new FXMenuPane(ap->mo->m_fl);
     sel = MsgObject::ID_COPY_FILENAME;
     new FXMenuCommand(ap->fl_popup, "&Copy filename\t\tCopy the filename to clipboard.", NULL, ap->mo, sel);
     new FXMenuSeparator(ap->fl_popup);
@@ -1213,7 +1238,7 @@ load_stuff(struct app_data* ap)
         val = reg->readStringEntry("NameLocation", key.text(), "_NoWay_");
         if (val != "_NoWay_")
         {
-            ap->combo1->appendItem(val);
+            ap->mo->m_combo1->appendItem(val);
         }
     }
     for (index = 0; index < 100; index++)
@@ -1222,23 +1247,23 @@ load_stuff(struct app_data* ap)
         val = reg->readStringEntry("NameLocation", key.text(), "_NoWay_");
         if (val != "_NoWay_")
         {
-            ap->combo2->appendItem(val);
+            ap->mo->m_combo2->appendItem(val);
         }
     }
     val = reg->readStringEntry("NameLocation", "IncludeSubfolders", "_NoWay_");
     if (val != "_NoWay_")
     {
-        ap->cb1->setCheck(atoi(val.text()));
+        ap->mo->m_cb1->setCheck(atoi(val.text()));
     }
     val = reg->readStringEntry("NameLocation", "CaseSensitiveSearch", "_NoWay_");
     if (val != "_NoWay_")
     {
-        ap->cb2->setCheck(atoi(val.text()));
+        ap->mo->m_cb2->setCheck(atoi(val.text()));
     }
     val = reg->readStringEntry("NameLocation", "ShowHiddenFiles", "_NoWay_");
     if (val != "_NoWay_")
     {
-        ap->cb3->setCheck(atoi(val.text()));
+        ap->mo->m_cb3->setCheck(atoi(val.text()));
     }
 
     return 0;
@@ -1329,21 +1354,21 @@ gui_find_done(struct finder_info* fi)
 
     writeln(fi, "gui_find_done");
     ap = (struct app_data*)(fi->gui_obj);
-    ap->but1->enable();
-    ap->but2->disable();
-    count = ap->fl->getNumItems();
+    ap->mo->m_but1->enable();
+    ap->mo->m_but2->disable();
+    count = ap->mo->m_fl->getNumItems();
     str1.format("%d Items found", count);
     ap->sbl1->setText(str1);
 
     //ap->fl->show();
 
     /* resize the columns */
-    ft = ap->fl->getFont();
+    ft = ap->mo->m_fl->getFont();
     max_width[0] = ft->getTextWidth("Name");
     max_width[1] = ft->getTextWidth("In Subfolder");
     max_width[2] = ft->getTextWidth("Size");
     max_width[3] = ft->getTextWidth("Modified");
-    folding_item = ap->fl->getFirstItem();
+    folding_item = ap->mo->m_fl->getFirstItem();
     while (folding_item != NULL)
     {
         io = (ItemObject*)(folding_item->getData());
@@ -1369,10 +1394,10 @@ gui_find_done(struct finder_info* fi)
         }
         folding_item = folding_item->getNext();
     }
-    ap->fl->setHeaderSize(0, max_width[0] + 8);
-    ap->fl->setHeaderSize(1, max_width[1] + 8);
-    ap->fl->setHeaderSize(2, max_width[2] + 8);
-    ap->fl->setHeaderSize(3, max_width[3] + 8);
+    ap->mo->m_fl->setHeaderSize(0, max_width[0] + 8);
+    ap->mo->m_fl->setHeaderSize(1, max_width[1] + 8);
+    ap->mo->m_fl->setHeaderSize(2, max_width[2] + 8);
+    ap->mo->m_fl->setHeaderSize(3, max_width[3] + 8);
 
     return 0;
 }
@@ -1408,7 +1433,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
     io->modified = modified;
     folding_item = new FXFoldingItem(str1);
     folding_item->setDraggable(TRUE);
-    ap->fl->appendItem(NULL, folding_item, TRUE);
+    ap->mo->m_fl->appendItem(NULL, folding_item, TRUE);
     folding_item->setData(io);
     return 0;
 }
