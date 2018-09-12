@@ -1000,10 +1000,7 @@ best_fit_column(GUIObject* go, int column)
             {
                 io = (ItemObject*)(folding_item->getData());
                 width = ft->getTextWidth(io->filename);
-                if (width > max_width)
-                {
-                    max_width = width;
-                }
+                max_width = FXMAX(width, max_width);
                 folding_item = folding_item->getNext();
             }
             go->m_fl->setHeaderSize(0, max_width + 8);
@@ -1015,10 +1012,7 @@ best_fit_column(GUIObject* go, int column)
             {
                 io = (ItemObject*)(folding_item->getData());
                 width = ft->getTextWidth(io->in_subfolder);
-                if (width > max_width)
-                {
-                    max_width = width;
-                }
+                max_width = FXMAX(width, max_width);
                 folding_item = folding_item->getNext();
             }
             go->m_fl->setHeaderSize(1, max_width + 8);
@@ -1030,10 +1024,7 @@ best_fit_column(GUIObject* go, int column)
             {
                 io = (ItemObject*)(folding_item->getData());
                 width = ft->getTextWidth(io->size_text);
-                if (width > max_width)
-                {
-                    max_width = width;
-                }
+                max_width = FXMAX(width, max_width);
                 folding_item = folding_item->getNext();
             }
             go->m_fl->setHeaderSize(2, max_width + 8);
@@ -1046,10 +1037,7 @@ best_fit_column(GUIObject* go, int column)
             {
                 io = (ItemObject*)(folding_item->getData());
                 width = ft->getTextWidth(io->modified);
-                if (width > max_width)
-                {
-                    max_width = width;
-                }
+                max_width = FXMAX(width, max_width);
                 folding_item = folding_item->getNext();
             }
             go->m_fl->setHeaderSize(3, max_width + 8);
