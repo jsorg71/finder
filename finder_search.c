@@ -294,9 +294,10 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
     int look_in_text_alloc_bytes;
     int fd;
     int found_in_file;
+    int is_dir;
     char* path;
     char* look_in_text;
-    struct stat lstat;
+    struct stat lstat1;
 
     look_in_bytes = strlen(fi->look_in);
     name_bytes = strlen(name);
@@ -326,75 +327,85 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
     {
         snprintf(look_in_text, look_in_text_alloc_bytes, "%s", name + look_in_bytes + 1);
     }
-
     count = 0;
     while (1)
     {
-
         if (finder_event_is_set(fi->work_term_event))
         {
             break;
         }
-
         entry = readdir(dir);
         if (entry == NULL)
         {
             break;
         }
-
-        if (entry->d_type == DT_DIR)
+        fd = -1;
+        path = (char*)malloc(FINDER_MAX_PATH);
+        if (path == NULL)
+        {
+            continue;
+        }
+        snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry->d_name);
+        if ((entry->d_type == DT_UNKNOWN) || fi->search_in_files)
+        {
+            /* much slower if we have to go in here */
+            fd = open(path, O_RDONLY);
+            if (fd < 0)
+            {
+                writeln(fi, "open error %s", path);
+                free(path);
+                close(fd);
+                continue;
+            }
+            if (fstat(fd, &lstat1) != 0)
+            {
+                writeln(fi, "fstat error %s", path);
+                free(path);
+                close(fd);
+                continue;
+            }
+            is_dir = (lstat1.st_mode & S_IFMT) == S_IFDIR;
+        }
+        else
+        {
+            is_dir = entry->d_type == DT_DIR;
+        }
+        if (is_dir)
         {
             if ((strcmp(entry->d_name, ".") == 0) ||
                 (strcmp(entry->d_name, "..") == 0))
             {
+                free(path);
+                close(fd);
                 continue;
             }
             if (fi->include_subfolders)
             {
                 if ((entry->d_name[0] == '.') && fi->show_hidden == 0)
                 {
+                    free(path);
+                    close(fd);
                     continue;
                 }
-                path = (char*)malloc(FINDER_MAX_PATH);
-                snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry->d_name);
                 listdir(fi, wi, path);
-                free(path);
             }
         }
         else
         {
             if ((entry->d_name[0] == '.') && fi->show_hidden == 0)
             {
+                free(path);
+                close(fd);
                 continue;
             }
-
             if (check_file_name(fi, entry->d_name) != 0)
             {
+                free(path);
+                close(fd);
                 continue;
             }
-
-            path = (char*)malloc(FINDER_MAX_PATH);
-            if (path == NULL)
-            {
-                continue;
-            }
-            snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry->d_name);
             if (fi->search_in_files)
             {
-                fd = open(path, O_RDONLY);
-                if (fd < 0)
-                {
-                    writeln(fi, "open error %s", path);
-                    free(path);
-                    continue;
-                }
-                if (fstat(fd, &lstat) != 0)
-                {
-                    writeln(fi, "fstat error %s", path);
-                    free(path);
-                    close(fd);
-                    continue;
-                }
                 if (find_in_file(fd, fi, &found_in_file) != 0)
                 {
                     free(path);
@@ -407,25 +418,14 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                     close(fd);
                     continue;
                 }
-                close(fd);
             }
-            else
-            {
-                if (stat(path, &lstat) != 0)
-                {
-                    writeln(fi, "stat error %s", path);
-                    free(path);
-                    continue;
-                }
-            }
-            free(path);
             lwi = (struct work_item*)calloc(1, sizeof(struct work_item));
             if (lwi != NULL)
             {
                 lwi->cmd = FINDER_CMD_ADD_ONE;
                 lwi->filename = strdup(entry->d_name);
                 lwi->in_subfolder = strdup(look_in_text);
-                lwi->size = lstat.st_size;
+                lwi->size = lstat1.st_size;
                 finder_mutex_lock(fi->list_mutex);
                 finder_list_add_item(fi->work_to_main_list, (ITYPE)lwi);
                 finder_mutex_unlock(fi->list_mutex);
@@ -433,6 +433,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             count++;
             gui_set_event(fi);
         }
+        free(path);
+        close(fd);
     }
     free(look_in_text);
     closedir(dir);
