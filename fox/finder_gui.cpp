@@ -748,6 +748,7 @@ GUIObject::onEventTimeout(FXObject* obj, FXSelector sel, void* ptr)
 }
 
 /*****************************************************************************/
+/* sort column 1 acceding */
 static FXint
 sort00(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -774,6 +775,7 @@ sort00(const FXFoldingItem* a, const FXFoldingItem* b)
 }
 
 /*****************************************************************************/
+/* sort column 1 descending */
 static FXint
 sort01(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -800,6 +802,7 @@ sort01(const FXFoldingItem* a, const FXFoldingItem* b)
 }
 
 /*****************************************************************************/
+/* sort column 2 acceding */
 static FXint
 sort10(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -826,6 +829,7 @@ sort10(const FXFoldingItem* a, const FXFoldingItem* b)
 }
 
 /*****************************************************************************/
+/* sort column 2 descending */
 static FXint
 sort11(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -852,6 +856,7 @@ sort11(const FXFoldingItem* a, const FXFoldingItem* b)
 }
 
 /*****************************************************************************/
+/* sort column 3 acceding */
 static FXint
 sort20(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -878,6 +883,7 @@ sort20(const FXFoldingItem* a, const FXFoldingItem* b)
 }
 
 /*****************************************************************************/
+/* sort column 3 descending */
 static FXint
 sort21(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -904,6 +910,7 @@ sort21(const FXFoldingItem* a, const FXFoldingItem* b)
 }
 
 /*****************************************************************************/
+/* sort column 4 acceding */
 static FXint
 sort30(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -930,6 +937,7 @@ sort30(const FXFoldingItem* a, const FXFoldingItem* b)
 }
 
 /*****************************************************************************/
+/* sort column 4 descending */
 static FXint
 sort31(const FXFoldingItem* a, const FXFoldingItem* b)
 {
@@ -1028,7 +1036,6 @@ best_fit_column(GUIObject* go, int column)
                 folding_item = folding_item->getNext();
             }
             go->m_fl->setHeaderSize(2, max_width + 8);
-
             break;
         case 3:
             max_width = ft->getTextWidth("Modified");
@@ -1285,6 +1292,7 @@ long
 GUIObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXEvent* event;
+    FXCursor* cur;
 
     //writeln(m_fi, "GUIObject::onDragged:");
     event = (FXEvent*)ptr;
@@ -1292,12 +1300,14 @@ GUIObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
     if (m_mw->didAccept() != DRAG_REJECT)
     {
         //writeln(m_fi, "drop_ok_cursor");
-        m_fl->setDragCursor(m_app->getDefaultCursor(DEF_DNDCOPY_CURSOR));
+        cur = m_app->getDefaultCursor(DEF_DNDCOPY_CURSOR);
+        m_fl->setDragCursor(cur);
     }
     else
     {
         //writeln(m_fi, "drop_not_ok_cursor");
-        m_fl->setDragCursor(m_app->getDefaultCursor(DEF_DNDSTOP_CURSOR));
+        cur = m_app->getDefaultCursor(DEF_DNDSTOP_CURSOR);
+        m_fl->setDragCursor(cur);
     }
 
     return 1;

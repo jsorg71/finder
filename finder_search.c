@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -295,9 +296,11 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
     int fd;
     int found_in_file;
     int is_dir;
+    int got_stat;
     char* path;
     char* look_in_text;
     struct stat lstat1;
+    struct tm* local_time;
 
     look_in_bytes = strlen(fi->look_in);
     name_bytes = strlen(name);
@@ -340,6 +343,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             break;
         }
         fd = -1;
+        got_stat = 0;
         path = (char*)malloc(FINDER_MAX_PATH);
         if (path == NULL)
         {
@@ -364,6 +368,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                 close(fd);
                 continue;
             }
+            got_stat = 1;
             is_dir = (lstat1.st_mode & S_IFMT) == S_IFDIR;
         }
         else
@@ -422,10 +427,32 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             lwi = (struct work_item*)calloc(1, sizeof(struct work_item));
             if (lwi != NULL)
             {
+                if (got_stat == 0)
+                {
+                    //writeln(fi, "stat %s", path);
+                    if (stat(path, &lstat1) != 0)
+                    {
+                        writeln(fi, "stat error %s", path);
+                        free(path);
+                        close(fd);
+                        continue;
+                    }
+                }
                 lwi->cmd = FINDER_CMD_ADD_ONE;
                 lwi->filename = strdup(entry->d_name);
                 lwi->in_subfolder = strdup(look_in_text);
                 lwi->size = lstat1.st_size;
+                local_time = localtime(&(lstat1.st_mtim.tv_sec));
+                if (local_time != NULL)
+                {
+                    lwi->modified = (char*)malloc(1024);
+                    if (lwi->modified != NULL)
+                    {
+                        snprintf(lwi->modified, 1024, "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
+                                 1900 + local_time->tm_year, local_time->tm_mon, local_time->tm_mday,
+                                 local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
+                    }
+                }
                 finder_mutex_lock(fi->list_mutex);
                 finder_list_add_item(fi->work_to_main_list, (ITYPE)lwi);
                 finder_mutex_unlock(fi->list_mutex);
