@@ -625,6 +625,7 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXint width;
     FXint height;
+    FXint lw;
 
     width = m_mw->getWidth();
     height = m_mw->getHeight();
@@ -653,16 +654,17 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         m_label1->move(8, 8);
         m_label1->resize(100, 24);
 
+        lw = m_tabframe1->getWidth();
         m_combo1->move(85, 8);
-        m_combo1->resize(400, 24);
+        m_combo1->resize(lw - 100, 24);
 
         m_label2->move(8, 41);
         m_label2->resize(100, 24);
 
         m_combo2->move(85, 41);
-        m_combo2->resize(340, 24);
+        m_combo2->resize(lw - 165, 24);
 
-        m_but4->move(340 + 85 + 2, 41);
+        m_but4->move(lw - 75, 41);
         m_but4->resize(60, 24);
 
         m_cb1->move(8, 74);
@@ -677,8 +679,9 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         m_cb4->move(10, 10);
         m_cb4->resize(120, 24);
 
+        lw = m_tabframe3->getWidth();
         m_combo3->move(10, 40);
-        m_combo3->resize(340, 24);
+        m_combo3->resize(lw - 20, 24);
 
         m_cb5->move(10, 74);
         m_cb5->resize(160, 24);
