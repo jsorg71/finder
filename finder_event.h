@@ -2,7 +2,11 @@
 #if !defined(FINDER_EVENT_H)
 #define FINDER_EVENT_H
 
+#if defined(_WIN32)
+#define FINDER_WAIT_OBJ HANDLE
+#else
 #define FINDER_WAIT_OBJ int
+#endif
 
 #ifdef __cplusplus
 extern "C" {

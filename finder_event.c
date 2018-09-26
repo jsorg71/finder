@@ -30,11 +30,15 @@ finder_event_create(void** event1)
     {
         return 1;
     }
+#if defined(_WIN32)
+    levent->event = CreateEvent(0, 1, 0, NULL);
+#else
     if (pipe(levent->pipe) != 0)
     {
         free(levent);
         return 2;
     }
+#endif
     *event1 = levent;
     return 0;
 }
@@ -50,8 +54,12 @@ finder_event_delete(void* event1)
     {
         return 0;
     }
+#if defined(_WIN32)
+    CloseHandle(levent->event);
+#else
     close(levent->pipe[0]);
     close(levent->pipe[1]);
+#endif
     free(levent);
     return 0;
 }
@@ -65,10 +73,17 @@ finder_event_set(void* event1)
     levent = (struct finder_event*)event1;
     if (!finder_event_is_set(levent))
     {
+#if defined(_WIN32)
+        if (!SetEvent(levent->event))
+        {
+            return 1;
+        }
+#else
         if (write(levent->pipe[1], "sig", 4) != 4)
         {
             return 1;
         }
+#endif
     }
     return 0;
 }
@@ -78,15 +93,25 @@ int
 finder_event_clear(void* event1)
 {
     struct finder_event* levent;
+#if defined(_WIN32)
+#else
     char val[4];
+#endif
 
     levent = (struct finder_event*)event1;
     while (finder_event_is_set(levent))
     {
+#if defined(_WIN32)
+        if (!ResetEvent(levent->event))
+        {
+            return 1;
+        }
+#else
         if (read(levent->pipe[0], val, 4) < 1)
         {
             return 1;
         }
+#endif
     }
     return 0;
 }
@@ -96,12 +121,21 @@ int
 finder_event_is_set(void* event1)
 {
     struct finder_event* levent;
+#if defined(_WIN32)
+#else
     struct timeval time;
     fd_set rfds;
     int rv;
     int sck;
+#endif
 
     levent = (struct finder_event*)event1;
+#if defined(_WIN32)
+    if (WaitForSingleObject(levent->event, 0) == 0)
+    {
+        return 1;
+    }
+#else
     memset(&time, 0, sizeof(time));
     sck = levent->pipe[0];
     FD_ZERO(&rfds);
@@ -111,6 +145,7 @@ finder_event_is_set(void* event1)
     {
         return 1;
     }
+#endif
     return 0;
 }
 
@@ -121,6 +156,10 @@ finder_event_get_wait_obj(void* event1)
     struct finder_event* levent;
 
     levent = (struct finder_event*)event1;
+#if defined(_WIN32)
+    return levent->event;
+#else
     return levent->pipe[0];
+#endif
 }
 
