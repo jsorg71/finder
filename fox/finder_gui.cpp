@@ -1276,13 +1276,15 @@ GUIObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
             io = (ItemObject*)(fi->getData());
             if (io->in_subfolder.length() < 1)
             {
-                str1 = m_fi->look_in;
+                str1 = "file://";
+                str1 += m_fi->look_in;
                 str1 += "/";
                 str1 += io->filename;
             }
             else
             {
-                str1 = m_fi->look_in;
+                str1 = "file://";
+                str1 += m_fi->look_in;
                 str1 += "/";
                 str1 += io->in_subfolder;
                 str1 += "/";
