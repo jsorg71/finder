@@ -25,6 +25,7 @@
 #include "finder.h"
 #include "finder_event.h"
 #include "finder_gui.h"
+#include "finder_gui_about.h"
 
 class ItemObject : public FXObject
 {
@@ -158,13 +159,13 @@ public:
 };
 
 /*****************************************************************************/
-GUIObject::GUIObject():FXObject()
+GUIObject::GUIObject() : FXObject()
 {
     writeln(m_fi, "GUIObject::GUIObject default");
 }
 
 /*****************************************************************************/
-GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi):FXObject()
+GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
 {
     FXuint flags;
     FXSelector sel;
@@ -746,7 +747,12 @@ GUIObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 {
+    class AboutDialog* about;
+
     writeln(m_fi, "GUIObject::onCmdAbout:");
+    about = new AboutDialog(m_app, m_mw);
+    about->execute(PLACEMENT_OWNER);
+    delete about;
     return 0;
 }
 

@@ -1,5 +1,5 @@
 
-OBJS=finder_gui.o
+OBJS=finder_gui.o finder_gui_about.o
 
 CXXFLAGS=-O2 -g -Wall -I.. `fox-config --cflags` -fvisibility=hidden -fPIC
 
