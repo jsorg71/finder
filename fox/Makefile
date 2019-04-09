@@ -5,7 +5,7 @@ CXXFLAGS=-O2 -g -Wall -I.. `fox-config --cflags` -fvisibility=hidden -fPIC
 
 LDFLAGS=
 
-LIBS=`fox-config --libs` ../finder.a
+LIBS=`fox-config --libs` ../finder.a -lpthread
 
 all:
 	$(MAKE) -C ..
