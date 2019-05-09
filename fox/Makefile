@@ -18,3 +18,6 @@ clean:
 	$(MAKE) -C .. clean
 	rm -f finder $(OBJS)
 
+%.o: %.cpp *.h ../finder.a
+	$(CXX) $(CXXFLAGS) -c $<
+
