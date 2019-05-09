@@ -24,8 +24,20 @@ class AboutDialog : public FXDialogBox
     FXDECLARE(AboutDialog)
 public:
     AboutDialog();
-    AboutDialog(FXApp* app, FXWindow* parent);
+    AboutDialog(FXApp* app, FXWindow* parent, struct finder_info* fi);
     virtual ~AboutDialog();
+    long onPress(FXObject* obj, FXSelector sel, void* ptr);
+public:
+    enum _ids
+    {
+        ID_BUTTON = FXDialogBox::ID_LAST,
+        ID_LAST
+    };
+public:
+    FXApp* m_app;
+    FXButton* m_ok_but;
+    FXLabel* m_text;
+    struct finder_info* m_fi;
 };
 
 #endif

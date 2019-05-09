@@ -305,7 +305,7 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     flags = LAYOUT_SIDE_BOTTOM | LAYOUT_FILL_X | STATUSBAR_WITH_DRAGCORNER | FRAME_RAISED;
     m_sb = new FXStatusBar(m_mw, flags);
 
-    m_sbl1 = new FXLabel(m_sb, "", NULL,LAYOUT_RIGHT | LAYOUT_CENTER_Y);
+    m_sbl1 = new FXLabel(m_sb, "", NULL, LAYOUT_RIGHT | LAYOUT_CENTER_Y);
 
     m_app->create();
     m_mw->show(PLACEMENT_SCREEN);
@@ -750,7 +750,7 @@ GUIObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
     class AboutDialog* about;
 
     writeln(m_fi, "GUIObject::onCmdAbout:");
-    about = new AboutDialog(m_app, m_mw);
+    about = new AboutDialog(m_app, m_mw, m_fi);
     about->execute(PLACEMENT_OWNER);
     delete about;
     return 0;

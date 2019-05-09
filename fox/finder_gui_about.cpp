@@ -22,10 +22,12 @@
 
 #include <fx.h>
 
+#include "finder.h"
 #include "finder_gui_about.h"
 
 FXDEFMAP(AboutDialog) AboutDialogMap[] =
 {
+    FXMAPFUNC(SEL_COMMAND, AboutDialog::ID_BUTTON, AboutDialog::onPress)
 };
 
 FXIMPLEMENT(AboutDialog, FXDialogBox, AboutDialogMap, ARRAYNUMBER(AboutDialogMap))
@@ -33,16 +35,43 @@ FXIMPLEMENT(AboutDialog, FXDialogBox, AboutDialogMap, ARRAYNUMBER(AboutDialogMap
 /*****************************************************************************/
 AboutDialog::AboutDialog() : FXDialogBox()
 {
+    m_ok_but = NULL;
+    m_app = NULL;
+    m_fi = NULL;
 }
 
 /*****************************************************************************/
-AboutDialog::AboutDialog(FXApp* app, FXWindow* parent) : FXDialogBox(app, "Finder About")
+AboutDialog::AboutDialog(FXApp* app, FXWindow* parent, struct finder_info* fi) : FXDialogBox(parent, "Finder About")
 {
+    FXuint flags;
+    FXSelector sel;
+    FXString ver;
+
+    writeln(m_fi, "AboutDialog::AboutDialog");
     setWidth(400);
     setHeight(100);
+    flags = BUTTON_NORMAL | LAYOUT_EXPLICIT | BUTTON_DEFAULT;
+    sel = AboutDialog::ID_BUTTON;
+    m_ok_but = new FXButton(this, "&Ok", NULL, this, sel, flags, 300, 60, 80, 30);
+    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    ver.format("Finder version %d.%d", FINDER_VERSION_MAJOR, FINDER_VERSION_MINOR);
+    m_text = new FXLabel(this, ver, NULL, flags, 10, 10, 300, 30);
+    m_app = app;
+    m_fi = fi;
+    m_ok_but->setFocus();
 }
 
 /*****************************************************************************/
 AboutDialog::~AboutDialog()
 {
+    writeln(m_fi, "AboutDialog::~AboutDialog");
+}
+
+/*****************************************************************************/
+long
+AboutDialog::onPress(FXObject* obj, FXSelector sel, void* ptr)
+{
+    writeln(m_fi, "AboutDialog::onPress");
+    onCmdCancel(0, 0, 0);
+    return 0;
 }
