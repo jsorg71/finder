@@ -14,3 +14,6 @@ finder.a: $(OBJS)
 clean:
 	rm -f finder.a $(OBJS)
 
+%.o: %.c *.h
+	$(CC) $(CFLAGS) -c $<
+
