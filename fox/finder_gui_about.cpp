@@ -47,7 +47,7 @@ AboutDialog::AboutDialog(FXApp* app, FXWindow* parent, struct finder_info* fi) :
     FXSelector sel;
     FXString ver;
 
-    writeln(m_fi, "AboutDialog::AboutDialog");
+    writeln(fi, "AboutDialog::AboutDialog");
     setWidth(400);
     setHeight(100);
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT | BUTTON_DEFAULT;
