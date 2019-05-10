@@ -747,12 +747,14 @@ GUIObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 {
-    class AboutDialog* about;
+    FXbool ok;
+    AboutDialog* about;
 
     writeln(m_fi, "GUIObject::onCmdAbout:");
     about = new AboutDialog(m_app, m_mw, m_fi);
-    about->execute(PLACEMENT_OWNER);
+    ok = about->execute(PLACEMENT_OWNER);
     delete about;
+    writeln(m_fi, "GUIObject::onCmdAbout: ok %d", ok);
     return 0;
 }
 

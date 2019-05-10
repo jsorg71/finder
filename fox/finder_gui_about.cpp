@@ -72,6 +72,9 @@ long
 AboutDialog::onPress(FXObject* obj, FXSelector sel, void* ptr)
 {
     writeln(m_fi, "AboutDialog::onPress");
-    onCmdCancel(0, 0, 0);
-    return 0;
+    if (obj == m_ok_but)
+    {
+        return onCmdAccept(obj, sel, ptr);
+    }
+    return onCmdCancel(obj, sel, ptr);
 }

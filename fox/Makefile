@@ -1,11 +1,14 @@
 
 OBJS=finder_gui.o finder_gui_about.o
 
-CXXFLAGS=-O2 -g -Wall -I.. `fox-config --cflags` -fvisibility=hidden -fPIC
+FOX_CFLAGS=$(shell fox-config --cflags)
+FOX_LIBS=$(shell fox-config --libs)
+
+CXXFLAGS=-O2 -g -Wall -I.. $(FOX_CFLAGS) -fvisibility=hidden -fPIC
 
 LDFLAGS=
 
-LIBS=`fox-config --libs` ../finder.a -lpthread
+LIBS=$(FOX_LIBS) ../finder.a -lpthread
 
 all:
 	$(MAKE) -C ..
