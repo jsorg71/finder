@@ -148,6 +148,10 @@ public:
     FXRadioButton* m_rb3;
     FXRadioButton* m_rb4;
     FXRadioButton* m_rb5;
+    FXSpinner* m_spinner1;
+    FXSpinner* m_spinner2;
+    FXLabel* m_label3;
+    FXLabel* m_label4;
     FXComboBox* m_combo4;
     void* m_gui_event;
     int m_sort_order;
@@ -237,8 +241,16 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     m_rb3 = new FXRadioButton(m_tabframe2, "between", this, sel, flags);
     m_rb3->setCheck(TRUE);
     m_rb4 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
+    flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
+    m_spinner1 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
+    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    m_label3 = new FXLabel(m_tabframe2, "months(s)", NULL, flags);
+    flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
     m_rb5 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
-
+    flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
+    m_spinner2 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
+    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    m_label4 = new FXLabel(m_tabframe2, "days(s)", NULL, flags);
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT | COMBOBOX_STATIC;
     m_combo4 = new FXComboBox(m_tabframe2, 0, NULL, 0, flags);
 
@@ -254,7 +266,7 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
 
     sel = GUIObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
-    m_but1 = new FXButton(m_mw, "&Find", NULL, this, sel, flags);
+    m_but1 = new FXButton(m_mw, "F&ind", NULL, this, sel, flags);
     m_but2 = new FXButton(m_mw, "&Stop", NULL, this, sel, flags);
     m_but2->disable();
     sel = GUIObject::ID_EXIT;
@@ -316,7 +328,6 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
 
     m_dnd_types[0] = m_app->registerDragType("UTF8_STRING");
     m_dnd_types[1] = m_app->registerDragType("text/uri-list");
-
 }
 
 /*****************************************************************************/
@@ -718,6 +729,18 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 
         m_rb5->move(30, 8 + 96);
         m_rb5->resize(400, 24);
+
+        m_spinner1->move(200, 8 + 72);
+        m_spinner1->resize(32, 24);
+
+        m_spinner2->move(200, 8 + 96);
+        m_spinner2->resize(32, 24);
+
+        m_label3->move(250, 8 + 72);
+        m_label3->resize(100, 24);
+
+        m_label4->move(250, 8 + 96);
+        m_label4->resize(100, 24);
 
         m_combo4->move(110, 8 + 24);
         m_combo4->resize(100, 24);
