@@ -143,16 +143,19 @@ public:
     FXStatusBar* m_sb;
     FXLabel* m_sbl1;
     FXMenuPane* m_fl_popup;
-    FXRadioButton* m_rb1;
-    FXRadioButton* m_rb2;
-    FXRadioButton* m_rb3;
-    FXRadioButton* m_rb4;
-    FXRadioButton* m_rb5;
-    FXSpinner* m_spinner1;
-    FXSpinner* m_spinner2;
-    FXLabel* m_label3;
-    FXLabel* m_label4;
-    FXComboBox* m_combo4;
+    struct _m_date_tab
+    {
+        FXRadioButton* m_rb1;
+        FXRadioButton* m_rb2;
+        FXComboBox* m_combo1;
+        FXRadioButton* m_rb3;
+        FXRadioButton* m_rb4;
+        FXRadioButton* m_rb5;
+        FXSpinner* m_spinner1;
+        FXSpinner* m_spinner2;
+        FXLabel* m_label1;
+        FXLabel* m_label2;
+    } m_date_tab;
     void* m_gui_event;
     int m_sort_order;
     int m_last_header_click_mstime;
@@ -235,24 +238,25 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
 
     sel = GUIObject::ID_RADIOBUTTON;
     flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_rb1 = new FXRadioButton(m_tabframe2, "All files", this, sel, flags);
-    m_rb1->setCheck(TRUE);
-    m_rb2 = new FXRadioButton(m_tabframe2, "Find all files", this, sel, flags);
-    m_rb3 = new FXRadioButton(m_tabframe2, "between", this, sel, flags);
-    m_rb3->setCheck(TRUE);
-    m_rb4 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
-    flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
-    m_spinner1 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
-    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_label3 = new FXLabel(m_tabframe2, "months(s)", NULL, flags);
-    flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_rb5 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
-    flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
-    m_spinner2 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
-    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_label4 = new FXLabel(m_tabframe2, "days(s)", NULL, flags);
+    m_date_tab.m_rb1 = new FXRadioButton(m_tabframe2, "All files", this, sel, flags);
+    m_date_tab.m_rb1->setCheck(TRUE);
+    m_date_tab.m_rb2 = new FXRadioButton(m_tabframe2, "Find all files", this, sel, flags);
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT | COMBOBOX_STATIC;
-    m_combo4 = new FXComboBox(m_tabframe2, 0, NULL, 0, flags);
+    m_date_tab.m_combo1 = new FXComboBox(m_tabframe2, 0, NULL, 0, flags);
+    flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    m_date_tab.m_rb3 = new FXRadioButton(m_tabframe2, "between", this, sel, flags);
+    m_date_tab.m_rb3->setCheck(TRUE);
+    m_date_tab.m_rb4 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
+    flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
+    m_date_tab.m_spinner1 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
+    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    m_date_tab.m_label1 = new FXLabel(m_tabframe2, "months(s)", NULL, flags);
+    flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    m_date_tab.m_rb5 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
+    flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
+    m_date_tab.m_spinner2 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
+    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    m_date_tab.m_label2 = new FXLabel(m_tabframe2, "days(s)", NULL, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
     m_cb4 = new FXCheckButton(m_tabframe3, "Search in files", NULL, 0, flags);
@@ -715,35 +719,35 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         m_cb5->move(10, 74);
         m_cb5->resize(160, 24);
 
-        m_rb1->move(10, 8);
-        m_rb1->resize(400, 24);
+        m_date_tab.m_rb1->move(10, 8);
+        m_date_tab.m_rb1->resize(400, 24);
 
-        m_rb2->move(10, 8 + 24);
-        m_rb2->resize(400, 24);
+        m_date_tab.m_rb2->move(10, 8 + 24);
+        m_date_tab.m_rb2->resize(400, 24);
 
-        m_rb3->move(30, 8 + 48);
-        m_rb3->resize(400, 24);
+        m_date_tab.m_rb3->move(30, 8 + 48);
+        m_date_tab.m_rb3->resize(400, 24);
 
-        m_rb4->move(30, 8 + 72);
-        m_rb4->resize(400, 24);
+        m_date_tab.m_rb4->move(30, 8 + 72);
+        m_date_tab.m_rb4->resize(400, 24);
 
-        m_rb5->move(30, 8 + 96);
-        m_rb5->resize(400, 24);
+        m_date_tab.m_rb5->move(30, 8 + 96);
+        m_date_tab.m_rb5->resize(400, 24);
 
-        m_spinner1->move(200, 8 + 72);
-        m_spinner1->resize(32, 24);
+        m_date_tab.m_spinner1->move(200, 8 + 72);
+        m_date_tab.m_spinner1->resize(48, 24);
 
-        m_spinner2->move(200, 8 + 96);
-        m_spinner2->resize(32, 24);
+        m_date_tab.m_spinner2->move(200, 8 + 96);
+        m_date_tab.m_spinner2->resize(48, 24);
 
-        m_label3->move(250, 8 + 72);
-        m_label3->resize(100, 24);
+        m_date_tab.m_label1->move(250, 8 + 72);
+        m_date_tab.m_label1->resize(100, 24);
 
-        m_label4->move(250, 8 + 96);
-        m_label4->resize(100, 24);
+        m_date_tab.m_label2->move(250, 8 + 96);
+        m_date_tab.m_label2->resize(100, 24);
 
-        m_combo4->move(110, 8 + 24);
-        m_combo4->resize(100, 24);
+        m_date_tab.m_combo1->move(110, 8 + 24);
+        m_date_tab.m_combo1->resize(100, 24);
 
     }
     return 0;
@@ -1388,54 +1392,42 @@ GUIObject::onRadioButton(FXObject* obj, FXSelector sel, void* ptr)
 {
     writeln(m_fi, "GUIObject::onRadioButton:");
 
-    if (obj == m_rb1)
+    if (obj == m_date_tab.m_rb1)
     {
-        if (m_rb1->getCheck())
+        if (m_date_tab.m_rb1->getCheck())
         {
-            m_rb2->setCheck(FALSE);
-            //m_rb3->setCheck(FALSE);
-            //m_rb4->setCheck(FALSE);
-            //m_rb5->setCheck(FALSE);
+            m_date_tab.m_rb2->setCheck(FALSE);
         }
     }
-    else if (obj == m_rb2)
+    else if (obj == m_date_tab.m_rb2)
     {
-        if (m_rb2->getCheck())
+        if (m_date_tab.m_rb2->getCheck())
         {
-            m_rb1->setCheck(FALSE);
-            //m_rb3->setCheck(FALSE);
-            //m_rb4->setCheck(FALSE);
-            //m_rb5->setCheck(FALSE);
+            m_date_tab.m_rb1->setCheck(FALSE);
         }
     }
-    else if (obj == m_rb3)
+    else if (obj == m_date_tab.m_rb3)
     {
-        if (m_rb3->getCheck())
+        if (m_date_tab.m_rb3->getCheck())
         {
-            //m_rb1->setCheck(FALSE);
-            //m_rb2->setCheck(FALSE);
-            m_rb4->setCheck(FALSE);
-            m_rb5->setCheck(FALSE);
+            m_date_tab.m_rb4->setCheck(FALSE);
+            m_date_tab.m_rb5->setCheck(FALSE);
         }
     }
-    else if (obj == m_rb4)
+    else if (obj == m_date_tab.m_rb4)
     {
-        if (m_rb4->getCheck())
+        if (m_date_tab.m_rb4->getCheck())
         {
-            //m_rb1->setCheck(FALSE);
-            //m_rb2->setCheck(FALSE);
-            m_rb3->setCheck(FALSE);
-            m_rb5->setCheck(FALSE);
+            m_date_tab.m_rb3->setCheck(FALSE);
+            m_date_tab.m_rb5->setCheck(FALSE);
         }
     }
-    else if (obj == m_rb5)
+    else if (obj == m_date_tab.m_rb5)
     {
-        if (m_rb5->getCheck())
+        if (m_date_tab.m_rb5->getCheck())
         {
-            //m_rb1->setCheck(FALSE);
-            //m_rb2->setCheck(FALSE);
-            m_rb3->setCheck(FALSE);
-            m_rb4->setCheck(FALSE);
+            m_date_tab.m_rb3->setCheck(FALSE);
+            m_date_tab.m_rb4->setCheck(FALSE);
         }
     }
     return 1;
