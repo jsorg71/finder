@@ -113,7 +113,6 @@ public:
     FXButton* m_but1;
     FXButton* m_but2;
     FXButton* m_but3;
-    FXButton* m_but4;
     FXTabItem* m_ti1;
     FXTabItem* m_ti2;
     FXTabItem* m_ti3;
@@ -125,16 +124,6 @@ public:
     FXGroupBox* m_tabframe1;
     FXGroupBox* m_tabframe2;
     FXGroupBox* m_tabframe3;
-    FXLabel* m_label1;
-    FXLabel* m_label2;
-    FXCheckButton* m_cb1;
-    FXCheckButton* m_cb2;
-    FXCheckButton* m_cb3;
-    FXCheckButton* m_cb4;
-    FXCheckButton* m_cb5;
-    FXComboBox* m_combo1;
-    FXComboBox* m_combo2;
-    FXComboBox* m_combo3;
     FXDockSite* m_topdock;
     FXToolBarShell* m_tbs;
     FXMenuBar* m_mb;
@@ -143,6 +132,17 @@ public:
     FXStatusBar* m_sb;
     FXLabel* m_sbl1;
     FXMenuPane* m_fl_popup;
+    struct _m_name_tab
+    {
+        FXLabel* m_label1;
+        FXComboBox* m_combo1;
+        FXLabel* m_label2;
+        FXComboBox* m_combo2;
+        FXButton* m_but1;
+        FXCheckButton* m_cb1;
+        FXCheckButton* m_cb2;
+        FXCheckButton* m_cb3;
+    } m_name_tab;
     struct _m_date_tab
     {
         FXRadioButton* m_rb1;
@@ -156,6 +156,12 @@ public:
         FXLabel* m_label1;
         FXLabel* m_label2;
     } m_date_tab;
+    struct _m_adva_tab
+    {
+        FXCheckButton* m_cb1;
+        FXComboBox* m_combo1;
+        FXCheckButton* m_cb2;
+    } m_adva_tab;
     void* m_gui_event;
     int m_sort_order;
     int m_last_header_click_mstime;
@@ -213,28 +219,28 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     m_tabframe3 = new FXGroupBox(m_tab_book, "", flags);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_label1 = new FXLabel(m_tabframe1, "&Named:", NULL, flags);
+    m_name_tab.m_label1 = new FXLabel(m_tabframe1, "&Named:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    m_combo1 = new FXComboBox(m_tabframe1, 0, NULL, 0, flags);
-    m_combo1->setNumVisible(10);
+    m_name_tab.m_combo1 = new FXComboBox(m_tabframe1, 0, NULL, 0, flags);
+    m_name_tab.m_combo1->setNumVisible(10);
 
     flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_label2 = new FXLabel(m_tabframe1, "Look &in:", NULL, flags);
+    m_name_tab.m_label2 = new FXLabel(m_tabframe1, "Look &in:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    m_combo2 = new FXComboBox(m_tabframe1, 0, NULL, 0, flags);
-    m_combo2->setNumVisible(10);
+    m_name_tab.m_combo2 = new FXComboBox(m_tabframe1, 0, NULL, 0, flags);
+    m_name_tab.m_combo2->setNumVisible(10);
 
     sel = GUIObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
-    m_but4 = new FXButton(m_tabframe1, "&Browse", NULL, this, sel, flags);
+    m_name_tab.m_but1 = new FXButton(m_tabframe1, "&Browse", NULL, this, sel, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_cb1 = new FXCheckButton(m_tabframe1, "Include subfolders", NULL, 0, flags);
-    m_cb1->setCheck(TRUE);
-    m_cb2 = new FXCheckButton(m_tabframe1, "Case sensitive search", NULL, 0, flags);
-    m_cb3 = new FXCheckButton(m_tabframe1, "Show hidden files", NULL, 0, flags);
+    m_name_tab.m_cb1 = new FXCheckButton(m_tabframe1, "Include subfolders", NULL, 0, flags);
+    m_name_tab.m_cb1->setCheck(TRUE);
+    m_name_tab.m_cb2 = new FXCheckButton(m_tabframe1, "Case sensitive search", NULL, 0, flags);
+    m_name_tab.m_cb3 = new FXCheckButton(m_tabframe1, "Show hidden files", NULL, 0, flags);
 
     sel = GUIObject::ID_RADIOBUTTON;
     flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
@@ -259,14 +265,14 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     m_date_tab.m_label2 = new FXLabel(m_tabframe2, "days(s)", NULL, flags);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_cb4 = new FXCheckButton(m_tabframe3, "Search in files", NULL, 0, flags);
+    m_adva_tab.m_cb1 = new FXCheckButton(m_tabframe3, "Search in files", NULL, 0, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
-    m_combo3 = new FXComboBox(m_tabframe3, 0, NULL, 0, flags);
-    m_combo3->setNumVisible(10);
+    m_adva_tab.m_combo1 = new FXComboBox(m_tabframe3, 0, NULL, 0, flags);
+    m_adva_tab.m_combo1->setNumVisible(10);
 
     flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
-    m_cb5 = new FXCheckButton(m_tabframe3, "Case sensitive search", NULL, 0, flags);
+    m_adva_tab.m_cb2 = new FXCheckButton(m_tabframe3, "Case sensitive search", NULL, 0, flags);
 
     sel = GUIObject::ID_BUTTON;
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
@@ -451,15 +457,15 @@ int
 GUIObject::loadFromReg()
 {
     /* Name/Location tab */
-    loadCombo(m_combo1, "NameLocation", "Named");
-    loadCombo(m_combo2, "NameLocation", "LookIn");
-    loadCheckbox(m_cb1, "NameLocation", "IncludeSubfolders", TRUE);
-    loadCheckbox(m_cb2, "NameLocation", "CaseSensitiveSearch", FALSE);
-    loadCheckbox(m_cb3, "NameLocation", "ShowHiddenFiles", FALSE);
+    loadCombo(m_name_tab.m_combo1, "NameLocation", "Named");
+    loadCombo(m_name_tab.m_combo2, "NameLocation", "LookIn");
+    loadCheckbox(m_name_tab.m_cb1, "NameLocation", "IncludeSubfolders", TRUE);
+    loadCheckbox(m_name_tab.m_cb2, "NameLocation", "CaseSensitiveSearch", FALSE);
+    loadCheckbox(m_name_tab.m_cb3, "NameLocation", "ShowHiddenFiles", FALSE);
     /* Advanced tab */
-    loadCheckbox(m_cb4, "Advanced", "SearchInFiles", FALSE);
-    loadCombo(m_combo3, "Advanced", "SearchInFilesText");
-    loadCheckbox(m_cb5, "Advanced", "CaseSensitiveSearch", FALSE);
+    loadCheckbox(m_adva_tab.m_cb1, "Advanced", "SearchInFiles", FALSE);
+    loadCombo(m_adva_tab.m_combo1, "Advanced", "SearchInFilesText");
+    loadCheckbox(m_adva_tab.m_cb2, "Advanced", "CaseSensitiveSearch", FALSE);
     return 0;
 }
 
@@ -532,15 +538,15 @@ int
 GUIObject::saveToReg()
 {
     /* Name/Location tab */
-    saveCombo(m_combo1, "NameLocation", "Named");
-    saveCombo(m_combo2, "NameLocation", "LookIn");
-    saveCheckbox(m_cb1, "NameLocation", "IncludeSubfolders", TRUE);
-    saveCheckbox(m_cb2, "NameLocation", "CaseSensitiveSearch", FALSE);
-    saveCheckbox(m_cb3, "NameLocation", "ShowHiddenFiles", FALSE);
+    saveCombo(m_name_tab.m_combo1, "NameLocation", "Named");
+    saveCombo(m_name_tab.m_combo2, "NameLocation", "LookIn");
+    saveCheckbox(m_name_tab.m_cb1, "NameLocation", "IncludeSubfolders", TRUE);
+    saveCheckbox(m_name_tab.m_cb2, "NameLocation", "CaseSensitiveSearch", FALSE);
+    saveCheckbox(m_name_tab.m_cb3, "NameLocation", "ShowHiddenFiles", FALSE);
     /* Advanced tab */
-    saveCheckbox(m_cb4, "Advanced", "SearchInFiles", FALSE);
-    saveCombo(m_combo3, "Advanced", "SearchInFilesText");
-    saveCheckbox(m_cb5, "Advanced", "CaseSensitiveSearch", FALSE);
+    saveCheckbox(m_adva_tab.m_cb1, "Advanced", "SearchInFiles", FALSE);
+    saveCombo(m_adva_tab.m_combo1, "Advanced", "SearchInFilesText");
+    saveCheckbox(m_adva_tab.m_cb2, "Advanced", "CaseSensitiveSearch", FALSE);
     return 0;
 }
 
@@ -594,16 +600,16 @@ GUIObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     {
         writeln(m_fi, "but1");
         m_fl->clearItems(TRUE);
-        str1 = m_combo1->getText();
+        str1 = m_name_tab.m_combo1->getText();
         snprintf(m_fi->named, sizeof(m_fi->named), "%s", str1.text());
-        str1 = m_combo2->getText();
+        str1 = m_name_tab.m_combo2->getText();
         snprintf(m_fi->look_in, sizeof(m_fi->look_in), "%s", str1.text());
-        m_fi->include_subfolders = m_cb1->getCheck();
-        m_fi->case_sensitive = m_cb2->getCheck();
-        m_fi->show_hidden = m_cb3->getCheck();
-        m_fi->search_in_files = m_cb4->getCheck();
-        m_fi->search_in_case_sensitive = m_cb5->getCheck();
-        str1 = m_combo3->getText();
+        m_fi->include_subfolders = m_name_tab.m_cb1->getCheck();
+        m_fi->case_sensitive = m_name_tab.m_cb2->getCheck();
+        m_fi->show_hidden = m_name_tab.m_cb3->getCheck();
+        m_fi->search_in_files = m_adva_tab.m_cb1->getCheck();
+        m_fi->search_in_case_sensitive = m_adva_tab.m_cb2->getCheck();
+        str1 = m_adva_tab.m_combo1->getText();
         snprintf(m_fi->text, sizeof(m_fi->text), "%s", str1.text());
 
         saveToReg();
@@ -623,14 +629,14 @@ GUIObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
         writeln(m_fi, "but3");
         //ap->app->stop(0);
     }
-    if (obj == m_but4)
+    if (obj == m_name_tab.m_but1)
     {
         writeln(m_fi, "but4");
-        str1 = m_combo2->getText();
+        str1 = m_name_tab.m_combo2->getText();
         str1 = FXDirDialog::getOpenDirectory(m_mw, "Select Look In directory", str1);
         if (str1 != "")
         {
-            m_combo2->setText(str1);
+            m_name_tab.m_combo2->setText(str1);
         }
     }
 
@@ -684,40 +690,40 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
         m_but3->move(width - 110, 165);
         m_but3->resize(100, 30);
 
-        m_label1->move(8, 8);
-        m_label1->resize(100, 24);
+        m_name_tab.m_label1->move(8, 8);
+        m_name_tab.m_label1->resize(100, 24);
 
         lw = m_tabframe1->getWidth();
-        m_combo1->move(85, 8);
-        m_combo1->resize(lw - 100, 24);
+        m_name_tab.m_combo1->move(85, 8);
+        m_name_tab.m_combo1->resize(lw - 100, 24);
 
-        m_label2->move(8, 41);
-        m_label2->resize(100, 24);
+        m_name_tab.m_label2->move(8, 41);
+        m_name_tab.m_label2->resize(100, 24);
 
-        m_combo2->move(85, 41);
-        m_combo2->resize(lw - 165, 24);
+        m_name_tab.m_combo2->move(85, 41);
+        m_name_tab.m_combo2->resize(lw - 165, 24);
 
-        m_but4->move(lw - 75, 41);
-        m_but4->resize(60, 24);
+        m_name_tab.m_but1->move(lw - 75, 41);
+        m_name_tab.m_but1->resize(60, 24);
 
-        m_cb1->move(8, 74);
-        m_cb1->resize(200, 24);
+        m_name_tab.m_cb1->move(8, 74);
+        m_name_tab.m_cb1->resize(200, 24);
 
-        m_cb2->move(8, 107);
-        m_cb2->resize(200, 24);
+        m_name_tab.m_cb2->move(8, 107);
+        m_name_tab.m_cb2->resize(200, 24);
 
-        m_cb3->move(216, 74);
-        m_cb3->resize(200, 24);
+        m_name_tab.m_cb3->move(216, 74);
+        m_name_tab.m_cb3->resize(200, 24);
 
-        m_cb4->move(10, 10);
-        m_cb4->resize(120, 24);
+        m_adva_tab.m_cb1->move(10, 10);
+        m_adva_tab.m_cb1->resize(120, 24);
 
         lw = m_tabframe3->getWidth();
-        m_combo3->move(10, 40);
-        m_combo3->resize(lw - 20, 24);
+        m_adva_tab.m_combo1->move(10, 40);
+        m_adva_tab.m_combo1->resize(lw - 20, 24);
 
-        m_cb5->move(10, 74);
-        m_cb5->resize(160, 24);
+        m_adva_tab.m_cb2->move(10, 74);
+        m_adva_tab.m_cb2->resize(160, 24);
 
         m_date_tab.m_rb1->move(10, 8);
         m_date_tab.m_rb1->resize(400, 24);
