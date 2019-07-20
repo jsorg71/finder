@@ -201,7 +201,7 @@ finder_wait(int num_wait_objs, FINDER_WAIT_OBJ* wait_objs)
             FD_SET(((unsigned int)(wait_objs[index])), &rfds);
         }
     }
-    select(max_fd, &rfds, NULL, NULL, NULL);
+    select(max_fd + 1, &rfds, NULL, NULL, NULL);
 #endif
     return 0;
 }
