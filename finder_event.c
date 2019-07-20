@@ -180,3 +180,29 @@ finder_event_get_wait_obj(void* event1)
 #endif
 }
 
+/*****************************************************************************/
+int
+finder_wait(int num_wait_objs, FINDER_WAIT_OBJ* wait_objs)
+{
+#if defined(_WIN32)
+    WaitForMultipleObjects(num_wait_objs, wait_objs, FALSE, INFINITE);
+#else
+    int index;
+    int max_fd;
+    fd_set rfds;
+
+    FD_ZERO(&rfds);
+    max_fd = 0;
+    for (index = 0; index < num_wait_objs; index++)
+    {
+        if (wait_objs[index] > max_fd)
+        {
+            max_fd = wait_objs[index];
+            FD_SET(((unsigned int)(wait_objs[index])), &rfds);
+        }
+    }
+    select(max_fd, &rfds, NULL, NULL, NULL);
+#endif
+    return 0;
+}
+

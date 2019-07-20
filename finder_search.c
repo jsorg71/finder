@@ -109,7 +109,7 @@ myfnmatch(const char* pattern, const char* string, int flags)
                 break;
         }
     }
-    return 1; /* not found */
+    /* can not get here */
 }
 
 /*****************************************************************************/

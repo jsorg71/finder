@@ -19,8 +19,13 @@
 #if !defined(FINDER_THREAD_H)
 #define FINDER_THREAD_H
 
+#if defined(_WIN32)
+#define FINDER_THREAD_RV unsigned long
+#define FINDER_THREAD_CC __stdcall
+#else
 #define FINDER_THREAD_RV void*
 #define FINDER_THREAD_CC
+#endif
 
 typedef FINDER_THREAD_RV (FINDER_THREAD_CC * start_routine_proc)(void*);
 

@@ -41,6 +41,8 @@ int
 finder_event_is_set(void* event1);
 FINDER_WAIT_OBJ
 finder_event_get_wait_obj(void* event1);
+int
+finder_wait(int num_wait_objs, FINDER_WAIT_OBJ* wait_objs);
 
 #ifdef __cplusplus
 }

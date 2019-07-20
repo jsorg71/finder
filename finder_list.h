@@ -19,7 +19,7 @@
 #if !defined(FINDER_LIST_H)
 #define FINDER_LIST_H
 
-#define ITYPE ssize_t
+#define ITYPE size_t
 
 #ifdef __cplusplus
 extern "C" {

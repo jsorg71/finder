@@ -3,7 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <sys/time.h>
+#endif
 
 #include "finder.h"
 #include "finder_gui.h"
@@ -77,6 +81,10 @@ writeln(struct finder_info* fi, const char* format, ...)
     va_list ap;
     char* log_line;
 
+    if (fi == NULL)
+    {
+        return 0;
+    }
     log_line = (char*)malloc(1024);
     va_start(ap, format);
     vsnprintf(log_line, 1024, format, ap);
@@ -118,10 +126,7 @@ finder_thread(void* arg)
     int cont;
     int error;
     int list_count;
-    int max_fd;
-    int work_term_fd;
-    int main_to_work_fd;
-    fd_set rfds;
+    FINDER_WAIT_OBJ wos[2];
     struct finder_info* fi;
     struct work_item* wi;
 
@@ -131,20 +136,12 @@ finder_thread(void* arg)
     while (cont)
     {
         //writeln(fi, "loop");
-        FD_ZERO(&rfds);
-        work_term_fd = finder_event_get_wait_obj(fi->work_term_event);
-        FD_SET((unsigned int)work_term_fd, &rfds);
-        main_to_work_fd = finder_event_get_wait_obj(fi->main_to_work_event);
-        FD_SET((unsigned int)main_to_work_fd, &rfds);
-        max_fd = work_term_fd;
-        if (main_to_work_fd > max_fd)
-        {
-            max_fd = main_to_work_fd;
-        }
-        error = select(max_fd + 1, &rfds, 0, 0, 0);
+        wos[0] = finder_event_get_wait_obj(fi->work_term_event);
+        wos[1] = finder_event_get_wait_obj(fi->main_to_work_event);
+        error = finder_wait(2, wos);
         if (error < 0)
         {
-            writeln(fi, "select failed");
+            writeln(fi, "finder_wait failed");
         }
         if (finder_event_is_set(fi->work_term_event))
         {
@@ -326,7 +323,7 @@ format_commas(FINDER_I64 n, char* out)
     {
         return 1;
     }
-    snprintf(buf, 64, "%lld", (long long)n);
+    snprintf(buf, 64, "%lld", (FINDER_I64)n);
     c = 2 - (strlen(buf) % 3);
     for (p = buf; *p != 0; p++)
     {
@@ -345,9 +342,13 @@ format_commas(FINDER_I64 n, char* out)
 int
 get_mstime(void)
 {
+#if defined(_WIN32)
+    return GetTickCount();
+#else
     struct timeval tp;
 
     gettimeofday(&tp, 0);
     return (tp.tv_sec * 1000) + (tp.tv_usec / 1000);
+#endif
 }
 

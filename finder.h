@@ -28,8 +28,13 @@
 #define FINDER_CMD_DONE         101
 #define FINDER_CMD_ADD_ONE      102
 
+#if defined(_WIN32)
+#define FINDER_I64 INT64
+#define FINDER_INTPTR INT_PTR
+#else
 #define FINDER_I64 long long
-#define FINDER_INTPTR ssize_t
+#define FINDER_INTPTR long
+#endif
 
 struct work_item
 {
