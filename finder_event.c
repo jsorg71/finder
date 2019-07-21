@@ -189,17 +189,23 @@ finder_wait(int num_wait_objs, FINDER_WAIT_OBJ* wait_objs)
 #else
     int index;
     int max_fd;
+    int fd;
     fd_set rfds;
 
+    if (num_wait_objs < 1)
+    {
+        return 0;
+    }
     FD_ZERO(&rfds);
     max_fd = 0;
     for (index = 0; index < num_wait_objs; index++)
     {
-        if (wait_objs[index] > max_fd)
+        fd = wait_objs[index];
+        if (fd > max_fd)
         {
-            max_fd = wait_objs[index];
-            FD_SET(((unsigned int)(wait_objs[index])), &rfds);
+            max_fd = fd;
         }
+        FD_SET(((unsigned int)fd), &rfds);
     }
     select(max_fd + 1, &rfds, NULL, NULL, NULL);
 #endif
