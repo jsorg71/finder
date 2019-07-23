@@ -1,0 +1,19 @@
+
+OBJS=finder.obj finder_event.obj finder_list.obj finder_thread.obj finder_search.obj finder_file.obj
+
+CFLAGS=-O2
+
+LDFLAGS=
+
+LIBS=
+
+all: finder.lib
+
+finder.lib: $(OBJS)
+	tlib finder.lib +finder.obj +finder_event.obj +finder_list.obj +finder_thread.obj +finder_search.obj +finder_file.obj
+
+clean:
+	del finder.lib $(OBJS)
+
+.c.obj:
+	$(CC) $(CFLAGS) -q -c $?
