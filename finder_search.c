@@ -526,14 +526,17 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                 lwi->size = entry.nFileSizeHigh;
                 lwi->size = lwi->size << 32;
                 lwi->size = lwi->size | entry.nFileSizeLow;
-                if (FileTimeToSystemTime(&(entry.ftLastWriteTime), &system_time))
+                if (FileTimeToSystemTime(&(entry.ftLastWriteTime),
+                    &system_time))
                 {
                     lwi->modified = (char*)malloc(1024);
                     if (lwi->modified != NULL)
                     {
-                        snprintf(lwi->modified, 1024, "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
-                                 system_time.wYear, system_time.wMonth, system_time.wDay,
-                                 system_time.wHour, system_time.wMinute, system_time.wSecond);
+                        snprintf(lwi->modified, 1024,
+                                 "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
+                                 system_time.wYear, system_time.wMonth,
+                                 system_time.wDay,  system_time.wHour,
+                                 system_time.wMinute, system_time.wSecond);
                     }
                 }
 #else
@@ -554,9 +557,12 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                     lwi->modified = (char*)malloc(1024);
                     if (lwi->modified != NULL)
                     {
-                        snprintf(lwi->modified, 1024, "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
-                                 1900 + local_time->tm_year, local_time->tm_mon, local_time->tm_mday,
-                                 local_time->tm_hour, local_time->tm_min, local_time->tm_sec);
+                        snprintf(lwi->modified, 1024,
+                                 "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
+                                 1900 + local_time->tm_year,
+                                 local_time->tm_mon, local_time->tm_mday,
+                                 local_time->tm_hour, local_time->tm_min,
+                                 local_time->tm_sec);
                     }
                 }
 #endif
