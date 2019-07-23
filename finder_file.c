@@ -36,6 +36,8 @@
 int
 finder_file_read_sections(const char* file_name, void* names_list)
 {
+    (void)file_name;
+    (void)names_list;
     return 0;
 }
 
@@ -44,6 +46,10 @@ int
 finder_file_read_section(const char* file_name, const char* section,
                          void* names_list, void* values_list)
 {
+    (void)file_name;
+    (void)section;
+    (void)names_list;
+    (void)values_list;
     return 0;
 }
 
@@ -52,6 +58,10 @@ int
 finder_file_write_section(const char* file_name, const char* section,
                           void* names_list, void* values_list)
 {
+    (void)file_name;
+    (void)section;
+    (void)names_list;
+    (void)values_list;
     return 0;
 }
 
