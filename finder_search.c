@@ -334,13 +334,13 @@ check_file_name(struct finder_info* fi, const char* filename)
 }
 
 #if defined(_WIN32)
-#define FINDER_FIND_NEXT_BREAK_CONTINE \
+#define FINDER_FIND_NEXT_BREAK_CONTINUE \
     if (!FindNextFile(find_handle, &entry)) break; continue
 #define FINDER_FIND_CLOSE FindClose(find_handle)
-#define FINDER_FIND_FILE_HIDDEN \
+#define FINDER_FIND_FILE_HIDDEN entry \
     (entry.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 #else
-#define FINDER_FIND_NEXT_BREAK_CONTINE \
+#define FINDER_FIND_NEXT_BREAK_CONTINUE \
     entry = readdir(find_handle); if (!entry) break; continue
 #define FINDER_FIND_CLOSE closedir(find_handle)
 #define FINDER_FIND_FILE_HIDDEN (entry_file_name[0] == '.')
@@ -450,7 +450,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             {
                 writeln(fi, "open error %s", path);
                 FINDER_FILE_CLOSE(file_obj);
-                FINDER_FIND_NEXT_BREAK_CONTINE;
+                FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
 #if defined(_WIN32)
             is_dir = entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
@@ -459,7 +459,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             {
                 writeln(fi, "fstat error %s", path);
                 FINDER_FILE_CLOSE(file_obj);
-                FINDER_FIND_NEXT_BREAK_CONTINE;
+                FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
             got_stat = 1;
             is_dir = (lstat1.st_mode & S_IFMT) == S_IFDIR;
@@ -479,14 +479,14 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                 (strcmp(entry_file_name, "..") == 0))
             {
                 FINDER_FILE_CLOSE(file_obj);
-                FINDER_FIND_NEXT_BREAK_CONTINE;
+                FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
             if (fi->include_subfolders)
             {
                 if (FINDER_FIND_FILE_HIDDEN && (fi->show_hidden == 0))
                 {
                     FINDER_FILE_CLOSE(file_obj);
-                    FINDER_FIND_NEXT_BREAK_CONTINE;
+                    FINDER_FIND_NEXT_BREAK_CONTINUE;
                 }
                 listdir(fi, wi, path);
             }
@@ -496,24 +496,24 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             if (FINDER_FIND_FILE_HIDDEN && (fi->show_hidden == 0))
             {
                 FINDER_FILE_CLOSE(file_obj);
-                FINDER_FIND_NEXT_BREAK_CONTINE;
+                FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
             if (check_file_name(fi, entry_file_name) != 0)
             {
                 FINDER_FILE_CLOSE(file_obj);
-                FINDER_FIND_NEXT_BREAK_CONTINE;
+                FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
             if (fi->search_in_files)
             {
                 if (find_in_file(file_obj, fi, &found_in_file) != 0)
                 {
                     FINDER_FILE_CLOSE(file_obj);
-                    FINDER_FIND_NEXT_BREAK_CONTINE;
+                    FINDER_FIND_NEXT_BREAK_CONTINUE;
                 }
                 if (!found_in_file)
                 {
                     FINDER_FILE_CLOSE(file_obj);
-                    FINDER_FIND_NEXT_BREAK_CONTINE;
+                    FINDER_FIND_NEXT_BREAK_CONTINUE;
                 }
             }
             lwi = (struct work_item*)calloc(1, sizeof(struct work_item));
@@ -544,7 +544,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                     {
                         writeln(fi, "stat error %s", path);
                         FINDER_FILE_CLOSE(file_obj);
-                        FINDER_FIND_NEXT_BREAK_CONTINE;
+                        FINDER_FIND_NEXT_BREAK_CONTINUE;
                     }
                 }
                 lwi->size = lstat1.st_size;
@@ -567,7 +567,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             gui_set_event(fi);
         }
         FINDER_FILE_CLOSE(file_obj);
-        FINDER_FIND_NEXT_BREAK_CONTINE;
+        FINDER_FIND_NEXT_BREAK_CONTINUE;
     }
     free(look_in_text);
     free(path);
