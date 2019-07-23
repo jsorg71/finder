@@ -337,7 +337,7 @@ check_file_name(struct finder_info* fi, const char* filename)
 #define FINDER_FIND_NEXT_BREAK_CONTINUE \
     if (!FindNextFile(find_handle, &entry)) break; continue
 #define FINDER_FIND_CLOSE FindClose(find_handle)
-#define FINDER_FIND_FILE_HIDDEN entry \
+#define FINDER_FIND_FILE_HIDDEN \
     (entry.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
 #else
 #define FINDER_FIND_NEXT_BREAK_CONTINUE \
