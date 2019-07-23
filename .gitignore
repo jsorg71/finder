@@ -1,4 +1,8 @@
 *~
 *.a
 *.o
+*.obj
+*.lib
+*.exe
+*.tds
 finder
