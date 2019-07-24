@@ -21,28 +21,28 @@
 int
 gui_init(struct finder_info* fi)
 {
-    writeln(fi, "gui_init");
+    writeln(fi, "gui_init:");
     if (finder_mutex_create(&(fi->list_mutex)) != 0)
     {
-        writeln(fi, "finder_mutex_create failed");
+        writeln(fi, "gui_init: finder_mutex_create failed");
         return 1;
     }
     if (finder_event_create(&(fi->work_term_event)) != 0)
     {
-        writeln(fi, "finder_event_create failed");
+        writeln(fi, "gui_init: finder_event_create failed");
         finder_mutex_delete(fi->list_mutex);
         return 2;
     }
     if (finder_event_create(&(fi->main_to_work_event)) != 0)
     {
-        writeln(fi, "finder_event_create failed");
+        writeln(fi, "gui_init: finder_event_create failed");
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         return 2;
     }
     if (finder_list_create(1024, 1024, &(fi->main_to_work_list)) != 0)
     {
-        writeln(fi, "finder_list_create failed");
+        writeln(fi, "gui_init: finder_list_create failed");
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         finder_event_delete(fi->main_to_work_event);
@@ -50,7 +50,7 @@ gui_init(struct finder_info* fi)
     }
     if (finder_list_create(1024, 1024, &(fi->work_to_main_list)) != 0)
     {
-        writeln(fi, "finder_list_create failed");
+        writeln(fi, "gui_init: finder_list_create failed");
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         finder_event_delete(fi->main_to_work_event);
@@ -65,7 +65,7 @@ gui_init(struct finder_info* fi)
 int
 gui_deinit(struct finder_info* fi)
 {
-    writeln(fi, "gui_deinit");
+    writeln(fi, "gui_deinit:");
     finder_mutex_delete(fi->list_mutex);
     finder_event_delete(fi->work_term_event);
     finder_event_delete(fi->main_to_work_event);
@@ -131,17 +131,17 @@ finder_thread(void* arg)
     struct work_item* wi;
 
     fi = (struct finder_info*)arg;
-    writeln(fi, "thread start");
+    writeln(fi, "finder_thread: thread start");
     cont = 1;
     while (cont)
     {
-        //writeln(fi, "loop");
+        //writeln(fi, "finder_thread: loop");
         wos[0] = finder_event_get_wait_obj(fi->work_term_event);
         wos[1] = finder_event_get_wait_obj(fi->main_to_work_event);
         error = finder_wait(2, wos);
         if (error < 0)
         {
-            writeln(fi, "finder_wait failed");
+            writeln(fi, "finder_thread: finder_wait failed");
         }
         if (finder_event_is_set(fi->work_term_event))
         {
@@ -186,7 +186,7 @@ finder_thread(void* arg)
         finder_mutex_unlock(fi->list_mutex);
         gui_set_event(fi);
     }
-    writeln(fi, "thread stop");
+    writeln(fi, "finder_thread: thread stop");
     return 0;
 }
 
