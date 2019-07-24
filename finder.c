@@ -89,7 +89,7 @@ writeln(struct finder_info* fi, const char* format, ...)
     va_start(ap, format);
     vsnprintf(log_line, 1024, format, ap);
     va_end(ap);
-    printf("%s\n", log_line);
+    gui_writeln(fi, log_line);
     free(log_line);
     return 0;
 }

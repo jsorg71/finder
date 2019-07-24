@@ -1563,3 +1563,12 @@ gui_add_one(struct finder_info* fi, const char* filename,
     go = (GUIObject*)(fi->gui_obj);
     return go->addOne(filename, in_subfolder, size, modified);
 }
+
+/*****************************************************************************/
+int
+gui_writeln(struct finder_info* fi, const char* msg)
+{
+    printf("%s\n", msg);
+    return 0;
+}
+

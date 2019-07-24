@@ -31,6 +31,8 @@ int
 gui_add_one(struct finder_info* fi, const char* filename,
             const char* in_subfolder, FINDER_I64 size,
             const char* modified);
+int
+gui_writeln(struct finder_info* fi, const char* msg);
 
 #ifdef __cplusplus
 }
