@@ -9,7 +9,7 @@ LIBS=
 
 all: finder.exe
 
-finder.exe: $(OBJS)
+finder.exe: $(OBJS) ../finder.lib
 	$(CC) -WR -efinder.exe $(OBJS) ../finder.lib
 
 clean:

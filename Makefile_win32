@@ -10,7 +10,7 @@ LIBS=
 all: finder.lib
 
 finder.lib: $(OBJS)
-	tlib finder.lib +finder.obj +finder_event.obj +finder_list.obj +finder_thread.obj +finder_search.obj +finder_file.obj
+	tlib finder.lib -+finder.obj -+finder_event.obj -+finder_list.obj -+finder_thread.obj -+finder_search.obj -+finder_file.obj
 
 clean:
 	del finder.lib $(OBJS)
