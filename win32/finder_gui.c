@@ -28,6 +28,15 @@ gui_add_one(struct finder_info* fi, const char* filename,
             const char* in_subfolder, FINDER_I64 size,
             const char* modified)
 {
+    writeln(fi, "gui_add_one: %s", filename);
+    return 0;
+}
+
+/*****************************************************************************/
+int
+gui_writeln(struct finder_info* fi, const char* msg)
+{
+    OutputDebugStringA(msg);
     return 0;
 }
 
@@ -41,7 +50,12 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     {
         MessageBox(NULL, "WinMain: gui_init failed", "finder", MB_OK);
     }
-    writeln(&g_fi, "hello %d", 45);
-    MessageBox(NULL, lpCmdLine, "finder", 0);
+    writeln(&g_fi, "WinMain: starting search");
+    snprintf(g_fi.named, 255, "*.*");
+    snprintf(g_fi.look_in, 255, "c:\\temp\\");
+    g_fi.include_subfolders = 1;
+    start_find(&g_fi);
+    MessageBox(NULL, "WinMain: searching", "finder", MB_OK);
+    gui_deinit(&g_fi);
     return 0;
 }
