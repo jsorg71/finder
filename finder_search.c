@@ -348,7 +348,7 @@ check_file_name(struct finder_info* fi, const char* filename)
 
 /*****************************************************************************/
 int
-listdir(struct finder_info* fi, struct work_item* wi, const char* name)
+listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
 {
 #if defined(_WIN32)
     HANDLE find_handle;
@@ -363,33 +363,33 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
 #endif
     struct work_item* lwi;
     int look_in_bytes;
-    int name_bytes;
-    int look_in_text_alloc_bytes;
+    int dir_name_bytes;
+    int in_subfolder_text_alloc_bytes;
     int found_in_file;
     int is_dir;
     int do_open;
-    char* path;
-    char* look_in_text;
+    char* dir_file_name;
+    char* in_subfolder_text;
     const char* entry_file_name;
     FINDER_FILE_OBJ file_obj;
 
     look_in_bytes = strlen(fi->look_in);
-    name_bytes = strlen(name);
-    //writeln(fi, "%d %d", look_in_bytes, name_bytes);
-    if (name_bytes < look_in_bytes)
+    dir_name_bytes = strlen(dir_name);
+    //writeln(fi, "%d %d", look_in_bytes, dir_name_bytes);
+    if (dir_name_bytes < look_in_bytes)
     {
         writeln(fi, "%s", "error");
         return 1;
     }
 #if defined(_WIN32)
-    find_handle = FindFirstFileA(name, &entry);
+    find_handle = FindFirstFileA(dir_name, &entry);
     if (find_handle == INVALID_HANDLE_VALUE)
     {
         writeln(fi, "%s", "error");
         return 1;
     }
 #else
-    find_handle = opendir(name);
+    find_handle = opendir(dir_name);
     if (find_handle == NULL)
     {
         writeln(fi, "%s", "error");
@@ -406,25 +406,25 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
         }
     }
 #endif
-    look_in_text_alloc_bytes = name_bytes - look_in_bytes + 1;
-    look_in_text = (char*)calloc(look_in_text_alloc_bytes, 1);
-    if (look_in_text == NULL)
+    in_subfolder_text_alloc_bytes = dir_name_bytes - look_in_bytes + 1;
+    in_subfolder_text = (char*)calloc(in_subfolder_text_alloc_bytes, 1);
+    if (in_subfolder_text == NULL)
     {
         writeln(fi, "%s", "error");
         return 1;
     }
-    path = (char*)malloc(FINDER_MAX_PATH);
-    if (path == NULL)
+    dir_file_name = (char*)malloc(FINDER_MAX_PATH);
+    if (dir_file_name == NULL)
     {
-        free(look_in_text);
+        free(in_subfolder_text);
         writeln(fi, "%s", "error");
         return 1;
     }
 
-    if (name_bytes > look_in_bytes)
+    if (dir_name_bytes > look_in_bytes)
     {
-        snprintf(look_in_text, look_in_text_alloc_bytes, "%s",
-                 name + look_in_bytes + 1);
+        snprintf(in_subfolder_text, in_subfolder_text_alloc_bytes, "%s",
+                 dir_name + look_in_bytes + 1);
     }
     while (1)
     {
@@ -441,14 +441,14 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
         got_stat = 0;
         do_open = (entry->d_type == DT_UNKNOWN) || fi->search_in_files;
 #endif
-        snprintf(path, FINDER_MAX_PATH, "%s/%s", name, entry_file_name);
+        snprintf(dir_file_name, FINDER_MAX_PATH, "%s/%s", dir_name, entry_file_name);
         if (do_open)
         {
             /* much slower if we have to go in here */
-            FINDER_FILE_OPEN_RO(path, file_obj);
+            FINDER_FILE_OPEN_RO(dir_file_name, file_obj);
             if (file_obj == FINDER_FILE_INVALID)
             {
-                writeln(fi, "open error %s", path);
+                writeln(fi, "open error %s", dir_file_name);
                 FINDER_FILE_CLOSE(file_obj);
                 FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
@@ -457,7 +457,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
 #else
             if (fstat(file_obj, &lstat1) != 0)
             {
-                writeln(fi, "fstat error %s", path);
+                writeln(fi, "fstat error %s", dir_file_name);
                 FINDER_FILE_CLOSE(file_obj);
                 FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
@@ -488,7 +488,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
                     FINDER_FILE_CLOSE(file_obj);
                     FINDER_FIND_NEXT_BREAK_CONTINUE;
                 }
-                listdir(fi, wi, path);
+                listdir(fi, wi, dir_file_name);
             }
         }
         else
@@ -521,7 +521,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
             {
                 lwi->cmd = FINDER_CMD_ADD_ONE;
                 lwi->filename = strdup(entry_file_name);
-                lwi->in_subfolder = strdup(look_in_text);
+                lwi->in_subfolder = strdup(in_subfolder_text);
 #if defined(_WIN32)
                 lwi->size = entry.nFileSizeHigh;
                 lwi->size = lwi->size << 32;
@@ -542,10 +542,10 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
 #else
                 if (got_stat == 0)
                 {
-                    //writeln(fi, "stat %s", path);
-                    if (stat(path, &lstat1) != 0)
+                    //writeln(fi, "stat %s", dir_file_name);
+                    if (stat(dir_file_name, &lstat1) != 0)
                     {
-                        writeln(fi, "stat error %s", path);
+                        writeln(fi, "stat error %s", dir_file_name);
                         FINDER_FILE_CLOSE(file_obj);
                         FINDER_FIND_NEXT_BREAK_CONTINUE;
                     }
@@ -575,8 +575,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* name)
         FINDER_FILE_CLOSE(file_obj);
         FINDER_FIND_NEXT_BREAK_CONTINUE;
     }
-    free(look_in_text);
-    free(path);
+    free(in_subfolder_text);
+    free(dir_file_name);
     FINDER_FIND_CLOSE;
     gui_set_event(fi);
     return 0;

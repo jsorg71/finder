@@ -20,6 +20,6 @@
 #define FINDER_SEARCH_H
 
 int
-listdir(struct finder_info* fi, struct work_item* wi, const char* name);
+listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name);
 
 #endif
