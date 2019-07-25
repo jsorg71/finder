@@ -354,6 +354,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
     HANDLE find_handle;
     WIN32_FIND_DATAA entry;
     SYSTEMTIME system_time;
+    SYSTEMTIME local_time;
+    char* ldir_name;
 #else
     DIR* find_handle;
     struct dirent* entry;
@@ -378,21 +380,30 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
     //writeln(fi, "%d %d", look_in_bytes, dir_name_bytes);
     if (dir_name_bytes < look_in_bytes)
     {
-        writeln(fi, "%s", "error");
+        writeln(fi, "listdir: error, dir_name_bytes can not be less then dir_name_bytes");
         return 1;
     }
 #if defined(_WIN32)
-    find_handle = FindFirstFileA(dir_name, &entry);
+    ldir_name = (char*)malloc(FINDER_MAX_PATH);
+    if (ldir_name == NULL)
+    {
+        writeln(fi, "listdir: error malloc");
+        return 1;
+    }
+    snprintf(ldir_name, FINDER_MAX_PATH, "%s\\*", dir_name);
+    //writeln(fi, "listdir: ldir_name [%s]", ldir_name);
+    find_handle = FindFirstFileA(ldir_name, &entry);
+    free(ldir_name);
     if (find_handle == INVALID_HANDLE_VALUE)
     {
-        writeln(fi, "%s", "error");
+        writeln(fi, "listdir: error access directory [%s]", dir_name);
         return 1;
     }
 #else
     find_handle = opendir(dir_name);
     if (find_handle == NULL)
     {
-        writeln(fi, "%s", "error");
+        writeln(fi, "listdir: error access directory [%s]", dir_name);
         return 1;
     }
     else
@@ -400,7 +411,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
         entry = readdir(find_handle);
         if (entry == NULL)
         {
-            writeln(fi, "%s", "error");
+            writeln(fi, "listdir: error access directory [%s]", dir_name);
             closedir(find_handle);
             return 1;
         }
@@ -410,14 +421,16 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
     in_subfolder_text = (char*)calloc(in_subfolder_text_alloc_bytes, 1);
     if (in_subfolder_text == NULL)
     {
-        writeln(fi, "%s", "error");
+        writeln(fi, "listdir: error calloc");
+        FINDER_FIND_CLOSE;
         return 1;
     }
     dir_file_name = (char*)malloc(FINDER_MAX_PATH);
     if (dir_file_name == NULL)
     {
+        writeln(fi, "listdir: error malloc");
         free(in_subfolder_text);
-        writeln(fi, "%s", "error");
+        FINDER_FIND_CLOSE;
         return 1;
     }
 
@@ -436,12 +449,13 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
 #if defined(_WIN32)
         entry_file_name = entry.cFileName;
         do_open = fi->search_in_files;
+        snprintf(dir_file_name, FINDER_MAX_PATH, "%s\\%s", dir_name, entry_file_name);
 #else
         entry_file_name = entry->d_name;
         got_stat = 0;
         do_open = (entry->d_type == DT_UNKNOWN) || fi->search_in_files;
-#endif
         snprintf(dir_file_name, FINDER_MAX_PATH, "%s/%s", dir_name, entry_file_name);
+#endif
         if (do_open)
         {
             /* much slower if we have to go in here */
@@ -527,22 +541,34 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                 lwi->size = lwi->size << 32;
                 lwi->size = lwi->size | entry.nFileSizeLow;
                 if (FileTimeToSystemTime(&(entry.ftLastWriteTime),
-                    &system_time))
+                                         &system_time))
                 {
-                    lwi->modified = (char*)malloc(1024);
-                    if (lwi->modified != NULL)
+                    if (SystemTimeToTzSpecificLocalTime(NULL, &system_time,
+                                                        &local_time))
                     {
-                        snprintf(lwi->modified, 1024,
-                                 "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
-                                 system_time.wYear, system_time.wMonth,
-                                 system_time.wDay,  system_time.wHour,
-                                 system_time.wMinute, system_time.wSecond);
+                        lwi->modified = (char*)malloc(1024);
+                        if (lwi->modified != NULL)
+                        {
+                            snprintf(lwi->modified, 1024,
+                                     "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
+                                     local_time.wYear, local_time.wMonth,
+                                     local_time.wDay,  local_time.wHour,
+                                     local_time.wMinute, local_time.wSecond);
+                        }
                     }
+                    else
+                    {
+                        writeln(fi, "listdir: SystemTimeToTzSpecificLocalTime failed");
+                    }
+                }
+                else
+                {
+                    writeln(fi, "listdir: FileTimeToSystemTime failed");
                 }
 #else
                 if (got_stat == 0)
                 {
-                    //writeln(fi, "stat %s", dir_file_name);
+                    //writeln(fi, "listdir: stat %s", dir_file_name);
                     if (stat(dir_file_name, &lstat1) != 0)
                     {
                         writeln(fi, "stat error %s", dir_file_name);
@@ -566,6 +592,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                     }
                 }
 #endif
+                writeln(fi, "listdir: add one filename [%s] modified [%s]", lwi->filename, lwi->modified);
                 finder_mutex_lock(fi->list_mutex);
                 finder_list_add_item(fi->work_to_main_list, (ITYPE)lwi);
                 finder_mutex_unlock(fi->list_mutex);
