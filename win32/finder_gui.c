@@ -51,9 +51,10 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         MessageBox(NULL, "WinMain: gui_init failed", "finder", MB_OK);
     }
     writeln(&g_fi, "WinMain: starting search");
-    snprintf(g_fi.named, 255, "*.*");
-    snprintf(g_fi.look_in, 255, "c:\\temp\\");
+    snprintf(g_fi.named, 255, "*.cab;*.exe");
+    snprintf(g_fi.look_in, 255, "c:\\temp");
     g_fi.include_subfolders = 1;
+    g_fi.case_sensitive = 0;
     start_find(&g_fi);
     MessageBox(NULL, "WinMain: searching", "finder", MB_OK);
     gui_deinit(&g_fi);
