@@ -555,6 +555,10 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                                      local_time.wDay,  local_time.wHour,
                                      local_time.wMinute, local_time.wSecond);
                         }
+                        else
+                        {
+                            writeln(fi, "listdir: malloc error");
+                        }
                     }
                     else
                     {
@@ -596,6 +600,10 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                 finder_mutex_lock(fi->list_mutex);
                 finder_list_add_item(fi->work_to_main_list, (ITYPE)lwi);
                 finder_mutex_unlock(fi->list_mutex);
+            }
+            else
+            {
+                writeln(fi, "listdir: malloc error");
             }
             gui_set_event(fi);
         }
