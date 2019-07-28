@@ -323,7 +323,11 @@ format_commas(FINDER_I64 n, char* out)
     {
         return 1;
     }
+#if defined(_WIN32)
+    snprintf(buf, 64, "%Ld", (FINDER_I64)n);
+#else
     snprintf(buf, 64, "%lld", (FINDER_I64)n);
+#endif
     c = 2 - (strlen(buf) % 3);
     for (p = buf; *p != 0; p++)
     {
