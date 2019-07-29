@@ -276,13 +276,13 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     memset(&col, 0, sizeof(col));
     col.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
     col.cx = 100;
-    col.pszText = "filename";
+    col.pszText = "Name";
     SendMessage(go->hwndListView, LVM_INSERTCOLUMN, 0, (LPARAM)&col);
-    col.pszText = "in subfolder";
+    col.pszText = "In Subfolder";
     SendMessage(go->hwndListView, LVM_INSERTCOLUMN, 1, (LPARAM)&col);
-    col.pszText = "size";
+    col.pszText = "Size";
     SendMessage(go->hwndListView, LVM_INSERTCOLUMN, 2, (LPARAM)&col);
-    col.pszText = "modified";
+    col.pszText = "Modified";
     SendMessage(go->hwndListView, LVM_INSERTCOLUMN, 3, (LPARAM)&col);
 
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS;
