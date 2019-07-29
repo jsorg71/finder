@@ -25,13 +25,18 @@ static const char CLASS_NAME[]  = "Finder Window Class";
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+#define GET_FI_FROM_WND(_hwnd) \
+    (struct finder_info*)GetWindowLongPtr(_hwnd, GWL_USERDATA)
+#define SET_FI_TO_WND(_hwnd, _fi) \
+    SetWindowLongPtr(_hwnd, GWL_USERDATA, (LONG_PTR)_fi);
+
 /*****************************************************************************/
 int
 gui_set_event(struct finder_info* fi)
 {
     struct gui_object* go;
 
-    writeln(fi, "gui_set_event:");
+    //writeln(fi, "gui_set_event:");
     go = (struct gui_object*)(fi->gui_obj);
     SetEvent(go->event);
     return 0;
@@ -41,7 +46,10 @@ gui_set_event(struct finder_info* fi)
 int
 gui_find_done(struct finder_info* fi)
 {
-    (void)fi;
+    //struct gui_object* go;
+
+    writeln(fi, "gui_find_done:");
+    //go = (struct gui_object*)(fi->gui_obj);
     return 0;
 }
 
@@ -56,8 +64,8 @@ gui_add_one(struct finder_info* fi, const char* filename,
     char text[256];
 
     go = (struct gui_object*)(fi->gui_obj);
-    writeln(fi, "gui_add_one: filename [%s] subfolder [%s] size %Ld "
-            "modified [%s]", filename, in_subfolder, size, modified);
+    //writeln(fi, "gui_add_one: filename [%s] subfolder [%s] size %Ld "
+    //        "modified [%s]", filename, in_subfolder, size, modified);
 
     memset(&item, 0, sizeof(item));
     item.mask = LVIF_TEXT;
@@ -108,6 +116,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     INITCOMMONCONTROLSEX icex;
     struct finder_info* fi;
     ATOM atom;
+    DWORD lasterror;
 
     (void)hPrevInstance;
     (void)lpCmdLine;
@@ -162,14 +171,16 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         UnregisterClass(CLASS_NAME, hInstance);
         return 0;
     }
-    SetWindowLongPtr(go->hwnd, GWL_USERDATA, (LONG_PTR)fi);
+    SET_FI_TO_WND(go->hwnd, fi);
     ShowWindow(go->hwnd, nCmdShow);
 
     memset(&icex, 0, sizeof(icex));
-    icex.dwICC = ICC_WIN95_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TAB_CLASSES;
+    //icex.dwICC = ICC_WIN95_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TAB_CLASSES;
+    icex.dwICC = ICC_LISTVIEW_CLASSES;
     if (!InitCommonControlsEx(&icex))
     {
-        writeln(fi, "WinMain: InitCommonControlsEx failed");
+        lasterror = GetLastError();
+        writeln(fi, "WinMain: InitCommonControlsEx failed lasterror 0x%8.8x", lasterror);
     }
 
     /* Run the message loop. */
@@ -182,7 +193,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                                   INFINITE, QS_ALLINPUT);
         if (WaitForSingleObject(go->event, 0) == 0)
         {
-            writeln(fi, "got event");
+            //writeln(fi, "WinMain: got event");
             ResetEvent(go->event);
             event_callback(fi);
         }
@@ -190,7 +201,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         {
             if (msg.message == WM_QUIT)
             {
-                writeln(fi, "got quit");
+                writeln(fi, "WinMain: got quit");
                 cont = 0;
                 break;
             }
@@ -209,6 +220,34 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 /*****************************************************************************/
 static int
+get_fi_go_from_hwnd(HWND hwnd, struct finder_info** fi, struct gui_object** go)
+{
+    struct finder_info* lfi;
+    struct gui_object* lgo;
+
+    lfi = GET_FI_FROM_WND(hwnd);
+    if (lfi == NULL)
+    {
+        return 1;
+    }
+    lgo = (struct gui_object*)(lfi->gui_obj);
+    if (lgo == NULL)
+    {
+        return 2;
+    }
+    if (fi != NULL)
+    {
+        *fi = lfi;
+    }
+    if (go != NULL)
+    {
+        *go = lgo;
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static int
 finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     struct finder_info* fi;
@@ -217,13 +256,11 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     LV_COLUMN col;
     TCITEM tie; 
 
-    fi = (struct finder_info*)GetWindowLongPtr(hwnd, GWL_USERDATA);
-    if (fi == NULL)
+    if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
     }
     writeln(fi, "finder_show_window:");
-    go = (struct gui_object*)(fi->gui_obj);
     if (hwnd != go->hwnd)
     {
         return 0;
@@ -289,12 +326,10 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     int width;
     int height;
 
-    fi = (struct finder_info*)GetWindowLongPtr(hwnd, GWL_USERDATA);
-    if (fi == NULL)
+    if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
     }
-    go = (struct gui_object*)(fi->gui_obj);
     if (hwnd != go->hwnd)
     {
         return 0;
@@ -311,6 +346,79 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************/
+static int
+finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+    struct finder_info* fi;
+    struct gui_object* go;
+
+    if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
+    {
+        return 0;
+    }
+    if (hwnd != go->hwnd)
+    {
+        return 0;
+    }
+    if (wParam == 0x8801) /* exit */
+    {
+        PostMessage(go->hwnd, WM_CLOSE, 0, 0);
+    }
+    if (wParam == 0x8802) /* find */
+    {
+        SendMessage(go->hwndListView, LVM_DELETEALLITEMS, 0, 0);
+        writeln(fi, "finder_show_window: starting search");
+        snprintf(fi->named, 255, "*.cab");
+        //snprintf(fi->look_in, 255, "d:\\flats");
+        snprintf(fi->look_in, 255, "d:\\windows");
+        fi->include_subfolders = 1;
+        fi->case_sensitive = 0;
+        start_find(fi);
+    }
+    if (wParam == 0x8803) /* stop */
+    {
+        writeln(fi, "finder_show_window: stopping search");
+        stop_find(fi);
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static int
+finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+    struct finder_info* fi;
+    struct gui_object* go;
+    NMHDR* nm;
+    NMLISTVIEW* nmlv;
+
+    if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
+    {
+        return 0;
+    }
+    if (hwnd != go->hwnd)
+    {
+        return 0;
+    }
+    //writeln(fi, "finder_notify: hwnd %d wParam %d lParam %d", hwnd, wParam, lParam);
+    nm = (NMHDR*)lParam;
+    if (nm->hwndFrom == go->hwndListView)
+    {
+        nmlv = (NMLISTVIEW*)lParam;
+        switch (nm->code)
+        {
+            case LVN_COLUMNCLICK:
+                //writeln(fi, "finder_notify: got LVN_COLUMNCLICK");
+                writeln(fi, "finder_notify: got LVN_COLUMNCLICK column %d", nmlv->iSubItem);
+                break;
+            case LVN_DELETEITEM:
+                writeln(fi, "finder_notify: got LVN_DELETEITEM lparam %p", (void*)(nmlv->lParam));
+                break;
+        }
+    }
+    return 0;
+}
+/*****************************************************************************/
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -318,7 +426,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     PAINTSTRUCT ps;
     HDC hdc;
 
-    fi = (struct finder_info*)GetWindowLongPtr(hwnd, GWL_USERDATA);
+    fi = GET_FI_FROM_WND(hwnd);
     if (fi == NULL)
     {
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -338,15 +446,13 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             finder_show_window(hwnd, wParam, lParam);
             break;
         case WM_SIZE:
-            //writeln(fi, "WindowProc: WM_SIZE");
             finder_size(hwnd, wParam, lParam);
             break;
         case WM_COMMAND:
-            writeln(fi, "WindowProc: WM_COMMAND wParam %d lParam %d", wParam, lParam);
-            if (wParam == 0x8801)
-            {
-                PostQuitMessage(0);
-            }
+            finder_command(hwnd, wParam, lParam);
+            break;
+        case WM_NOTIFY:
+            finder_notify(hwnd, wParam, lParam);
             break;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
