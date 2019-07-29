@@ -260,6 +260,7 @@ find_in_file(FINDER_FILE_OBJ file_obj, struct finder_info* fi,
         }
         if (finder_event_is_set(fi->work_term_event))
         {
+            writeln(fi, "find_in_file: work_term_event set");
             break;
         }
         if (readed == SEARCH_IN_READ_CHUCK)
@@ -443,6 +444,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
     {
         if (finder_event_is_set(fi->work_term_event))
         {
+            writeln(fi, "listdir: work_term_event set");
             break;
         }
         file_obj = FINDER_FILE_INVALID;
@@ -596,7 +598,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                     }
                 }
 #endif
-                writeln(fi, "listdir: add one filename [%s] modified [%s]", lwi->filename, lwi->modified);
+                //writeln(fi, "listdir: add one filename [%s] modified [%s]", lwi->filename, lwi->modified);
                 finder_mutex_lock(fi->list_mutex);
                 finder_list_add_item(fi->work_to_main_list, (ITYPE)lwi);
                 finder_mutex_unlock(fi->list_mutex);

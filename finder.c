@@ -236,10 +236,11 @@ stop_find(struct finder_info* fi)
 {
     writeln(fi, "stop_find:");
     finder_event_set(fi->work_term_event);
-    //finder_mutex_lock(fi->list_mutex);
-    //finder_list_clear(fi->main_to_work_list, 1024, 1024);
-    //finder_list_clear(fi->work_to_main_list, 1024, 1024);
-    //finder_mutex_unlock(fi->list_mutex);
+    finder_mutex_lock(fi->list_mutex);
+    finder_list_clear(fi->main_to_work_list, 1024, 1024);
+    finder_list_clear(fi->work_to_main_list, 1024, 1024);
+    finder_mutex_unlock(fi->list_mutex);
+    gui_find_done(fi);
     return 0;
 }
 
