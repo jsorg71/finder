@@ -18,6 +18,16 @@ struct gui_object
     HWND hwndListView;
     HWND hwndTabControl;
     HANDLE event;
+    int sort_order[4];
+};
+
+struct lv_item
+{
+    char* filename;
+    char* in_subfolder;
+    FINDER_I64 size;
+    char* size_text;
+    char* modified;
 };
 
 static const char CLASS_NAME[]  = "Finder Window Class";
@@ -46,10 +56,14 @@ gui_set_event(struct finder_info* fi)
 int
 gui_find_done(struct finder_info* fi)
 {
-    //struct gui_object* go;
+    struct gui_object* go;
 
     writeln(fi, "gui_find_done:");
-    //go = (struct gui_object*)(fi->gui_obj);
+    go = (struct gui_object*)(fi->gui_obj);
+    ListView_SetColumnWidth(go->hwndListView, 0, LVSCW_AUTOSIZE_USEHEADER);
+    ListView_SetColumnWidth(go->hwndListView, 1, LVSCW_AUTOSIZE_USEHEADER);
+    ListView_SetColumnWidth(go->hwndListView, 2, LVSCW_AUTOSIZE_USEHEADER);
+    ListView_SetColumnWidth(go->hwndListView, 3, LVSCW_AUTOSIZE_USEHEADER);
     return 0;
 }
 
@@ -61,32 +75,69 @@ gui_add_one(struct finder_info* fi, const char* filename,
 {
     LV_ITEM item;
     struct gui_object* go;
-    char text[256];
+    struct lv_item* lvi;
 
     go = (struct gui_object*)(fi->gui_obj);
     //writeln(fi, "gui_add_one: filename [%s] subfolder [%s] size %Ld "
     //        "modified [%s]", filename, in_subfolder, size, modified);
 
+    /* allocate */
+    while (1)
+    {
+        lvi = (struct lv_item*)calloc(1, sizeof(struct lv_item));
+        if (lvi != NULL)
+        {
+            lvi->filename = strdup(filename);
+            if (lvi->filename != NULL)
+            {
+                lvi->in_subfolder = strdup(in_subfolder);
+                if (lvi->in_subfolder != NULL)
+                {
+                    lvi->size_text = (char*)calloc(1, 256);
+                    if (lvi->size_text != NULL)
+                    {
+                        lvi->modified = strdup(modified);
+                        if (lvi->modified != NULL)
+                        {
+                            break;
+                        }
+                        free(lvi->modified);
+                    }
+                    free(lvi->size_text);
+                }
+                free(lvi->in_subfolder);
+            }
+            free(lvi->filename);
+        }
+        free(lvi);
+        return 0;
+    }
+    lvi->size = size;
+    format_commas(size, lvi->size_text);
+
     memset(&item, 0, sizeof(item));
-    item.mask = LVIF_TEXT;
-    item.cchTextMax = 256;
-    item.iItem = 0;
-    item.iSubItem = 0;
-    snprintf(text, 255, "%s", filename);
-    item.pszText = text;
+    item.mask = LVIF_TEXT | LVIF_PARAM;
+    item.pszText = lvi->filename;
+    item.cchTextMax = strlen(item.pszText) + 1;
+    item.lParam = (LONG_PTR)lvi;
+    item.iItem = SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
     SendMessage(go->hwndListView, LVM_INSERTITEM, 0, (LPARAM)&item);
 
+    item.mask = LVIF_TEXT;
     item.iSubItem = 1;
-    snprintf(text, 255, "%s", in_subfolder);
+    item.pszText = lvi->in_subfolder;
+    item.cchTextMax = strlen(item.pszText) + 1;
+    item.lParam = 0;
     SendMessage(go->hwndListView, LVM_SETITEM, 0, (LPARAM)&item);
 
     item.iSubItem = 2;
-    format_commas(size, text);
-    //snprintf(text, 255, "%Ld", size);
+    item.pszText = lvi->size_text;
+    item.cchTextMax = strlen(item.pszText) + 1;
     SendMessage(go->hwndListView, LVM_SETITEM, 0, (LPARAM)&item);
 
     item.iSubItem = 3;
-    snprintf(text, 255, "%s", modified);
+    item.pszText = lvi->modified;
+    item.cchTextMax = strlen(item.pszText) + 1;
     SendMessage(go->hwndListView, LVM_SETITEM, 0, (LPARAM)&item);
 
     return 0;
@@ -384,6 +435,110 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************/
+static int CALLBACK
+sort00(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return stricmp(obj1->filename, obj2->filename);
+}
+
+/*****************************************************************************/
+static int CALLBACK
+sort01(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return stricmp(obj1->in_subfolder, obj2->in_subfolder);
+}
+
+/*****************************************************************************/
+static int CALLBACK
+sort02(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return (int)(obj1->size - obj2->size);
+}
+
+/*****************************************************************************/
+static int CALLBACK
+sort03(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return stricmp(obj1->modified, obj2->modified);
+}
+
+/*****************************************************************************/
+static int CALLBACK
+sort10(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return stricmp(obj2->filename, obj1->filename);
+}
+
+/*****************************************************************************/
+static int CALLBACK
+sort11(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return stricmp(obj2->in_subfolder, obj1->in_subfolder);
+}
+
+/*****************************************************************************/
+static int CALLBACK
+sort12(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return (int)(obj2->size - obj1->size);
+}
+
+/*****************************************************************************/
+static int CALLBACK
+sort13(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    struct lv_item* obj1;
+    struct lv_item* obj2;
+
+    (void)lParamSort;
+    obj1 = (struct lv_item*)lParam1;
+    obj2 = (struct lv_item*)lParam2;
+    return stricmp(obj2->modified, obj1->modified);
+}
+
+/*****************************************************************************/
 static int
 finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
@@ -391,6 +546,10 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct gui_object* go;
     NMHDR* nm;
     NMLISTVIEW* nmlv;
+    struct lv_item* lvi;
+    int iSubItem;
+    PFNLVCOMPARE sasc[4] = { sort00, sort01, sort02, sort03 };
+    PFNLVCOMPARE sdesc[4] = { sort10, sort11, sort12, sort13 };
 
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
@@ -408,11 +567,28 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
         switch (nm->code)
         {
             case LVN_COLUMNCLICK:
-                //writeln(fi, "finder_notify: got LVN_COLUMNCLICK");
-                writeln(fi, "finder_notify: got LVN_COLUMNCLICK column %d", nmlv->iSubItem);
+                iSubItem = nmlv->iSubItem % 4;
+                if ((go->sort_order[iSubItem] % 2) == 0)
+                {
+                    ListView_SortItems(go->hwndListView, sasc[iSubItem], 0);
+                }
+                else
+                {
+                    ListView_SortItems(go->hwndListView, sdesc[iSubItem], 0);
+                }
+                go->sort_order[iSubItem]++;
                 break;
             case LVN_DELETEITEM:
-                writeln(fi, "finder_notify: got LVN_DELETEITEM lparam %p", (void*)(nmlv->lParam));
+                //writeln(fi, "finder_notify: got LVN_DELETEITEM lparam %p", (void*)(nmlv->lParam));
+                lvi = (struct lv_item*)(nmlv->lParam);
+                if (lvi != NULL)
+                {
+                    free(lvi->filename);
+                    free(lvi->in_subfolder);
+                    free(lvi->size_text);
+                    free(lvi->modified);
+                    free(lvi);
+                }
                 break;
         }
     }
