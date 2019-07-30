@@ -48,7 +48,7 @@ finder_event_create(void** event1)
         return 1;
     }
 #if defined(_WIN32)
-    levent->event = CreateEvent(0, 1, 0, NULL);
+    levent->event = CreateEvent(NULL, TRUE, FALSE, NULL);
 #else
     if (pipe(levent->pipe) != 0)
     {
