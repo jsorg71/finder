@@ -18,6 +18,7 @@ struct gui_object
     HWND hwndListView;
     HWND hwndTabControl;
     HANDLE event;
+    HFONT font;
     int sort_order[4];
 };
 
@@ -64,6 +65,8 @@ gui_find_done(struct finder_info* fi)
     ListView_SetColumnWidth(go->hwndListView, 1, LVSCW_AUTOSIZE_USEHEADER);
     ListView_SetColumnWidth(go->hwndListView, 2, LVSCW_AUTOSIZE_USEHEADER);
     ListView_SetColumnWidth(go->hwndListView, 3, LVSCW_AUTOSIZE_USEHEADER);
+    EnableWindow(go->hwndFindButton, TRUE);
+    EnableWindow(go->hwndStopButton, FALSE);
     return 0;
 }
 
@@ -168,6 +171,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     struct finder_info* fi;
     ATOM atom;
     DWORD lasterror;
+    NONCLIENTMETRICS non_client_metrics;
 
     (void)hPrevInstance;
     (void)lpCmdLine;
@@ -176,6 +180,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
     atom = RegisterClass(&wc);
     if (atom == 0)
     {
@@ -223,11 +229,16 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         return 0;
     }
     SET_FI_TO_WND(go->hwnd, fi);
+    /* create font */
+    memset(&non_client_metrics, 0, sizeof(non_client_metrics));
+    non_client_metrics.cbSize = sizeof(non_client_metrics);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &non_client_metrics, 0);
+    go->font = CreateFontIndirect(&non_client_metrics.lfMessageFont);
+    /* show main window */
     ShowWindow(go->hwnd, nCmdShow);
 
     memset(&icex, 0, sizeof(icex));
-    //icex.dwICC = ICC_WIN95_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TAB_CLASSES;
-    icex.dwICC = ICC_LISTVIEW_CLASSES;
+    icex.dwICC = ICC_WIN95_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TAB_CLASSES;
     if (!InitCommonControlsEx(&icex))
     {
         lasterror = GetLastError();
@@ -262,6 +273,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     gui_deinit(fi);
     DestroyWindow(go->hwnd);
+    DeleteObject(go->font);
     CloseHandle(go->event);
     free(go);
     free(fi);
@@ -307,6 +319,9 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     LV_COLUMN col;
     TCITEM tie; 
 
+    (void)wParam;
+    (void)lParam;
+
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -316,11 +331,16 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
+    /* check if already done */
+    if (go->hwndListView != NULL)
+    {
+        return 0;
+    }
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
             LVS_REPORT;
     go->hwndListView = CreateWindow(WC_LISTVIEW, "", flags, 0, 0, 10, 10,
                                     hwnd, NULL, go->hInstance, NULL);
-
+    SendMessage(go->hwndListView, WM_SETFONT, (WPARAM)(go->font), FALSE);
     SendMessage(go->hwndListView, LVM_SETEXTENDEDLISTVIEWSTYLE, 0,
                 LVS_EX_FULLROWSELECT);
 
@@ -339,6 +359,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS;
     go->hwndTabControl = CreateWindow(WC_TABCONTROL, "", flags, 0, 0, 10, 10,
                                       hwnd, NULL, go->hInstance, NULL);
+    SendMessage(go->hwndTabControl, WM_SETFONT, (WPARAM)(go->font), FALSE);
     memset(&tie, 0, sizeof(tie));
     tie.mask = TCIF_TEXT | TCIF_IMAGE;
     tie.iImage = -1;
@@ -353,18 +374,15 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
             BS_DEFPUSHBUTTON;
     go->hwndExitButton = CreateWindow("BUTTON", "Exit", flags, 0, 0, 10, 10,
                                       hwnd, (HMENU)0x8801, go->hInstance, NULL);
+    SendMessage(go->hwndExitButton, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS;
     go->hwndFindButton = CreateWindow("BUTTON", "Find", flags, 0, 0, 10, 10,
                                       hwnd, (HMENU)0x8802, go->hInstance, NULL);
+    SendMessage(go->hwndFindButton, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_DISABLED;
     go->hwndStopButton = CreateWindow("BUTTON", "Stop", flags, 0, 0, 10, 10,
                                       hwnd, (HMENU)0x8803, go->hInstance, NULL);
-
-    writeln(fi, "finder_show_window: starting search");
-    snprintf(fi->named, 255, "*.*");
-    snprintf(fi->look_in, 255, "d:\\flats");
-    fi->include_subfolders = 1;
-    fi->case_sensitive = 0;
-    start_find(fi);
-
+    SendMessage(go->hwndStopButton, WM_SETFONT, (WPARAM)(go->font), FALSE);
     return 0;
 }
 
@@ -376,6 +394,8 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct gui_object* go;
     int width;
     int height;
+
+    (void)wParam;
 
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
@@ -403,6 +423,8 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct finder_info* fi;
     struct gui_object* go;
 
+    (void)lParam;
+
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -417,6 +439,8 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
     if (wParam == 0x8802) /* find */
     {
+        EnableWindow(go->hwndFindButton, FALSE);
+        EnableWindow(go->hwndStopButton, TRUE);
         SendMessage(go->hwndListView, LVM_DELETEALLITEMS, 0, 0);
         writeln(fi, "finder_show_window: starting search");
         snprintf(fi->named, 255, "*.cab");
@@ -551,6 +575,8 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     PFNLVCOMPARE sasc[4] = { sort00, sort01, sort02, sort03 };
     PFNLVCOMPARE sdesc[4] = { sort10, sort11, sort12, sort13 };
 
+    (void)wParam;
+
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -559,7 +585,6 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
-    //writeln(fi, "finder_notify: hwnd %d wParam %d lParam %d", hwnd, wParam, lParam);
     nm = (NMHDR*)lParam;
     if (nm->hwndFrom == go->hwndListView)
     {
@@ -579,7 +604,6 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                 go->sort_order[iSubItem]++;
                 break;
             case LVN_DELETEITEM:
-                //writeln(fi, "finder_notify: got LVN_DELETEITEM lparam %p", (void*)(nmlv->lParam));
                 lvi = (struct lv_item*)(nmlv->lParam);
                 if (lvi != NULL)
                 {
@@ -598,27 +622,15 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    struct finder_info* fi;
     PAINTSTRUCT ps;
     HDC hdc;
 
-    fi = GET_FI_FROM_WND(hwnd);
-    if (fi == NULL)
-    {
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
     switch (uMsg)
     {
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
-        case WM_PAINT:
-            hdc = BeginPaint(hwnd, &ps);
-            FillRect(hdc, &ps.rcPaint, (HBRUSH) (COLOR_WINDOW + 1));
-            EndPaint(hwnd, &ps);
-            break;
         case WM_SHOWWINDOW:
-            writeln(fi, "WindowProc: WM_SHOWWINDOW");
             finder_show_window(hwnd, wParam, lParam);
             break;
         case WM_SIZE:
