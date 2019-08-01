@@ -236,7 +236,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     go->font = CreateFontIndirect(&non_client_metrics.lfMessageFont);
     /* show main window */
     ShowWindow(go->hwnd, nCmdShow);
-
+    /* init common controls */
     memset(&icex, 0, sizeof(icex));
     icex.dwICC = ICC_WIN95_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TAB_CLASSES;
     if (!InitCommonControlsEx(&icex))
@@ -244,7 +244,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         lasterror = GetLastError();
         writeln(fi, "WinMain: InitCommonControlsEx failed lasterror 0x%8.8x", lasterror);
     }
-
     /* Run the message loop. */
     cont = 1;
     while (cont)
@@ -255,7 +254,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                                   INFINITE, QS_ALLINPUT);
         if (WaitForSingleObject(go->event, 0) == 0)
         {
-            //writeln(fi, "WinMain: got event");
             ResetEvent(go->event);
             event_callback(fi);
         }
@@ -271,6 +269,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             DispatchMessage(&msg);
         }
     }
+    /* cleanup */
     gui_deinit(fi);
     DestroyWindow(go->hwnd);
     DeleteObject(go->font);
@@ -407,7 +406,6 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
     width = LOWORD(lParam);
     height = HIWORD(lParam);
-    //writeln(&g_fi, "finder_size: wParam %d width %d height %d", wParam, width, height);
     MoveWindow(go->hwndExitButton, 0, 0, 100, 100, TRUE);
     MoveWindow(go->hwndFindButton, 100, 0, 100, 100, TRUE);
     MoveWindow(go->hwndStopButton, 200, 0, 100, 100, TRUE);
@@ -562,6 +560,9 @@ sort13(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     return stricmp(obj2->modified, obj1->modified);
 }
 
+static const PFNLVCOMPARE g_sasc[4] = { sort00, sort01, sort02, sort03 };
+static const PFNLVCOMPARE g_sdesc[4] = { sort10, sort11, sort12, sort13 };
+
 /*****************************************************************************/
 static int
 finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -572,8 +573,6 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     NMLISTVIEW* nmlv;
     struct lv_item* lvi;
     int iSubItem;
-    PFNLVCOMPARE sasc[4] = { sort00, sort01, sort02, sort03 };
-    PFNLVCOMPARE sdesc[4] = { sort10, sort11, sort12, sort13 };
 
     (void)wParam;
 
@@ -595,11 +594,11 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                 iSubItem = nmlv->iSubItem % 4;
                 if ((go->sort_order[iSubItem] % 2) == 0)
                 {
-                    ListView_SortItems(go->hwndListView, sasc[iSubItem], 0);
+                    ListView_SortItems(go->hwndListView, g_sasc[iSubItem], 0);
                 }
                 else
                 {
-                    ListView_SortItems(go->hwndListView, sdesc[iSubItem], 0);
+                    ListView_SortItems(go->hwndListView, g_sdesc[iSubItem], 0);
                 }
                 go->sort_order[iSubItem]++;
                 break;
@@ -622,9 +621,6 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    PAINTSTRUCT ps;
-    HDC hdc;
-
     switch (uMsg)
     {
         case WM_DESTROY:
