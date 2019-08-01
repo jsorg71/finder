@@ -36,6 +36,9 @@
 #define FINDER_INTPTR long
 #endif
 
+/* strdup that can handle NULL */
+#define SAFESTRDUP(_str) ((_str) == NULL) ? NULL : strdup(_str)
+
 struct work_item
 {
     int cmd;

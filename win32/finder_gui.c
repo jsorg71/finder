@@ -90,16 +90,16 @@ gui_add_one(struct finder_info* fi, const char* filename,
         lvi = (struct lv_item*)calloc(1, sizeof(struct lv_item));
         if (lvi != NULL)
         {
-            lvi->filename = strdup(filename);
+            lvi->filename = SAFESTRDUP(filename);
             if (lvi->filename != NULL)
             {
-                lvi->in_subfolder = strdup(in_subfolder);
+                lvi->in_subfolder = SAFESTRDUP(in_subfolder);
                 if (lvi->in_subfolder != NULL)
                 {
                     lvi->size_text = (char*)calloc(1, 256);
                     if (lvi->size_text != NULL)
                     {
-                        lvi->modified = strdup(modified);
+                        lvi->modified = SAFESTRDUP(modified);
                         if (lvi->modified != NULL)
                         {
                             break;

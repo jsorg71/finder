@@ -536,8 +536,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
             if (lwi != NULL)
             {
                 lwi->cmd = FINDER_CMD_ADD_ONE;
-                lwi->filename = strdup(entry_file_name);
-                lwi->in_subfolder = strdup(in_subfolder_text);
+                lwi->filename = SAFESTRDUP(entry_file_name);
+                lwi->in_subfolder = SAFESTRDUP(in_subfolder_text);
 #if defined(_WIN32)
                 lwi->size = entry.nFileSizeHigh;
                 lwi->size = lwi->size << 32;
