@@ -204,7 +204,8 @@ start_find(struct finder_info* fi)
     writeln(fi, "  case_sensitive %d", fi->case_sensitive);
     writeln(fi, "  show_hidden %d", fi->show_hidden);
     writeln(fi, "  search_in_files %d", fi->search_in_files);
-    writeln(fi, "  case search_in_case_sensitive %d", fi->search_in_case_sensitive);
+    writeln(fi, "  case search_in_case_sensitive %d",
+            fi->search_in_case_sensitive);
     writeln(fi, "  text [%s]", fi->text);
 
     finder_mutex_lock(fi->list_mutex);
@@ -261,7 +262,8 @@ main_process_work_item(struct finder_info* fi, struct work_item* wi)
     }
     else if (wi->cmd == FINDER_CMD_ADD_ONE)
     {
-        gui_add_one(fi, wi->filename, wi->in_subfolder, wi->size, wi->modified);
+        gui_add_one(fi, wi->filename, wi->in_subfolder, wi->size,
+                    wi->modified);
         free(wi->filename);
         free(wi->in_subfolder);
         free(wi->modified);
@@ -290,7 +292,8 @@ event_callback(struct finder_info* fi)
         list_count = finder_list_get_count(fi->work_to_main_list);
         if (list_count > 0)
         {
-            wi = (struct work_item*)finder_list_get_item(fi->work_to_main_list, 0);
+            wi = (struct work_item*)
+                 finder_list_get_item(fi->work_to_main_list, 0);
             finder_list_remove_item(fi->work_to_main_list, 0);
             finder_mutex_unlock(fi->list_mutex);
             main_process_work_item(fi, wi);
