@@ -17,6 +17,8 @@ struct gui_object
     HWND hwndStopButton;
     HWND hwndListView;
     HWND hwndTabControl;
+    HWND hwndNamedEdit;
+    HWND hwndSubfolderCB;
     HANDLE event;
     HFONT font;
     int sort_order[4];
@@ -104,15 +106,14 @@ gui_add_one(struct finder_info* fi, const char* filename,
                         {
                             break;
                         }
-                        free(lvi->modified);
+                        free(lvi->size_text);
                     }
-                    free(lvi->size_text);
+                    free(lvi->in_subfolder);
                 }
-                free(lvi->in_subfolder);
+                free(lvi->filename);
             }
-            free(lvi->filename);
+            free(lvi);
         }
-        free(lvi);
         return 0;
     }
     lvi->size = size;
@@ -382,6 +383,20 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     go->hwndStopButton = CreateWindow("BUTTON", "Stop", flags, 0, 0, 10, 10,
                                       hwnd, (HMENU)0x8803, go->hInstance, NULL);
     SendMessage(go->hwndStopButton, WM_SETFONT, (WPARAM)(go->font), FALSE);
+
+    flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
+            CBS_DROPDOWN | CBS_HASSTRINGS | WS_OVERLAPPED;
+    go->hwndNamedEdit = CreateWindow(WC_COMBOBOXEX, "", flags, 0, 0, 10, 10,
+                                     hwnd, NULL, go->hInstance, NULL);
+    SendMessage(go->hwndNamedEdit, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    
+    flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
+            BS_AUTOCHECKBOX;
+    go->hwndSubfolderCB = CreateWindow("BUTTON", "incude subfolder", flags,
+                                       0, 0, 10, 10,
+                                       hwnd, NULL, go->hInstance, NULL);
+    SendMessage(go->hwndSubfolderCB, WM_SETFONT, (WPARAM)(go->font), FALSE);
+
     return 0;
 }
 
@@ -411,6 +426,8 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     MoveWindow(go->hwndStopButton, 200, 0, 100, 100, TRUE);
     MoveWindow(go->hwndListView, 10, height / 2, width - 20, height / 2 - 20, TRUE);
     MoveWindow(go->hwndTabControl, 300, 0, 1000, 100, TRUE);
+    MoveWindow(go->hwndNamedEdit, 100, 110, 100, 30, TRUE);
+    MoveWindow(go->hwndSubfolderCB, 100, 150, 100, 30, TRUE);
     return 0;
 }
 
@@ -431,27 +448,33 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
-    if (wParam == 0x8801) /* exit */
+    switch (wParam)
     {
-        PostMessage(go->hwnd, WM_CLOSE, 0, 0);
-    }
-    if (wParam == 0x8802) /* find */
-    {
-        EnableWindow(go->hwndFindButton, FALSE);
-        EnableWindow(go->hwndStopButton, TRUE);
-        SendMessage(go->hwndListView, LVM_DELETEALLITEMS, 0, 0);
-        writeln(fi, "finder_show_window: starting search");
-        snprintf(fi->named, 255, "*.cab");
-        //snprintf(fi->look_in, 255, "d:\\flats");
-        snprintf(fi->look_in, 255, "d:\\windows");
-        fi->include_subfolders = 1;
-        fi->case_sensitive = 0;
-        start_find(fi);
-    }
-    if (wParam == 0x8803) /* stop */
-    {
-        writeln(fi, "finder_show_window: stopping search");
-        stop_find(fi);
+        case 0x8801: /* exit */
+            PostMessage(go->hwnd, WM_CLOSE, 0, 0);
+            break;
+        case 0x8802: /* find */
+            EnableWindow(go->hwndFindButton, FALSE);
+            EnableWindow(go->hwndStopButton, TRUE);
+            SendMessage(go->hwndListView, LVM_DELETEALLITEMS, 0, 0);
+            writeln(fi, "finder_show_window: starting search");
+            snprintf(fi->named, 255, "*.cab");
+            //snprintf(fi->look_in, 255, "d:\\flats");
+            //snprintf(fi->look_in, 255, "d:\\windows");
+
+            GetWindowText(go->hwndNamedEdit, fi->look_in, 255);
+            writeln(fi, "look in %s", fi->look_in);
+
+            fi->include_subfolders = SendMessage(go->hwndSubfolderCB, BM_GETCHECK, 0, 0);
+            writeln(fi, "include subfolders %d", fi->include_subfolders);
+
+            fi->case_sensitive = 0;
+            start_find(fi);
+            break;
+        case 0x8803: /* stop */
+            writeln(fi, "finder_show_window: stopping search");
+            stop_find(fi);
+            break;
     }
     return 0;
 }
@@ -612,6 +635,18 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                     free(lvi->modified);
                     free(lvi);
                 }
+                break;
+        }
+    }
+    else if (nm->hwndFrom == go->hwndTabControl)
+    {
+        switch (nm->code)
+        {
+            case TCN_SELCHANGING:
+                writeln(fi, "TCN_SELCHANGING %d", TabCtrl_GetCurSel(go->hwndTabControl));
+                break;
+            case TCN_SELCHANGE:
+                writeln(fi, "TCN_SELCHANGE %d", TabCtrl_GetCurSel(go->hwndTabControl));
                 break;
         }
     }
