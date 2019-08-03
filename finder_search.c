@@ -450,7 +450,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
         file_obj = FINDER_FILE_INVALID;
 #if defined(_WIN32)
         entry_file_name = entry.cFileName;
-        do_open = fi->search_in_files;
+        is_dir = entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        do_open = fi->search_in_files && !is_dir;
         snprintf(dir_file_name, FINDER_MAX_PATH, "%s\\%s", dir_name, entry_file_name);
 #else
         entry_file_name = entry->d_name;
@@ -469,7 +470,6 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                 FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
 #if defined(_WIN32)
-            is_dir = entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #else
             if (fstat(file_obj, &lstat1) != 0)
             {
