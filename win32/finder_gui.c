@@ -8,6 +8,8 @@
 #include "finder.h"
 #include "finder_event.h"
 
+#define TAB_NUM_TABS 3
+
 struct gui_object
 {
     HINSTANCE hInstance;
@@ -15,10 +17,20 @@ struct gui_object
     HWND hwndExitButton;
     HWND hwndFindButton;
     HWND hwndStopButton;
+    HWND hwndBrowseButton;
     HWND hwndListView;
     HWND hwndTabControl;
+    HWND hwndTabs[TAB_NUM_TABS];
+    HWND hwndNamedLabel;
     HWND hwndNamedEdit;
+    HWND hwndLookInLabel;
+    HWND hwndLookInEdit;
     HWND hwndSubfolderCB;
+    HWND hwndCaseSensativeCB;
+    HWND hwndHiddenCB;
+    HWND hwndSearchInFileCB;
+    HWND hwndSearchInFileEdit;
+    HWND hwndCaseSensativeSearchCB;
     HANDLE event;
     HFONT font;
     int sort_order[4];
@@ -318,6 +330,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     DWORD flags;
     LV_COLUMN col;
     TCITEM tie; 
+    int index;
 
     (void)wParam;
     (void)lParam;
@@ -369,6 +382,15 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     TabCtrl_InsertItem(go->hwndTabControl, 1, &tie);
     tie.pszText = "Advanced";
     TabCtrl_InsertItem(go->hwndTabControl, 2, &tie);
+    
+    //flags = WS_CHILD | WS_VISIBLE;
+    flags = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
+    for (index = 0; index < TAB_NUM_TABS; index++)
+    {
+        go->hwndTabs[index] = CreateWindow("STATIC", "", flags, 0, 0, 10, 10,
+                                           go->hwndTabControl,
+                                           NULL, go->hInstance, NULL);
+    }
 
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
             BS_DEFPUSHBUTTON;
@@ -379,23 +401,75 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     go->hwndFindButton = CreateWindow("BUTTON", "Find", flags, 0, 0, 10, 10,
                                       hwnd, (HMENU)0x8802, go->hInstance, NULL);
     SendMessage(go->hwndFindButton, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    go->hwndBrowseButton = CreateWindow("BUTTON", "Browse", flags, 0, 0, 10, 10,
+                                        go->hwndTabs[0], (HMENU)0x8804,
+                                        go->hInstance, NULL);
+    SendMessage(go->hwndBrowseButton, WM_SETFONT, (WPARAM)(go->font), FALSE);
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS | WS_DISABLED;
     go->hwndStopButton = CreateWindow("BUTTON", "Stop", flags, 0, 0, 10, 10,
                                       hwnd, (HMENU)0x8803, go->hInstance, NULL);
     SendMessage(go->hwndStopButton, WM_SETFONT, (WPARAM)(go->font), FALSE);
 
+    flags = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
+    go->hwndNamedLabel = CreateWindow("STATIC", "Named:", flags,
+                                      0, 0, 10, 10,
+                                      go->hwndTabs[0],
+                                      NULL, go->hInstance, NULL);
+    SendMessage(go->hwndNamedLabel, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    go->hwndLookInLabel = CreateWindow("STATIC", "Look in:", flags,
+                                       0, 0, 10, 10,
+                                       go->hwndTabs[0],
+                                       NULL, go->hInstance, NULL);
+    SendMessage(go->hwndLookInLabel, WM_SETFONT, (WPARAM)(go->font), FALSE);
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
             CBS_DROPDOWN | CBS_HASSTRINGS | WS_OVERLAPPED;
     go->hwndNamedEdit = CreateWindow(WC_COMBOBOXEX, "", flags, 0, 0, 10, 10,
-                                     hwnd, NULL, go->hInstance, NULL);
+                                     go->hwndTabs[0],
+                                     NULL, go->hInstance, NULL);
     SendMessage(go->hwndNamedEdit, WM_SETFONT, (WPARAM)(go->font), FALSE);
-    
+    go->hwndLookInEdit = CreateWindow(WC_COMBOBOXEX, "", flags, 0, 0, 10, 10,
+                                      go->hwndTabs[0],
+                                      NULL, go->hInstance, NULL);
+    SendMessage(go->hwndLookInEdit, WM_SETFONT, (WPARAM)(go->font), FALSE);
+
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
             BS_AUTOCHECKBOX;
-    go->hwndSubfolderCB = CreateWindow("BUTTON", "incude subfolder", flags,
+    go->hwndSubfolderCB = CreateWindow("BUTTON", "Incude subfolder", flags,
                                        0, 0, 10, 10,
-                                       hwnd, NULL, go->hInstance, NULL);
+                                       go->hwndTabs[0],
+                                       NULL, go->hInstance, NULL);
     SendMessage(go->hwndSubfolderCB, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    go->hwndCaseSensativeCB = CreateWindow("BUTTON", "Case sensative search", flags,
+                                           0, 0, 10, 10,
+                                           go->hwndTabs[0],
+                                           NULL, go->hInstance, NULL);
+    SendMessage(go->hwndCaseSensativeCB, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    go->hwndHiddenCB = CreateWindow("BUTTON", "Show hidden files", flags,
+                                    0, 0, 10, 10,
+                                    go->hwndTabs[0],
+                                    NULL, go->hInstance, NULL);
+    SendMessage(go->hwndHiddenCB, WM_SETFONT, (WPARAM)(go->font), FALSE);
+
+    go->hwndSearchInFileCB = CreateWindow("BUTTON", "Search in files", flags,
+                                          0, 0, 10, 10,
+                                          go->hwndTabs[2],
+                                          NULL, go->hInstance, NULL);
+    SendMessage(go->hwndSearchInFileCB, WM_SETFONT, (WPARAM)(go->font), FALSE);
+    go->hwndCaseSensativeSearchCB = CreateWindow("BUTTON",
+                                                 "Case sensative search",
+                                                 flags, 0, 0, 10, 10,
+                                                 go->hwndTabs[2],
+                                                 NULL, go->hInstance, NULL);
+    SendMessage(go->hwndCaseSensativeSearchCB, WM_SETFONT,
+                (WPARAM)(go->font), FALSE);
+    flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
+            CBS_DROPDOWN | CBS_HASSTRINGS | WS_OVERLAPPED;
+    go->hwndSearchInFileEdit = CreateWindow(WC_COMBOBOXEX, "", flags,
+                                            0, 0, 10, 10,
+                                            go->hwndTabs[2],
+                                            NULL, go->hInstance, NULL);
+    SendMessage(go->hwndSearchInFileEdit, WM_SETFONT,
+                (WPARAM)(go->font), FALSE);
 
     return 0;
 }
@@ -408,6 +482,12 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct gui_object* go;
     int width;
     int height;
+    int index;
+    int x;
+    int y;
+    int cx;
+    int cy;
+    RECT rect;
 
     (void)wParam;
 
@@ -415,19 +495,41 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
-    if (hwnd != go->hwnd)
-    {
-        return 0;
-    }
     width = LOWORD(lParam);
     height = HIWORD(lParam);
-    MoveWindow(go->hwndExitButton, 0, 0, 100, 100, TRUE);
-    MoveWindow(go->hwndFindButton, 100, 0, 100, 100, TRUE);
-    MoveWindow(go->hwndStopButton, 200, 0, 100, 100, TRUE);
-    MoveWindow(go->hwndListView, 10, height / 2, width - 20, height / 2 - 20, TRUE);
-    MoveWindow(go->hwndTabControl, 300, 0, 1000, 100, TRUE);
-    MoveWindow(go->hwndNamedEdit, 100, 110, 100, 30, TRUE);
-    MoveWindow(go->hwndSubfolderCB, 100, 150, 100, 30, TRUE);
+    if (hwnd == go->hwnd)
+    {
+        MoveWindow(go->hwndTabControl, 10, 10, width - 120, 200, TRUE);
+        GetClientRect(go->hwndTabControl, &rect);
+        TabCtrl_AdjustRect(go->hwndTabControl, FALSE, &rect);
+        x = rect.left;
+        y = rect.top;
+        cx = rect.right - rect.left;
+        cy = rect.bottom - rect.top;
+        for (index = 0; index < TAB_NUM_TABS; index++)
+        {
+            MoveWindow(go->hwndTabs[index], x, y, cx, cy, TRUE);
+        }
+
+        MoveWindow(go->hwndExitButton, width - 95, 30, 75, 25, TRUE);
+        MoveWindow(go->hwndFindButton, width - 95, 60, 75, 25, TRUE);
+        MoveWindow(go->hwndStopButton, width - 95, 90, 75, 25, TRUE);
+
+        MoveWindow(go->hwndListView, 10, 220, width - 20, height - 240, TRUE);
+
+        MoveWindow(go->hwndNamedLabel, 0, 0, 50, 25, TRUE);
+        MoveWindow(go->hwndNamedEdit, 50, 0, width - 190, 25, TRUE);
+        MoveWindow(go->hwndLookInLabel, 0, 30, 50, 25, TRUE);
+        MoveWindow(go->hwndLookInEdit, 50, 30, width - 260, 25, TRUE);
+        MoveWindow(go->hwndBrowseButton, width - 200, 30, 50, 25, TRUE);
+        MoveWindow(go->hwndSubfolderCB, 0, 60, 150, 25, TRUE);
+        MoveWindow(go->hwndCaseSensativeCB, 0, 90, 150, 25, TRUE);
+        MoveWindow(go->hwndHiddenCB, 150, 60, 150, 25, TRUE);
+
+        MoveWindow(go->hwndSearchInFileCB, 0, 0, 150, 25, TRUE);
+        MoveWindow(go->hwndSearchInFileEdit, 0, 30, width - 190, 25, TRUE);
+        MoveWindow(go->hwndCaseSensativeSearchCB, 0, 60, 150, 25, TRUE);
+    }
     return 0;
 }
 
@@ -458,17 +560,28 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             EnableWindow(go->hwndStopButton, TRUE);
             SendMessage(go->hwndListView, LVM_DELETEALLITEMS, 0, 0);
             writeln(fi, "finder_show_window: starting search");
-            snprintf(fi->named, 255, "*.cab");
+            //snprintf(fi->named, 255, "*.cab");
             //snprintf(fi->look_in, 255, "d:\\flats");
             //snprintf(fi->look_in, 255, "d:\\windows");
 
-            GetWindowText(go->hwndNamedEdit, fi->look_in, 255);
+            GetWindowText(go->hwndNamedEdit, fi->named, 255);
+
+            GetWindowText(go->hwndLookInEdit, fi->look_in, 255);
             writeln(fi, "look in %s", fi->look_in);
 
             fi->include_subfolders = SendMessage(go->hwndSubfolderCB, BM_GETCHECK, 0, 0);
             writeln(fi, "include subfolders %d", fi->include_subfolders);
 
-            fi->case_sensitive = 0;
+            fi->case_sensitive = SendMessage(go->hwndCaseSensativeCB, BM_GETCHECK, 0, 0);
+            writeln(fi, "case sensative %d", fi->case_sensitive);
+
+            fi->show_hidden = SendMessage(go->hwndHiddenCB, BM_GETCHECK, 0, 0);
+            writeln(fi, "show_hidden %d", fi->show_hidden);
+
+            fi->search_in_files = SendMessage(go->hwndSearchInFileCB, BM_GETCHECK, 0, 0);
+            GetWindowText(go->hwndSearchInFileEdit, fi->text, 255);
+            fi->search_in_case_sensitive = SendMessage(go->hwndCaseSensativeSearchCB, BM_GETCHECK, 0, 0);
+
             start_find(fi);
             break;
         case 0x8803: /* stop */
@@ -596,6 +709,7 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     NMLISTVIEW* nmlv;
     struct lv_item* lvi;
     int iSubItem;
+    int index;
 
     (void)wParam;
 
@@ -643,10 +757,10 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
         switch (nm->code)
         {
             case TCN_SELCHANGING:
-                writeln(fi, "TCN_SELCHANGING %d", TabCtrl_GetCurSel(go->hwndTabControl));
                 break;
             case TCN_SELCHANGE:
-                writeln(fi, "TCN_SELCHANGE %d", TabCtrl_GetCurSel(go->hwndTabControl));
+                index = TabCtrl_GetCurSel(go->hwndTabControl);
+                BringWindowToTop(go->hwndTabs[index % TAB_NUM_TABS]);
                 break;
         }
     }
