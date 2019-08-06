@@ -969,7 +969,15 @@ sort02(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return (int)(obj1->size - obj2->size);
+    if (obj1->size < obj2->size)
+    {
+        return -1;
+    }
+    if (obj1->size > obj2->size)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /*****************************************************************************/
@@ -1021,7 +1029,15 @@ sort12(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return (int)(obj2->size - obj1->size);
+    if (obj2->size < obj1->size)
+    {
+        return -1;
+    }
+    if (obj2->size > obj1->size)
+    {
+        return 1;
+    }
+    return 0;
 }
 
 /*****************************************************************************/
