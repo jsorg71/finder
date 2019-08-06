@@ -639,7 +639,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct gui_object* go;
     DWORD flags;
     LV_COLUMN col;
-    TCITEM tie; 
+    TCITEM tie;
     int index;
 
     (void)wParam;
@@ -1158,7 +1158,7 @@ finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
     writeln(fi, "finder_timer:");
     if (wParam == go->startup_timer)
     {
-        KillTimer(hwnd, wParam); 
+        KillTimer(hwnd, wParam);
         //finder_load_from_reg(fi, go);
     }
     return 0;
