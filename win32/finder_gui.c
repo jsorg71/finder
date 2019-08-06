@@ -189,7 +189,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     (void)hPrevInstance;
     (void)lpCmdLine;
-
     memset(&wc, 0, sizeof(wc));
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
@@ -644,7 +643,6 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     (void)wParam;
     (void)lParam;
-
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -795,6 +793,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************/
+/* resize a combobox causes trouble, this function tries to correct */
 /* https://microsoft.public.win32.programmer.ui.narkive.com/68jcCh28/resizing-combo-boxes */
 static int
 finder_resize_combobox(HWND hwnd, int x, int y, int width, int height)
@@ -826,7 +825,6 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     RECT rect;
 
     (void)wParam;
-
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -877,7 +875,6 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct gui_object* go;
 
     (void)lParam;
-
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -896,31 +893,20 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             EnableWindow(go->hwndStopButton, TRUE);
             SendMessage(go->hwndListView, LVM_DELETEALLITEMS, 0, 0);
             writeln(fi, "finder_show_window: starting search");
-            //snprintf(fi->named, 255, "*.cab");
-            //snprintf(fi->look_in, 255, "d:\\flats");
-            //snprintf(fi->look_in, 255, "d:\\windows");
-
             GetWindowText(go->hwndNamedEdit, fi->named, 255);
-
             GetWindowText(go->hwndLookInEdit, fi->look_in, 255);
             writeln(fi, "look in %s", fi->look_in);
-
             fi->include_subfolders = SendMessage(go->hwndSubfolderCB, BM_GETCHECK, 0, 0);
             writeln(fi, "include subfolders %d", fi->include_subfolders);
-
             fi->case_sensitive = SendMessage(go->hwndCaseSensativeCB, BM_GETCHECK, 0, 0);
             writeln(fi, "case sensative %d", fi->case_sensitive);
-
             fi->show_hidden = SendMessage(go->hwndHiddenCB, BM_GETCHECK, 0, 0);
             writeln(fi, "show_hidden %d", fi->show_hidden);
-
             fi->search_in_files = SendMessage(go->hwndSearchInFileCB, BM_GETCHECK, 0, 0);
             GetWindowText(go->hwndSearchInFileEdit, fi->text, 255);
             fi->search_in_case_sensitive = SendMessage(go->hwndCaseSensativeSearchCB, BM_GETCHECK, 0, 0);
-
             /* save data here */
             finder_save_to_reg(fi, go);
-
             start_find(fi);
             break;
         case 0x8803: /* stop */
@@ -1069,7 +1055,6 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     int index;
 
     (void)wParam;
-
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -1133,7 +1118,6 @@ finder_close(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     (void)wParam;
     (void)lParam;
-
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
@@ -1150,7 +1134,6 @@ finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct gui_object* go;
 
     (void)lParam;
-
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
         return 0;
