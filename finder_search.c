@@ -48,7 +48,7 @@
                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, \
                             OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL)
 #define FINDER_FILE_CLOSE(_file_obj) \
-    if (file_obj != INVALID_HANDLE_VALUE) CloseHandle(_file_obj)
+    if (_file_obj != INVALID_HANDLE_VALUE) CloseHandle(_file_obj)
 #define FINDER_FILE_READ(_file_obj, _ptr, _bytes_to_read, _bytes_read) \
     do { \
         DWORD lbytes_read; \
