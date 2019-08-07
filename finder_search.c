@@ -451,14 +451,35 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
 #if defined(_WIN32)
         entry_file_name = entry.cFileName;
         is_dir = entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-        do_open = fi->search_in_files && !is_dir;
         snprintf(dir_file_name, FINDER_MAX_PATH, "%s\\%s", dir_name, entry_file_name);
 #else
-        entry_file_name = entry->d_name;
         got_stat = 0;
-        do_open = (entry->d_type == DT_UNKNOWN) || fi->search_in_files;
+        entry_file_name = entry->d_name;
         snprintf(dir_file_name, FINDER_MAX_PATH, "%s/%s", dir_name, entry_file_name);
+        if (entry->d_type == DT_UNKNOWN)
+        {
+            if ((strcmp(entry_file_name, ".") == 0) ||
+                (strcmp(entry_file_name, "..") == 0))
+            {
+                FINDER_FILE_CLOSE(file_obj);
+                FINDER_FIND_NEXT_BREAK_CONTINUE;
+            }
+            /* sorry, you have to stat here */
+            if (stat(dir_file_name, &lstat1) != 0)
+            {
+                writeln(fi, "stat error %s", dir_file_name);
+                FINDER_FILE_CLOSE(file_obj);
+                FINDER_FIND_NEXT_BREAK_CONTINUE;
+            }
+            got_stat = 1;
+            is_dir = (lstat1.st_mode & S_IFMT) == S_IFDIR;
+        }
+        else
+        {
+            is_dir = entry->d_type == DT_DIR;
+        }
 #endif
+        do_open = fi->search_in_files && !is_dir;
         if (do_open)
         {
             /* much slower if we have to go in here */
@@ -471,22 +492,16 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
             }
 #if defined(_WIN32)
 #else
-            if (fstat(file_obj, &lstat1) != 0)
+            if (got_stat == 0)
             {
-                writeln(fi, "fstat error %s", dir_file_name);
-                FINDER_FILE_CLOSE(file_obj);
-                FINDER_FIND_NEXT_BREAK_CONTINUE;
+                if (fstat(file_obj, &lstat1) != 0)
+                {
+                    writeln(fi, "fstat error %s", dir_file_name);
+                    FINDER_FILE_CLOSE(file_obj);
+                    FINDER_FIND_NEXT_BREAK_CONTINUE;
+                }
+                got_stat = 1;
             }
-            got_stat = 1;
-            is_dir = (lstat1.st_mode & S_IFMT) == S_IFDIR;
-#endif
-        }
-        else
-        {
-#if defined(_WIN32)
-            is_dir = entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-#else
-            is_dir = entry->d_type == DT_DIR;
 #endif
         }
         if (is_dir)
@@ -521,6 +536,12 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
             }
             if (fi->search_in_files)
             {
+                if (file_obj == FINDER_FILE_INVALID)
+                {
+                    writeln(fi, "listdir: logic error file_obj is FINDER_FILE_INVALID");
+                    FINDER_FILE_CLOSE(file_obj);
+                    FINDER_FIND_NEXT_BREAK_CONTINUE;
+                }
                 if (find_in_file(file_obj, fi, &found_in_file) != 0)
                 {
                     FINDER_FILE_CLOSE(file_obj);
