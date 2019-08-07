@@ -21,7 +21,17 @@
 int
 gui_init(struct finder_info* fi)
 {
-    writeln(fi, "gui_init:");
+    writeln(fi, "gui_nit:");
+    if (sizeof(FINDER_I64) != 8)
+    {
+        writeln(fi, "gui_init: bad FINDER_I64 size");
+        return 1;
+    }
+    if (sizeof(ITYPE) != sizeof(void*))
+    {
+        writeln(fi, "gui_init: bad ITYPE size");
+        return 1;
+    }
     if (finder_mutex_create(&(fi->list_mutex)) != 0)
     {
         writeln(fi, "gui_init: finder_mutex_create failed");
