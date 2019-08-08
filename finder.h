@@ -88,6 +88,28 @@ format_commas(FINDER_I64 n, char* out);
 int
 get_mstime(void);
 
+int
+logln(struct finder_info* fi, int log_level, const char* format, ...);
+
+#define LOG_ERROR 0
+#define LOG_WARN  1
+#define LOG_INFO  2
+#define LOG_DEBUG 3
+
+#define LOGS "%s:"
+#define LOGP __FUNCTION__
+
+#define LOG_LEVEL 1
+#define LOGLN(_level, _args) \
+    do \
+    { \
+        if (_level < LOG_LEVEL) \
+        { \
+            logln _args ; \
+        } \
+    } \
+    while (0)
+
 #ifdef __cplusplus
 }
 #endif

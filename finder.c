@@ -21,15 +21,15 @@
 int
 gui_init(struct finder_info* fi)
 {
-    writeln(fi, "gui_nit:");
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
     if (sizeof(FINDER_I64) != 8)
     {
-        writeln(fi, "gui_init: bad FINDER_I64 size");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "bad FINDER_I64 size", LOGP));
         return 1;
     }
     if (sizeof(ITYPE) != sizeof(void*))
     {
-        writeln(fi, "gui_init: bad ITYPE size");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "bad ITYPE size", LOGP));
         return 1;
     }
     if (finder_mutex_create(&(fi->list_mutex)) != 0)
@@ -370,3 +370,37 @@ get_mstime(void)
 #endif
 }
 
+static int g_log_level = 4;
+
+static const char g_log_pre[][8] =
+{
+    "ERROR",
+    "WARN",
+    "INFO",
+    "DEBUG"
+};
+
+/*****************************************************************************/
+int
+logln(struct finder_info* fi, int log_level, const char* format, ...)
+{
+    va_list ap;
+    char* log_line;
+
+    if (fi == NULL)
+    {
+        return 0;
+    }
+    if (log_level < g_log_level)
+    {
+        log_line = (char*)malloc(2048);
+        va_start(ap, format);
+        vsnprintf(log_line, 1024, format, ap);
+        va_end(ap);
+        snprintf(log_line + 1024, 1024, "[%10.10u] [%s] %s",
+                 get_mstime(), g_log_pre[log_level % 4], log_line);
+        gui_writeln(fi, log_line + 1024);
+        free(log_line);
+    }
+    return 0;
+}
