@@ -207,16 +207,15 @@ start_find(struct finder_info* fi)
 {
     struct work_item* wi;
 
-    writeln(fi, "start_find:");
-    writeln(fi, "  named [%s]", fi->named);
-    writeln(fi, "  look_in [%s]", fi->look_in);
-    writeln(fi, "  include_subfolders %d", fi->include_subfolders);
-    writeln(fi, "  case_sensitive %d", fi->case_sensitive);
-    writeln(fi, "  show_hidden %d", fi->show_hidden);
-    writeln(fi, "  search_in_files %d", fi->search_in_files);
-    writeln(fi, "  case search_in_case_sensitive %d",
-            fi->search_in_case_sensitive);
-    writeln(fi, "  text [%s]", fi->text);
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN(0, (fi, LOG_INFO, "  named [%s]", fi->named));
+    LOGLN(0, (fi, LOG_INFO, "  look_in [%s]", fi->look_in));
+    LOGLN(0, (fi, LOG_INFO, "  include_subfolders %d", fi->include_subfolders));
+    LOGLN(0, (fi, LOG_INFO, "  case_sensitive %d", fi->case_sensitive));
+    LOGLN(0, (fi, LOG_INFO, "  show_hidden %d", fi->show_hidden));
+    LOGLN(0, (fi, LOG_INFO, "  search_in_files %d", fi->search_in_files));
+    LOGLN(0, (fi, LOG_INFO, "  case search_in_case_sensitive %d", fi->search_in_case_sensitive));
+    LOGLN(0, (fi, LOG_INFO, "  text [%s]", fi->text));
 
     finder_mutex_lock(fi->list_mutex);
     finder_list_clear(fi->main_to_work_list, 1024, 1024);
@@ -245,7 +244,7 @@ start_find(struct finder_info* fi)
 int
 stop_find(struct finder_info* fi)
 {
-    writeln(fi, "stop_find:");
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
     finder_event_set(fi->work_term_event);
     finder_mutex_lock(fi->list_mutex);
     finder_list_clear(fi->main_to_work_list, 1024, 1024);
@@ -260,12 +259,12 @@ stop_find(struct finder_info* fi)
 static int
 main_process_work_item(struct finder_info* fi, struct work_item* wi)
 {
-    //writeln(fi, "main_process_work_item");
+    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
     if (wi == NULL)
     {
         return 0;
     }
-    //writeln(fi, "main_process_work_item: cmd %d", wi->cmd);
+    LOGLN(10, (fi, LOG_INFO, LOGS "cmd %d", LOGP, wi->cmd));
     if (wi->cmd == FINDER_CMD_DONE)
     {
         gui_find_done(fi);
@@ -278,7 +277,7 @@ main_process_work_item(struct finder_info* fi, struct work_item* wi)
         free(wi->in_subfolder);
         free(wi->modified);
     }
-    //writeln(fi, "main_process_work_item: free item");
+    LOGLN(10, (fi, LOG_INFO, LOGS "free item", LOGP));
     free(wi);
     return 0;
 }
@@ -293,7 +292,7 @@ event_callback(struct finder_info* fi)
     int count;
     struct work_item* wi;
 
-    //writeln(fi, "event_callback:");
+    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
     count = 0;
     cont = 1;
     while (cont)
@@ -310,7 +309,7 @@ event_callback(struct finder_info* fi)
             count++;
             if (count > 1024)
             {
-                //writeln(fi, "event_callback: later");
+                LOGLN(10, (fi, LOG_INFO, LOGS "later", LOGP));
                 /* do more later */
                 gui_set_event(fi);
                 cont = 0;
