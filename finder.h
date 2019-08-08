@@ -96,8 +96,14 @@ logln(struct finder_info* fi, int log_level, const char* format, ...);
 #define LOG_INFO  2
 #define LOG_DEBUG 3
 
-#define LOGS "%s:"
-#define LOGP __FUNCTION__
+#define LOGS "%s(%d):%s:"
+#define LOGP __FILE__, __LINE__, __FUNCTION__
+
+#if !defined(__FUNCTION__) && defined(__FUNC__)
+#define LOG_PRE const char* __FUNCTION__ = __FUNC__;
+#else
+#define LOG_PRE
+#endif
 
 #define LOG_LEVEL 1
 #define LOGLN(_level, _args) \
@@ -105,6 +111,7 @@ logln(struct finder_info* fi, int log_level, const char* format, ...);
     { \
         if (_level < LOG_LEVEL) \
         { \
+            LOG_PRE \
             logln _args ; \
         } \
     } \

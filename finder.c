@@ -34,25 +34,25 @@ gui_init(struct finder_info* fi)
     }
     if (finder_mutex_create(&(fi->list_mutex)) != 0)
     {
-        writeln(fi, "gui_init: finder_mutex_create failed");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_mutex_create failed", LOGP));
         return 1;
     }
     if (finder_event_create(&(fi->work_term_event)) != 0)
     {
-        writeln(fi, "gui_init: finder_event_create failed");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_event_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         return 2;
     }
     if (finder_event_create(&(fi->main_to_work_event)) != 0)
     {
-        writeln(fi, "gui_init: finder_event_create failed");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_event_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         return 2;
     }
     if (finder_list_create(1024, 1024, &(fi->main_to_work_list)) != 0)
     {
-        writeln(fi, "gui_init: finder_list_create failed");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_list_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         finder_event_delete(fi->main_to_work_event);
@@ -60,7 +60,7 @@ gui_init(struct finder_info* fi)
     }
     if (finder_list_create(1024, 1024, &(fi->work_to_main_list)) != 0)
     {
-        writeln(fi, "gui_init: finder_list_create failed");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_list_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         finder_event_delete(fi->main_to_work_event);
@@ -75,7 +75,7 @@ gui_init(struct finder_info* fi)
 int
 gui_deinit(struct finder_info* fi)
 {
-    writeln(fi, "gui_deinit:");
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
     finder_mutex_delete(fi->list_mutex);
     finder_event_delete(fi->work_term_event);
     finder_event_delete(fi->main_to_work_event);
@@ -111,7 +111,7 @@ process_work_item(struct finder_info* fi, struct work_item* wi)
 {
     int rv;
 
-    //writeln(fi, "process_work_item");
+    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
     if (wi == NULL)
     {
         return 0;
@@ -123,7 +123,7 @@ process_work_item(struct finder_info* fi, struct work_item* wi)
         rv = 1;
         gui_set_event(fi);
     }
-    //writeln(fi, "process_work_item: free item");
+    LOGLN(10, (fi, LOG_INFO, LOGS "free item", LOGP));
     free(wi);
     return rv;
 }
@@ -141,17 +141,17 @@ finder_thread(void* arg)
     struct work_item* wi;
 
     fi = (struct finder_info*)arg;
-    writeln(fi, "finder_thread: thread start");
+    LOGLN(0, (fi, LOG_INFO, LOGS "thread start", LOGP));
     cont = 1;
     while (cont)
     {
-        //writeln(fi, "finder_thread: loop");
+        LOGLN(10, (fi, LOG_INFO, LOGS "loop", LOGP));
         wos[0] = finder_event_get_wait_obj(fi->work_term_event);
         wos[1] = finder_event_get_wait_obj(fi->main_to_work_event);
         error = finder_wait(2, wos);
         if (error < 0)
         {
-            writeln(fi, "finder_thread: finder_wait failed");
+            LOGLN(0, (fi, LOG_ERROR, LOGS "finder_wait failed", LOGP));
         }
         if (finder_event_is_set(fi->work_term_event))
         {
@@ -196,7 +196,7 @@ finder_thread(void* arg)
         finder_mutex_unlock(fi->list_mutex);
         gui_set_event(fi);
     }
-    writeln(fi, "finder_thread: thread stop");
+    LOGLN(0, (fi, LOG_INFO, LOGS "thread stop", LOGP));
     return 0;
 }
 
@@ -397,7 +397,7 @@ logln(struct finder_info* fi, int log_level, const char* format, ...)
         va_start(ap, format);
         vsnprintf(log_line, 1024, format, ap);
         va_end(ap);
-        snprintf(log_line + 1024, 1024, "[%10.10u] [%s] %s",
+        snprintf(log_line + 1024, 1024, "[%10.10u][%s]%s",
                  get_mstime(), g_log_pre[log_level % 4], log_line);
         gui_writeln(fi, log_line + 1024);
         free(log_line);
