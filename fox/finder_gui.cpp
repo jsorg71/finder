@@ -174,7 +174,7 @@ public:
 /*****************************************************************************/
 GUIObject::GUIObject() : FXObject()
 {
-    writeln(m_fi, "GUIObject::GUIObject default");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS "default", LOGP));
 }
 
 /*****************************************************************************/
@@ -185,7 +185,7 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     FXCursor* cur;
     FXInputHandle ih;
 
-    writeln(m_fi, "GUIObject::GUIObject");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
 
     m_fi = fi;
     m_sort_order = 0;
@@ -343,7 +343,7 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
 /*****************************************************************************/
 GUIObject::~GUIObject()
 {
-    writeln(m_fi, "GUIObject::~GUIObject");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     finder_event_delete(m_gui_event);
     delete m_app;
     delete m_mutex1;
@@ -1487,7 +1487,7 @@ gui_main_loop(struct finder_info* fi)
 {
     GUIObject* go;
 
-    writeln(fi, "gui_main_loop");
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
     go = (GUIObject*)(fi->gui_obj);
     go->mainLoop();
     return 0;
