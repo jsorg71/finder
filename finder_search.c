@@ -260,7 +260,7 @@ find_in_file(FINDER_FILE_OBJ file_obj, struct finder_info* fi,
         }
         if (finder_event_is_set(fi->work_term_event))
         {
-            writeln(fi, "find_in_file: work_term_event set");
+            LOGLN(0, (fi, LOG_INFO, LOGS "work_term_event set", LOGP));
             break;
         }
         if (readed == SEARCH_IN_READ_CHUCK)
@@ -299,7 +299,7 @@ check_file_name(struct finder_info* fi, const char* filename)
         else
         {
             len1 = p2 - p1;
-            //writeln(fi, "len1 %d", len1);
+            LOGLN(10, (fi, LOG_INFO, LOGS "len1 %d", len1));
             if (len1 > 1023)
             {
                 len1 = 1023;
@@ -310,7 +310,7 @@ check_file_name(struct finder_info* fi, const char* filename)
         }
         if (text[0] != 0)
         {
-            //writeln(fi, "%s", text);
+            LOGLN(10, (fi, LOG_INFO, LOGS "%s", text));
             if (fi->case_sensitive)
             {
                 if (myfnmatch(text, filename, 0) == 0)
@@ -378,33 +378,33 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
 
     look_in_bytes = strlen(fi->look_in);
     dir_name_bytes = strlen(dir_name);
-    //writeln(fi, "%d %d", look_in_bytes, dir_name_bytes);
+    LOGLN(10, (fi, LOG_DEBUG, LOGS "%d %d", look_in_bytes, dir_name_bytes));
     if (dir_name_bytes < look_in_bytes)
     {
-        writeln(fi, "listdir: error, dir_name_bytes can not be less then dir_name_bytes");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "error, dir_name_bytes can not be less then dir_name_bytes", LOGP));
         return 1;
     }
 #if defined(_WIN32)
     ldir_name = (char*)malloc(FINDER_MAX_PATH);
     if (ldir_name == NULL)
     {
-        writeln(fi, "listdir: error malloc");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "error malloc", LOGP));
         return 1;
     }
     snprintf(ldir_name, FINDER_MAX_PATH, "%s\\*", dir_name);
-    //writeln(fi, "listdir: ldir_name [%s]", ldir_name);
+    LOGLN(10, (fi, LOG_DEBUG, LOGS "ldir_name [%s]", LOGP, ldir_name));
     find_handle = FindFirstFileA(ldir_name, &entry);
     free(ldir_name);
     if (find_handle == INVALID_HANDLE_VALUE)
     {
-        writeln(fi, "listdir: error access directory [%s]", dir_name);
+        LOGLN(0, (fi, LOG_ERROR, LOGS "error access directory [%s]", LOGP, dir_name));
         return 1;
     }
 #else
     find_handle = opendir(dir_name);
     if (find_handle == NULL)
     {
-        writeln(fi, "listdir: error access directory [%s]", dir_name);
+        LOGLN(0, (fi, LOG_ERROR, LOGS "error access directory [%s]", LOGP, dir_name));
         return 1;
     }
     else
@@ -412,7 +412,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
         entry = readdir(find_handle);
         if (entry == NULL)
         {
-            writeln(fi, "listdir: error access directory [%s]", dir_name);
+            LOGLN(0, (fi, LOG_ERROR, LOGS "error access directory [%s]", LOGP, dir_name));
             closedir(find_handle);
             return 1;
         }
@@ -422,14 +422,14 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
     in_subfolder_text = (char*)calloc(in_subfolder_text_alloc_bytes, 1);
     if (in_subfolder_text == NULL)
     {
-        writeln(fi, "listdir: error calloc");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "error calloc", LOGP));
         FINDER_FIND_CLOSE;
         return 1;
     }
     dir_file_name = (char*)malloc(FINDER_MAX_PATH);
     if (dir_file_name == NULL)
     {
-        writeln(fi, "listdir: error malloc");
+        LOGLN(0, (fi, LOG_ERROR, LOGS "error malloc", LOGP));
         free(in_subfolder_text);
         FINDER_FIND_CLOSE;
         return 1;
@@ -444,7 +444,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
     {
         if (finder_event_is_set(fi->work_term_event))
         {
-            writeln(fi, "listdir: work_term_event set");
+            LOGLN(0, (fi, LOG_ERROR, LOGS "work_term_event set", LOGP));
             break;
         }
         file_obj = FINDER_FILE_INVALID;
@@ -467,7 +467,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
             /* sorry, you have to stat here */
             if (stat(dir_file_name, &lstat1) != 0)
             {
-                writeln(fi, "stat error %s", dir_file_name);
+                LOGLN(0, (fi, LOG_ERROR, LOGS "stat error %s", LOGP, dir_file_name));
                 FINDER_FILE_CLOSE(file_obj);
                 FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
@@ -486,7 +486,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
             FINDER_FILE_OPEN_RO(dir_file_name, file_obj);
             if (file_obj == FINDER_FILE_INVALID)
             {
-                writeln(fi, "open error %s", dir_file_name);
+                LOGLN(0, (fi, LOG_ERROR, LOGS "open error %s", LOGP, dir_file_name));
                 FINDER_FILE_CLOSE(file_obj);
                 FINDER_FIND_NEXT_BREAK_CONTINUE;
             }
@@ -496,7 +496,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
             {
                 if (fstat(file_obj, &lstat1) != 0)
                 {
-                    writeln(fi, "fstat error %s", dir_file_name);
+                    LOGLN(0, (fi, LOG_ERROR, LOGS "fstat error %s", LOGP, dir_file_name));
                     FINDER_FILE_CLOSE(file_obj);
                     FINDER_FIND_NEXT_BREAK_CONTINUE;
                 }
@@ -538,7 +538,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
             {
                 if (file_obj == FINDER_FILE_INVALID)
                 {
-                    writeln(fi, "listdir: logic error file_obj is FINDER_FILE_INVALID");
+                    LOGLN(0, (fi, LOG_ERROR, LOGS "logic error file_obj is FINDER_FILE_INVALID", LOGP));
                     FINDER_FILE_CLOSE(file_obj);
                     FINDER_FIND_NEXT_BREAK_CONTINUE;
                 }
@@ -580,25 +580,25 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                         }
                         else
                         {
-                            writeln(fi, "listdir: malloc error");
+                            LOGLN(0, (fi, LOG_ERROR, LOGS "malloc error", LOGP));
                         }
                     }
                     else
                     {
-                        writeln(fi, "listdir: SystemTimeToTzSpecificLocalTime failed");
+                        LOGLN(0, (fi, LOG_ERROR, LOGS "SystemTimeToTzSpecificLocalTime failed", LOGP));
                     }
                 }
                 else
                 {
-                    writeln(fi, "listdir: FileTimeToSystemTime failed");
+                    LOGLN(0, (fi, LOG_ERROR, LOGS "FileTimeToSystemTime failed", LOPP));
                 }
 #else
                 if (got_stat == 0)
                 {
-                    //writeln(fi, "listdir: stat %s", dir_file_name);
+                    LOGLN(10, (fi, LOG_DEBUG, LOGS "stat %s", LOGP, dir_file_name));
                     if (stat(dir_file_name, &lstat1) != 0)
                     {
-                        writeln(fi, "stat error %s", dir_file_name);
+                        LOGLN(0, (fi, LOG_ERROR, LOGS "stat error %s", LOGP, dir_file_name));
                         FINDER_FILE_CLOSE(file_obj);
                         FINDER_FIND_NEXT_BREAK_CONTINUE;
                     }
@@ -619,14 +619,14 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                     }
                 }
 #endif
-                //writeln(fi, "listdir: add one filename [%s] modified [%s]", lwi->filename, lwi->modified);
+                LOGLN(10, (fi, LOG_DEBUG, LOGS "add one filename [%s] modified [%s]", LOGP, lwi->filename, lwi->modified));
                 finder_mutex_lock(fi->list_mutex);
                 finder_list_add_item(fi->work_to_main_list, (ITYPE)lwi);
                 finder_mutex_unlock(fi->list_mutex);
             }
             else
             {
-                writeln(fi, "listdir: malloc error");
+                LOGLN(0, (fi, LOG_ERROR, LOGS "malloc error", LOGP));
             }
             gui_set_event(fi);
         }
