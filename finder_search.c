@@ -590,7 +590,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                 }
                 else
                 {
-                    LOGLN(0, (fi, LOG_ERROR, LOGS "FileTimeToSystemTime failed", LOPP));
+                    LOGLN(0, (fi, LOG_ERROR, LOGS "FileTimeToSystemTime failed", LOGP));
                 }
 #else
                 if (got_stat == 0)
