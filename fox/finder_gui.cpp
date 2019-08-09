@@ -585,7 +585,7 @@ GUIObject::addOne(const char* filename, const char* in_subfolder,
 long
 GUIObject::onDefault(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(m_fi, "onDefault obj %p sel %d ptr %p", obj, sel, ptr);
+    LOGLN(10, (m_fi, LOG_DEBUG, LOGS "obj %p sel %d ptr %p", LOGP, obj, sel, ptr));
     return FXObject::onDefault(obj, sel, ptr);
 }
 
@@ -595,10 +595,10 @@ GUIObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXString str1;
 
-    writeln(m_fi, "onPress obj %p sel %d ptr %p", obj, sel, ptr);
+    LOGLN(0, (m_fi, LOG_INFO, LOGS "obj %p sel %d ptr %p", LOGP, obj, sel, ptr));
     if (obj == m_but1)
     {
-        writeln(m_fi, "but1");
+        LOGLN(0, (m_fi, LOG_INFO, LOGS "but1", LOGP));
         m_fl->clearItems(TRUE);
         str1 = m_name_tab.m_combo1->getText();
         snprintf(m_fi->named, sizeof(m_fi->named), "%s", str1.text());
@@ -621,17 +621,17 @@ GUIObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
     }
     if (obj == m_but2)
     {
-        writeln(m_fi, "but2");
+        LOGLN(0, (m_fi, LOG_INFO, LOGS "but2", LOGP));
         stop_find(m_fi);
     }
     if (obj == m_but3)
     {
-        writeln(m_fi, "but3");
+        LOGLN(0, (m_fi, LOG_INFO, LOGS "but3", LOGP));
         //ap->app->stop(0);
     }
     if (obj == m_name_tab.m_but1)
     {
-        writeln(m_fi, "but4");
+        LOGLN(0, (m_fi, LOG_INFO, LOGS "but4", LOGP));
         str1 = m_name_tab.m_combo2->getText();
         str1 = FXDirDialog::getOpenDirectory(m_mw, "Select Look In directory", str1);
         if (str1 != "")
@@ -670,8 +670,8 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
     height = m_mw->getHeight();
     if ((width != m_width) || (height != m_height))
     {
-        //writeln(ap->fi, "GUIObject::onResizeTimeout: resized to %dx%d, was %dx%d",
-        //        width, height, ap->width, ap->height);
+        LOGLN(10, (m_fi, LOG_DEBUG, LOGS "resized to %dx%d, was %dx%d",
+              LOGP, width, height, m_width, m_height));
         m_width = width;
         m_height = height;
 
@@ -763,7 +763,7 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(m_fi, "GUIObject::onCmdExit:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     m_mw->close(TRUE);
     return 1;
 }
@@ -772,7 +772,7 @@ GUIObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(m_fi, "GUIObject::onCmdHelp:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     return 0;
 }
 
@@ -783,11 +783,11 @@ GUIObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
     FXbool ok;
     AboutDialog* about;
 
-    writeln(m_fi, "GUIObject::onCmdAbout:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     about = new AboutDialog(m_app, m_mw, m_fi);
     ok = about->execute(PLACEMENT_OWNER);
     delete about;
-    writeln(m_fi, "GUIObject::onCmdAbout: ok %d", ok);
+    LOGLN(0, (m_fi, LOG_INFO, LOGS "ok %d", LOGP, ok));
     return 0;
 }
 
@@ -1159,7 +1159,7 @@ GUIObject::onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr)
     FXEvent* event;
     FXFoldingItem* rci;
 
-    writeln(m_fi, "GUIObject::onFLRightMouseUp:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     event = (FXEvent*)ptr;
     if (event->moved == FALSE)
     {
@@ -1187,7 +1187,7 @@ GUIObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
     ItemObject* io;
     FXString str1;
 
-    writeln(m_fi, "GUIObject::onCopyFilename:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
     while (fi != NULL)
@@ -1216,7 +1216,7 @@ GUIObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
     ItemObject* io;
     FXString str1;
 
-    writeln(m_fi, "GUIObject::onCopyFullPath:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
     while (fi != NULL)
@@ -1257,7 +1257,7 @@ GUIObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXuint rv;
 
-    writeln(m_fi, "GUIObject::onClose:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     rv = FXMessageBox::warning(m_mw, MBOX_YES_NO, "Question", "Do you want to exit?");
     if (rv == MBOX_CLICKED_YES)
     {
@@ -1271,7 +1271,7 @@ GUIObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onClipboardLost(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "GUIObject::onClipboardLost:");
+    LOGLN(10, (m_fi, LOG_INFO, LOGS, LOGP));
     return 1;
 }
 
@@ -1279,7 +1279,7 @@ GUIObject::onClipboardLost(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onClipboardGained(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "GUIObject::onClipboardGained:");
+    LOGLN(10, (m_fi, LOG_INFO, LOGS, LOGP));
     return 1;
 }
 
@@ -1290,7 +1290,7 @@ GUIObject::onClipboardRequest(FXObject* obj, FXSelector sel, void* ptr)
     FXuchar* data;
     FXuint len;
 
-    //writeln(ap->fi, "GUIObject::onClipboardRequest:");
+    LOGLN(10, (m_fi, LOG_INFO, LOGS, LOGP));
     len = m_dnd_str.length();
     FXMALLOC(&data, FXuchar, len + 8);
     memcpy(data, m_dnd_str.text(), len);
@@ -1307,7 +1307,7 @@ GUIObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
     ItemObject* io;
     FXString str1;
 
-    //writeln(ap->fi, "GUIObject::onBeginDrag:");
+    LOGLN(10, (m_fi, LOG_INFO, LOGS, LOGP));
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
     while (fi != NULL)
@@ -1344,7 +1344,7 @@ GUIObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onEndDrag(FXObject* obj, FXSelector sel, void* ptr)
 {
-    //writeln(ap->fi, "GUIObject::onEndDrag:");
+    LOGLN(10, (m_fi, LOG_INFO, LOGS, LOGP));
     m_mw->endDrag();
     m_fl->setDragCursor(m_app->getDefaultCursor(DEF_ARROW_CURSOR));
     return 1;
@@ -1357,18 +1357,18 @@ GUIObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
     FXEvent* event;
     FXCursor* cur;
 
-    //writeln(m_fi, "GUIObject::onDragged:");
+    LOGLN(10, (m_fi, LOG_INFO, LOGS, LOGP));
     event = (FXEvent*)ptr;
     m_mw->handleDrag(event->root_x, event->root_y);
     if (m_mw->didAccept() != DRAG_REJECT)
     {
-        //writeln(m_fi, "drop_ok_cursor");
+        LOGLN(10, (m_fi, LOG_DEBUG, LOGS "drop_ok_cursor", LOGP));
         cur = m_app->getDefaultCursor(DEF_DNDCOPY_CURSOR);
         m_fl->setDragCursor(cur);
     }
     else
     {
-        //writeln(m_fi, "drop_not_ok_cursor");
+        LOGLN(10, (m_fi, LOG_DEBUG, LOGS "drop_not_ok_cursor", LOGP));
         cur = m_app->getDefaultCursor(DEF_DNDSTOP_CURSOR);
         m_fl->setDragCursor(cur);
     }
@@ -1383,7 +1383,7 @@ GUIObject::onDNDRequest(FXObject* obj, FXSelector sel, void* ptr)
     FXuchar* data;
     FXuint len;
 
-    //writeln(m_fi, "GUIObject::onDNDRequest:");
+    LOGLN(10, (m_fi, LOG_INFO, LOGS, LOGP));
     len = m_dnd_str.length();
     FXMALLOC(&data, FXuchar, len + 8);
     memcpy(data, m_dnd_str.text(), len);
@@ -1396,7 +1396,7 @@ GUIObject::onDNDRequest(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onRadioButton(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(m_fi, "GUIObject::onRadioButton:");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
 
     if (obj == m_date_tab.m_rb1)
     {
@@ -1499,7 +1499,7 @@ gui_delete(struct finder_info* fi)
 {
     GUIObject* go;
 
-    writeln(fi, "gui_delete");
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
     go = (GUIObject*)(fi->gui_obj);
     go->m_app->exit(); /* close display, write registry */
     delete go;
@@ -1526,7 +1526,7 @@ gui_set_event(struct finder_info* fi)
 {
     GUIObject* go;
 
-    //writeln(fi, "gui_set_event");
+    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
     go = (GUIObject*)(fi->gui_obj);
     return go->setEvent();
 }
@@ -1537,7 +1537,8 @@ gui_find_done(struct finder_info* fi)
 {
     GUIObject* go;
 
-    writeln(fi, "gui_find_done");
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    
     go = (GUIObject*)(fi->gui_obj);
     return go->findDone();
 }

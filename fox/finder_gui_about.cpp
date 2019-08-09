@@ -47,7 +47,7 @@ AboutDialog::AboutDialog(FXApp* app, FXWindow* parent, struct finder_info* fi) :
     FXSelector sel;
     FXString ver;
 
-    writeln(fi, "AboutDialog::AboutDialog");
+    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
     setWidth(400);
     setHeight(100);
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT | BUTTON_DEFAULT;
@@ -64,14 +64,14 @@ AboutDialog::AboutDialog(FXApp* app, FXWindow* parent, struct finder_info* fi) :
 /*****************************************************************************/
 AboutDialog::~AboutDialog()
 {
-    writeln(m_fi, "AboutDialog::~AboutDialog");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
 }
 
 /*****************************************************************************/
 long
 AboutDialog::onPress(FXObject* obj, FXSelector sel, void* ptr)
 {
-    writeln(m_fi, "AboutDialog::onPress");
+    LOGLN(0, (m_fi, LOG_INFO, LOGS, LOGP));
     if (obj == m_ok_but)
     {
         return onCmdAccept(obj, sel, ptr);
