@@ -349,7 +349,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     LONG lRes;
     HKEY hSectionKey;
     DWORD key_bytes;
-    DWORD type;
+    DWORD key_type;
     char text[256];
     char key_name[256];
     int index;
@@ -358,7 +358,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     int cb_text_bytes1;
     char* cb_text;
 
-    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     lRes = RegCreateKeyEx(hKey, section, 0, NULL, 0,
                           KEY_READ | KEY_WRITE, NULL, &hSectionKey, NULL);
     if (lRes != ERROR_SUCCESS)
@@ -370,7 +370,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     {
         text[0] = 0;
     }
-    LOGLN0((fi, LOG_INFO, LOGS "for edit [%s] got text [%s]", LOGP, key_prefix, text));
+    LOGLN10((fi, LOG_INFO, LOGS "for edit [%s] got text [%s]", LOGP, key_prefix, text));
     if (text[0] != 0)
     {
         index = SendMessage(hwnd, CB_FINDSTRING, 0, (LPARAM)text);
@@ -389,11 +389,11 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     {
         snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
         key_bytes = 0;
-        lRes = RegQueryValueEx(hSectionKey, key_name, NULL, &type, NULL,
+        lRes = RegQueryValueEx(hSectionKey, key_name, NULL, &key_type, NULL,
                                &key_bytes);
         if (lRes == ERROR_SUCCESS)
         {
-            LOGLN0((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], deleting", LOGP, section, key_name));
+            LOGLN10((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], deleting", LOGP, section, key_name));
             lRes = RegDeleteValue(hSectionKey, key_name);
             if (lRes != ERROR_SUCCESS)
             {
@@ -402,7 +402,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
         }
     }
     count = SendMessage(hwnd, CB_GETCOUNT, 0, 0);
-    LOGLN0((fi, LOG_INFO, LOGS "for edit [%s] got count %d", LOGP, key_prefix, count));
+    LOGLN10((fi, LOG_INFO, LOGS "for edit [%s] got count %d", LOGP, key_prefix, count));
     if (count != CB_ERR)
     {
         if (count > 100)
@@ -423,7 +423,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
                         if (cb_text_bytes == cb_text_bytes1)
                         {
                             snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
-                            LOGLN0((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], adding [%s]", LOGP, section, key_name, cb_text));
+                            LOGLN10((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], adding [%s]", LOGP, section, key_name, cb_text));
                             lRes = RegSetValueEx(hSectionKey, key_name, 0, REG_SZ, cb_text, cb_text_bytes + 1);
                             if (lRes != ERROR_SUCCESS)
                             {
@@ -465,8 +465,9 @@ finder_save_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
     HKEY hSectionKey;
     BOOL is_checked;
     DWORD key_value;
+    DWORD key_type;
 
-    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     lRes = RegCreateKeyEx(hKey, section, 0, NULL, 0,
                           KEY_READ | KEY_WRITE, NULL, &hSectionKey, NULL);
     if (lRes != ERROR_SUCCESS)
@@ -478,10 +479,14 @@ finder_save_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
     is_checked = SendMessage(hwnd, BM_GETCHECK, 0, 0);
     if ((!is_checked) == (!def))
     {
-        lRes = RegDeleteValue(hSectionKey, key_prefix);
-        if (lRes != ERROR_SUCCESS)
+        lRes = RegQueryValueEx(hSectionKey, key_prefix, NULL, &key_type, NULL, NULL);
+        if (lRes == ERROR_SUCCESS)
         {
-            LOGLN0((fi, LOG_ERROR, LOGS "RegDeleteValue failed error 0x%8.8x", LOGP, lRes));
+            lRes = RegDeleteValue(hSectionKey, key_prefix);
+            if (lRes != ERROR_SUCCESS)
+            {
+                LOGLN0((fi, LOG_ERROR, LOGS "RegDeleteValue failed error 0x%8.8x", LOGP, lRes));
+            }
         }
     }
     else
@@ -557,7 +562,7 @@ finder_load_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
         {
             if (type == REG_SZ)
             {
-                LOGLN0((fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%s]", LOGP, section, key_name, key_value));
+                LOGLN10((fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%s]", LOGP, section, key_name, key_value));
                 SendMessage(hwnd, CB_ADDSTRING, 0, (LPARAM)key_value);
             }
         }
@@ -599,7 +604,7 @@ finder_load_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
     {
         if (type == REG_DWORD)
         {
-            LOGLN0((fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%d]", LOGP, section, key_prefix, key_value));
+            LOGLN10((fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%d]", LOGP, section, key_prefix, key_value));
             def = key_value;
         }
     }
