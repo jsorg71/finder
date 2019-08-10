@@ -30,10 +30,10 @@
 
 #if defined(_WIN32)
 #define FINDER_I64 __int64
-#define FINDER_I64S "Ld"
+#define FINDER_PRId64 "Ld"
 #else
 #define FINDER_I64 long long
-#define FINDER_I64S "lld"
+#define FINDER_PRId64 "lld"
 #endif
 
 /* strdup that can handle NULL */

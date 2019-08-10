@@ -320,7 +320,7 @@ format_commas(FINDER_I64 n, char* out, int out_bytes)
         return 1;
     }
     out_end = out + out_bytes - 2;
-    snprintf(buf, 64, FINDER_I64S, n);
+    snprintf(buf, 64, "%" FINDER_PRId64, n);
     c = 2 - (strlen(buf) % 3);
     for (p = buf; *p != 0; p++)
     {
