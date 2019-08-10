@@ -659,6 +659,9 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     LV_COLUMN col;
     TCITEM tie;
     int index;
+    HMENU hMenubar;
+    HMENU hMenuFile;
+    HMENU hMenuHelp;
 
     (void)wParam;
     (void)lParam;
@@ -676,10 +679,20 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
+    /* menu */
+    hMenubar = CreateMenu();
+    hMenuFile = CreateMenu();
+    AppendMenu(hMenuFile, MF_STRING, 0x8801, "&Quit");
+    AppendMenu(hMenubar, MF_POPUP, (UINT_PTR) hMenuFile, "&File");
+    hMenuHelp = CreateMenu();
+    AppendMenu(hMenuHelp, MF_STRING, 0x8805, "&About");
+    AppendMenu(hMenubar, MF_POPUP, (UINT_PTR) hMenuHelp, "&Help");
+    SetMenu(hwnd, hMenubar);
     /* create tab control */
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS;
     go->hwndTabControl = CreateWindowEx(WS_EX_CONTROLPARENT,
-                                        WC_TABCONTROL, "", flags, 0, 0, 10, 10,
+                                        WC_TABCONTROL, "", flags,
+                                        0, 0, 10, 10,
                                         hwnd, NULL, go->hInstance, NULL);
     SendMessage(go->hwndTabControl, WM_SETFONT, (WPARAM)(go->font), FALSE);
     memset(&tie, 0, sizeof(tie));
@@ -905,6 +918,7 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
     switch (wParam)
     {
         case 0x8801: /* exit */
+            LOGLN0((fi, LOG_INFO, LOGS "exit", LOGP));
             PostMessage(go->hwnd, WM_CLOSE, 0, 0);
             break;
         case 0x8802: /* find */
@@ -933,6 +947,10 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             stop_find(fi);
             break;
         case 0x8804: /* browse */
+            LOGLN0((fi, LOG_INFO, LOGS "browser button", LOGP));
+            break;
+        case 0x8805: /* about */
+            LOGLN0((fi, LOG_INFO, LOGS "about", LOGP));
             break;
     }
     return 0;
@@ -1167,6 +1185,16 @@ finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************/
+static int
+finder_create(HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+    (void)hwnd;
+    (void)wParam;
+    (void)lParam;
+    return 0;
+}
+
+/*****************************************************************************/
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1192,6 +1220,9 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
         case WM_TIMER:
             finder_timer(hwnd, wParam, lParam);
+            break;
+        case WM_CREATE:
+            finder_create(hwnd, wParam, lParam);
             break;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
