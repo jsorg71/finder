@@ -87,26 +87,6 @@ gui_deinit(struct finder_info* fi)
 }
 
 /*****************************************************************************/
-int
-writeln(struct finder_info* fi, const char* format, ...)
-{
-    va_list ap;
-    char* log_line;
-
-    if (fi == NULL)
-    {
-        return 0;
-    }
-    log_line = (char*)malloc(1024);
-    va_start(ap, format);
-    vsnprintf(log_line, 1024, format, ap);
-    va_end(ap);
-    gui_writeln(fi, log_line);
-    free(log_line);
-    return 0;
-}
-
-/*****************************************************************************/
 /* work thread */
 static int
 process_work_item(struct finder_info* fi, struct work_item* wi)

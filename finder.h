@@ -76,8 +76,6 @@ gui_init(struct finder_info* fi);
 int
 gui_deinit(struct finder_info* fi);
 int
-writeln(struct finder_info* fi, const char* format, ...);
-int
 start_find(struct finder_info* fi);
 int
 stop_find(struct finder_info* fi);
