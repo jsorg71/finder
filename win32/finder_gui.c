@@ -79,7 +79,7 @@ gui_set_event(struct finder_info* fi)
 {
     struct gui_object* go;
 
-    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
     SetEvent(go->event);
     return 0;
@@ -91,7 +91,7 @@ gui_find_done(struct finder_info* fi)
 {
     struct gui_object* go;
 
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
     ListView_SetColumnWidth(go->hwndListView, 0, LVSCW_AUTOSIZE_USEHEADER);
     ListView_SetColumnWidth(go->hwndListView, 1, LVSCW_AUTOSIZE_USEHEADER);
@@ -113,8 +113,8 @@ gui_add_one(struct finder_info* fi, const char* filename,
     struct lv_item* lvi;
 
     go = (struct gui_object*)(fi->gui_obj);
-    LOGLN(10, (fi, LOG_INFO, LOGS "filename [%s] subfolder [%s] size "
-          "%Ld modified [%s]", LOGP, filename, in_subfolder, size, modified));
+    LOGLN10((fi, LOG_INFO, LOGS "filename [%s] subfolder [%s] size "
+            "%Ld modified [%s]", LOGP, filename, in_subfolder, size, modified));
 
     /* allocate */
     while (1)
@@ -223,7 +223,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     if (!InitCommonControlsEx(&icex))
     {
         lasterror = GetLastError();
-        LOGLN(0, (fi, LOG_INFO, LOGS "InitCommonControlsEx failed lasterror 0x%8.8x", LOGP, lasterror));
+        LOGLN0((fi, LOG_INFO, LOGS "InitCommonControlsEx failed lasterror 0x%8.8x", LOGP, lasterror));
     }
     fi = (struct finder_info*)calloc(1, sizeof(struct finder_info));
     if (fi == NULL)
@@ -291,7 +291,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         {
             if (msg.message == WM_QUIT)
             {
-                LOGLN(0, (fi, LOG_INFO, LOGS "got quit", LOGP));
+                LOGLN0((fi, LOG_INFO, LOGS "got quit", LOGP));
                 cont = 0;
                 break;
             }
@@ -358,19 +358,19 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     int cb_text_bytes1;
     char* cb_text;
 
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     lRes = RegCreateKeyEx(hKey, section, 0, NULL, 0,
                           KEY_READ | KEY_WRITE, NULL, &hSectionKey, NULL);
     if (lRes != ERROR_SUCCESS)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "RegCreateKeyEx failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "RegCreateKeyEx failed", LOGP));
         return 1;
     }
     if (!GetWindowText(hwnd, text, 255))
     {
         text[0] = 0;
     }
-    LOGLN(0, (fi, LOG_INFO, LOGS "for edit [%s] got text [%s]", LOGP, key_prefix, text));
+    LOGLN0((fi, LOG_INFO, LOGS "for edit [%s] got text [%s]", LOGP, key_prefix, text));
     if (text[0] != 0)
     {
         index = SendMessage(hwnd, CB_FINDSTRING, 0, (LPARAM)text);
@@ -393,16 +393,16 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
                                &key_bytes);
         if (lRes == ERROR_SUCCESS)
         {
-            LOGLN(0, (fi, LOG_INFO, LOGS "for section [%s], found key name [%s], deleting", LOGP, section, key_name));
+            LOGLN0((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], deleting", LOGP, section, key_name));
             lRes = RegDeleteValue(hSectionKey, key_name);
             if (lRes != ERROR_SUCCESS)
             {
-                LOGLN(0, (fi, LOG_ERROR, LOGS "RegDeleteValue failed error 0x%8.8x", LOGP, lRes));
+                LOGLN0((fi, LOG_ERROR, LOGS "RegDeleteValue failed error 0x%8.8x", LOGP, lRes));
             }
         }
     }
     count = SendMessage(hwnd, CB_GETCOUNT, 0, 0);
-    LOGLN(0, (fi, LOG_INFO, LOGS "for edit [%s] got count %d", LOGP, key_prefix, count));
+    LOGLN0((fi, LOG_INFO, LOGS "for edit [%s] got count %d", LOGP, key_prefix, count));
     if (count != CB_ERR)
     {
         if (count > 100)
@@ -423,32 +423,32 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
                         if (cb_text_bytes == cb_text_bytes1)
                         {
                             snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
-                            LOGLN(0, (fi, LOG_INFO, LOGS "for section [%s], found key name [%s], adding [%s]", LOGP, section, key_name, cb_text));
+                            LOGLN0((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], adding [%s]", LOGP, section, key_name, cb_text));
                             lRes = RegSetValueEx(hSectionKey, key_name, 0, REG_SZ, cb_text, cb_text_bytes + 1);
                             if (lRes != ERROR_SUCCESS)
                             {
-                                LOGLN(0, (fi, LOG_ERROR, LOGS "RegSetValueEx failed", LOGP));
+                                LOGLN0((fi, LOG_ERROR, LOGS "RegSetValueEx failed", LOGP));
                             }
                         }
                         else
                         {
-                            LOGLN(0, (fi, LOG_ERROR, LOGS "error CB_GETLBTEXT result does not match CB_GETLBTEXTLEN result", LOGP));
+                            LOGLN0((fi, LOG_ERROR, LOGS "error CB_GETLBTEXT result does not match CB_GETLBTEXTLEN result", LOGP));
                         }
                         free(cb_text);
                     }
                     else
                     {
-                        LOGLN(0, (fi, LOG_ERROR, LOGS "error malloc failed", LOGP));
+                        LOGLN0((fi, LOG_ERROR, LOGS "error malloc failed", LOGP));
                     }
                 }
                 else
                 {
-                    LOGLN(0, (fi, LOG_INFO, LOGS "error cb_text_bytes is zero", LOGP));
+                    LOGLN0((fi, LOG_INFO, LOGS "error cb_text_bytes is zero", LOGP));
                 }
             }
             else
             {
-                LOGLN(0, (fi, LOG_ERROR, LOGS "error CB_GETLBTEXTLEN failed", LOGP));
+                LOGLN0((fi, LOG_ERROR, LOGS "error CB_GETLBTEXTLEN failed", LOGP));
             }
         }
     }
@@ -466,12 +466,12 @@ finder_save_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
     BOOL is_checked;
     DWORD key_value;
 
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     lRes = RegCreateKeyEx(hKey, section, 0, NULL, 0,
                           KEY_READ | KEY_WRITE, NULL, &hSectionKey, NULL);
     if (lRes != ERROR_SUCCESS)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "RegCreateKeyEx failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "RegCreateKeyEx failed", LOGP));
         return 1;
     }
 
@@ -481,7 +481,7 @@ finder_save_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
         lRes = RegDeleteValue(hSectionKey, key_prefix);
         if (lRes != ERROR_SUCCESS)
         {
-            LOGLN(0, (fi, LOG_ERROR, LOGS "RegDeleteValue failed error 0x%8.8x", LOGP, lRes));
+            LOGLN0((fi, LOG_ERROR, LOGS "RegDeleteValue failed error 0x%8.8x", LOGP, lRes));
         }
     }
     else
@@ -491,7 +491,7 @@ finder_save_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
                              (LPBYTE)(&key_value), sizeof(key_value));
         if (lRes != ERROR_SUCCESS)
         {
-            LOGLN(0, (fi, LOG_ERROR, LOGS "RegSetValueEx failed", LOGP));
+            LOGLN0((fi, LOG_ERROR, LOGS "RegSetValueEx failed", LOGP));
         }
     }
     RegCloseKey(hSectionKey);
@@ -505,12 +505,12 @@ finder_save_to_reg(struct finder_info* fi, struct gui_object* go)
     HKEY hKey;
     LONG lRes;
 
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     lRes = RegCreateKeyEx(HKEY_CURRENT_USER, "SOFTWARE\\Finder", 0, NULL, 0,
                           KEY_READ | KEY_WRITE, NULL, &hKey, NULL);
     if (lRes != ERROR_SUCCESS)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "RegCreateKeyEx failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "RegCreateKeyEx failed", LOGP));
         return 1;
     }
     /* Name/Location tab */
@@ -543,7 +543,7 @@ finder_load_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     lRes = RegOpenKeyEx(hKey, section, 0, KEY_READ, &hSectionKey);
     if (lRes != ERROR_SUCCESS)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "RegOpenKeyEx [%s] failed", LOGP, section));
+        LOGLN0((fi, LOG_ERROR, LOGS "RegOpenKeyEx [%s] failed", LOGP, section));
         return 1;
     }
     SendMessage(hwnd, CB_RESETCONTENT, 0, 0);
@@ -557,7 +557,7 @@ finder_load_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
         {
             if (type == REG_SZ)
             {
-                LOGLN(0, (fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%s]", LOGP, section, key_name, key_value));
+                LOGLN0((fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%s]", LOGP, section, key_name, key_value));
                 SendMessage(hwnd, CB_ADDSTRING, 0, (LPARAM)key_value);
             }
         }
@@ -586,7 +586,7 @@ finder_load_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
     lRes = RegOpenKeyEx(hKey, section, 0, KEY_READ, &hSectionKey);
     if (lRes != ERROR_SUCCESS)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "RegOpenKeyEx [%s] failed", LOGP, section));
+        LOGLN0((fi, LOG_ERROR, LOGS "RegOpenKeyEx [%s] failed", LOGP, section));
         /* still need to set default */
         checked = def ? BST_CHECKED : BST_UNCHECKED;
         SendMessage(hwnd, BM_SETCHECK, checked, 0);
@@ -599,7 +599,7 @@ finder_load_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
     {
         if (type == REG_DWORD)
         {
-            LOGLN(0, (fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%d]", LOGP, section, key_prefix, key_value));
+            LOGLN0((fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%d]", LOGP, section, key_prefix, key_value));
             def = key_value;
         }
     }
@@ -616,12 +616,12 @@ finder_load_from_reg(struct finder_info* fi, struct gui_object* go)
     HKEY hKey;
     LONG lRes;
 
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     lRes = RegOpenKeyEx(HKEY_CURRENT_USER, "SOFTWARE\\Finder", 0,
                         KEY_READ, &hKey);
     if (lRes != ERROR_SUCCESS)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "RegOpenKeyEx failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "RegOpenKeyEx failed", LOGP));
         /* still need to set defaults */
         SendMessage(go->hwndSubfolderCB, BM_SETCHECK, BST_CHECKED, 0);
         SendMessage(go->hwndCaseSensativeCB, BM_SETCHECK, BST_UNCHECKED, 0);
@@ -661,7 +661,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     if (hwnd != go->hwnd)
     {
         return 0;
@@ -906,16 +906,16 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             EnableWindow(go->hwndFindButton, FALSE);
             EnableWindow(go->hwndStopButton, TRUE);
             SendMessage(go->hwndListView, LVM_DELETEALLITEMS, 0, 0);
-            LOGLN(0, (fi, LOG_INFO, LOGS "starting search", LOGP));
+            LOGLN0((fi, LOG_INFO, LOGS "starting search", LOGP));
             GetWindowText(go->hwndNamedEdit, fi->named, 255);
             GetWindowText(go->hwndLookInEdit, fi->look_in, 255);
-            LOGLN(0, (fi, LOG_INFO, "look in %s", fi->look_in));
+            LOGLN0((fi, LOG_INFO, "look in %s", fi->look_in));
             fi->include_subfolders = SendMessage(go->hwndSubfolderCB, BM_GETCHECK, 0, 0);
-            LOGLN(0, (fi, LOG_INFO, "include subfolders %d", fi->include_subfolders));
+            LOGLN0((fi, LOG_INFO, "include subfolders %d", fi->include_subfolders));
             fi->case_sensitive = SendMessage(go->hwndCaseSensativeCB, BM_GETCHECK, 0, 0);
-            LOGLN(0, (fi, LOG_INFO, "case sensative %d", fi->case_sensitive));
+            LOGLN0((fi, LOG_INFO, "case sensative %d", fi->case_sensitive));
             fi->show_hidden = SendMessage(go->hwndHiddenCB, BM_GETCHECK, 0, 0);
-            LOGLN(0, (fi, LOG_INFO, "show_hidden %d", fi->show_hidden));
+            LOGLN0((fi, LOG_INFO, "show_hidden %d", fi->show_hidden));
             fi->search_in_files = SendMessage(go->hwndSearchInFileCB, BM_GETCHECK, 0, 0);
             GetWindowText(go->hwndSearchInFileEdit, fi->text, 255);
             fi->search_in_case_sensitive = SendMessage(go->hwndCaseSensativeSearchCB, BM_GETCHECK, 0, 0);
@@ -924,7 +924,7 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             start_find(fi);
             break;
         case 0x8803: /* stop */
-            LOGLN(0, (fi, LOG_INFO, LOGS "stopping search", LOGP));
+            LOGLN0((fi, LOG_INFO, LOGS "stopping search", LOGP));
             stop_find(fi);
             break;
         case 0x8804: /* browse */
@@ -1136,7 +1136,7 @@ finder_close(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     return 0;
 }
 
@@ -1152,7 +1152,7 @@ finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
         return 0;
     }
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     if (wParam == go->startup_timer)
     {
         KillTimer(hwnd, wParam);

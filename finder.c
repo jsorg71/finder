@@ -21,38 +21,40 @@
 int
 gui_init(struct finder_info* fi)
 {
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+#include "finder_warn_off.h"
     if (sizeof(FINDER_I64) != 8)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "bad FINDER_I64 size", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "bad FINDER_I64 size", LOGP));
         return 1;
     }
     if (sizeof(ITYPE) != sizeof(void*))
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "bad ITYPE size", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "bad ITYPE size", LOGP));
         return 1;
     }
+#include "finder_warn_on.h"
     if (finder_mutex_create(&(fi->list_mutex)) != 0)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_mutex_create failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "finder_mutex_create failed", LOGP));
         return 1;
     }
     if (finder_event_create(&(fi->work_term_event)) != 0)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_event_create failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "finder_event_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         return 2;
     }
     if (finder_event_create(&(fi->main_to_work_event)) != 0)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_event_create failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "finder_event_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         return 2;
     }
     if (finder_list_create(1024, 1024, &(fi->main_to_work_list)) != 0)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_list_create failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "finder_list_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         finder_event_delete(fi->main_to_work_event);
@@ -60,7 +62,7 @@ gui_init(struct finder_info* fi)
     }
     if (finder_list_create(1024, 1024, &(fi->work_to_main_list)) != 0)
     {
-        LOGLN(0, (fi, LOG_ERROR, LOGS "finder_list_create failed", LOGP));
+        LOGLN0((fi, LOG_ERROR, LOGS "finder_list_create failed", LOGP));
         finder_mutex_delete(fi->list_mutex);
         finder_event_delete(fi->work_term_event);
         finder_event_delete(fi->main_to_work_event);
@@ -75,7 +77,7 @@ gui_init(struct finder_info* fi)
 int
 gui_deinit(struct finder_info* fi)
 {
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     finder_mutex_delete(fi->list_mutex);
     finder_event_delete(fi->work_term_event);
     finder_event_delete(fi->main_to_work_event);
@@ -111,7 +113,7 @@ process_work_item(struct finder_info* fi, struct work_item* wi)
 {
     int rv;
 
-    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     if (wi == NULL)
     {
         return 0;
@@ -123,7 +125,7 @@ process_work_item(struct finder_info* fi, struct work_item* wi)
         rv = 1;
         gui_set_event(fi);
     }
-    LOGLN(10, (fi, LOG_INFO, LOGS "free item", LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS "free item", LOGP));
     free(wi);
     return rv;
 }
@@ -141,17 +143,17 @@ finder_thread(void* arg)
     struct work_item* wi;
 
     fi = (struct finder_info*)arg;
-    LOGLN(0, (fi, LOG_INFO, LOGS "thread start", LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS "thread start", LOGP));
     cont = 1;
     while (cont)
     {
-        LOGLN(10, (fi, LOG_INFO, LOGS "loop", LOGP));
+        LOGLN10((fi, LOG_INFO, LOGS "loop", LOGP));
         wos[0] = finder_event_get_wait_obj(fi->work_term_event);
         wos[1] = finder_event_get_wait_obj(fi->main_to_work_event);
         error = finder_wait(2, wos);
         if (error < 0)
         {
-            LOGLN(0, (fi, LOG_ERROR, LOGS "finder_wait failed", LOGP));
+            LOGLN0((fi, LOG_ERROR, LOGS "finder_wait failed", LOGP));
         }
         if (finder_event_is_set(fi->work_term_event))
         {
@@ -196,7 +198,7 @@ finder_thread(void* arg)
         finder_mutex_unlock(fi->list_mutex);
         gui_set_event(fi);
     }
-    LOGLN(0, (fi, LOG_INFO, LOGS "thread stop", LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS "thread stop", LOGP));
     return 0;
 }
 
@@ -207,15 +209,15 @@ start_find(struct finder_info* fi)
 {
     struct work_item* wi;
 
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
-    LOGLN(0, (fi, LOG_INFO, "  named [%s]", fi->named));
-    LOGLN(0, (fi, LOG_INFO, "  look_in [%s]", fi->look_in));
-    LOGLN(0, (fi, LOG_INFO, "  include_subfolders %d", fi->include_subfolders));
-    LOGLN(0, (fi, LOG_INFO, "  case_sensitive %d", fi->case_sensitive));
-    LOGLN(0, (fi, LOG_INFO, "  show_hidden %d", fi->show_hidden));
-    LOGLN(0, (fi, LOG_INFO, "  search_in_files %d", fi->search_in_files));
-    LOGLN(0, (fi, LOG_INFO, "  case search_in_case_sensitive %d", fi->search_in_case_sensitive));
-    LOGLN(0, (fi, LOG_INFO, "  text [%s]", fi->text));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, "  named [%s]", fi->named));
+    LOGLN0((fi, LOG_INFO, "  look_in [%s]", fi->look_in));
+    LOGLN0((fi, LOG_INFO, "  include_subfolders %d", fi->include_subfolders));
+    LOGLN0((fi, LOG_INFO, "  case_sensitive %d", fi->case_sensitive));
+    LOGLN0((fi, LOG_INFO, "  show_hidden %d", fi->show_hidden));
+    LOGLN0((fi, LOG_INFO, "  search_in_files %d", fi->search_in_files));
+    LOGLN0((fi, LOG_INFO, "  case search_in_case_sensitive %d", fi->search_in_case_sensitive));
+    LOGLN0((fi, LOG_INFO, "  text [%s]", fi->text));
 
     finder_mutex_lock(fi->list_mutex);
     finder_list_clear(fi->main_to_work_list, 1024, 1024);
@@ -244,7 +246,7 @@ start_find(struct finder_info* fi)
 int
 stop_find(struct finder_info* fi)
 {
-    LOGLN(0, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     finder_event_set(fi->work_term_event);
     finder_mutex_lock(fi->list_mutex);
     finder_list_clear(fi->main_to_work_list, 1024, 1024);
@@ -259,12 +261,12 @@ stop_find(struct finder_info* fi)
 static int
 main_process_work_item(struct finder_info* fi, struct work_item* wi)
 {
-    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     if (wi == NULL)
     {
         return 0;
     }
-    LOGLN(10, (fi, LOG_INFO, LOGS "cmd %d", LOGP, wi->cmd));
+    LOGLN10((fi, LOG_INFO, LOGS "cmd %d", LOGP, wi->cmd));
     if (wi->cmd == FINDER_CMD_DONE)
     {
         gui_find_done(fi);
@@ -277,7 +279,7 @@ main_process_work_item(struct finder_info* fi, struct work_item* wi)
         free(wi->in_subfolder);
         free(wi->modified);
     }
-    LOGLN(10, (fi, LOG_INFO, LOGS "free item", LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS "free item", LOGP));
     free(wi);
     return 0;
 }
@@ -292,7 +294,7 @@ event_callback(struct finder_info* fi)
     int count;
     struct work_item* wi;
 
-    LOGLN(10, (fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     count = 0;
     cont = 1;
     while (cont)
@@ -309,7 +311,7 @@ event_callback(struct finder_info* fi)
             count++;
             if (count > 1024)
             {
-                LOGLN(10, (fi, LOG_INFO, LOGS "later", LOGP));
+                LOGLN10((fi, LOG_INFO, LOGS "later", LOGP));
                 /* do more later */
                 gui_set_event(fi);
                 cont = 0;
