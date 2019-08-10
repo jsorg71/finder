@@ -567,7 +567,7 @@ GUIObject::addOne(const char* filename, const char* in_subfolder,
     str1 += in_subfolder;
     io->in_subfolder = in_subfolder;
     str1 += "\t";
-    format_commas(size, text);
+    format_commas(size, text, 128);
     io->size = size;
     io->size_text = text;
     str1 += text;

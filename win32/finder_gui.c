@@ -147,7 +147,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
         return 0;
     }
     lvi->size = size;
-    format_commas(size, lvi->size_text);
+    format_commas(size, lvi->size_text, 256);
 
     memset(&item, 0, sizeof(item));
     item.mask = LVIF_TEXT | LVIF_PARAM;

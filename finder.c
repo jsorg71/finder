@@ -308,30 +308,32 @@ event_callback(struct finder_info* fi)
 
 /*****************************************************************************/
 int
-format_commas(FINDER_I64 n, char* out)
+format_commas(FINDER_I64 n, char* out, int out_bytes)
 {
     int c;
     char buf[64];
     char* p;
+    char* out_end;
 
     if (out == NULL)
     {
         return 1;
     }
-#if defined(_WIN32)
-    snprintf(buf, 64, "%Ld", (FINDER_I64)n);
-#else
-    snprintf(buf, 64, "%lld", (FINDER_I64)n);
-#endif
+    out_end = out + out_bytes - 2;
+    snprintf(buf, 64, FINDER_I64S, n);
     c = 2 - (strlen(buf) % 3);
     for (p = buf; *p != 0; p++)
     {
-       *(out++) = *p;
-       if (c == 1)
-       {
+        if (out >= out_end)
+        {
+            return 1;
+        }
+        *(out++) = *p;
+        if (c == 1)
+        {
            *(out++) = ',';
-       }
-       c = (c + 1) % 3;
+        }
+        c = (c + 1) % 3;
     }
     *(--out) = 0;
     return 0;

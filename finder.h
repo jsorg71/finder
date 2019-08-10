@@ -30,8 +30,10 @@
 
 #if defined(_WIN32)
 #define FINDER_I64 __int64
+#define FINDER_I64S "Ld"
 #else
 #define FINDER_I64 long long
+#define FINDER_I64S "lld"
 #endif
 
 /* strdup that can handle NULL */
@@ -82,7 +84,7 @@ stop_find(struct finder_info* fi);
 int
 event_callback(struct finder_info* fi);
 int
-format_commas(FINDER_I64 n, char* out);
+format_commas(FINDER_I64 n, char* out, int out_bytes);
 int
 get_mstime(void);
 
