@@ -69,7 +69,7 @@ struct lv_item
     char* modified;
 };
 
-static const char CLASS_NAME[]  = "Finder Window Class";
+static const char g_class_name[]  = "Finder Window Class";
 
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -220,7 +220,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     memset(&wc, 0, sizeof(wc));
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = CLASS_NAME;
+    wc.lpszClassName = g_class_name;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
     atom = RegisterClass(&wc);
@@ -244,20 +244,20 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     fi = (struct finder_info*)calloc(1, sizeof(struct finder_info));
     if (fi == NULL)
     {
-        UnregisterClass(CLASS_NAME, hInstance);
+        UnregisterClass(g_class_name, hInstance);
         return 0;
     }
     if (gui_init(fi) != 0)
     {
         free(fi);
-        UnregisterClass(CLASS_NAME, hInstance);
+        UnregisterClass(g_class_name, hInstance);
         return 0;
     }
     go = (struct gui_object*)calloc(1, sizeof(struct gui_object));
     if (go == NULL)
     {
         free(fi);
-        UnregisterClass(CLASS_NAME, hInstance);
+        UnregisterClass(g_class_name, hInstance);
         return 0;
     }
     go->event = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -265,12 +265,12 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     {
         free(go);
         free(fi);
-        UnregisterClass(CLASS_NAME, hInstance);
+        UnregisterClass(g_class_name, hInstance);
         return 0;
     }
     go->hInstance = hInstance;
     fi->gui_obj = go;
-    go->hwnd = CreateWindow(CLASS_NAME, "Finder", WS_OVERLAPPEDWINDOW,
+    go->hwnd = CreateWindow(g_class_name, "Finder", WS_OVERLAPPEDWINDOW,
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             CW_USEDEFAULT, CW_USEDEFAULT,
                             NULL, NULL, hInstance, NULL);
@@ -279,7 +279,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         CloseHandle(go->event);
         free(go);
         free(fi);
-        UnregisterClass(CLASS_NAME, hInstance);
+        UnregisterClass(g_class_name, hInstance);
         return 0;
     }
     SET_FI_TO_WND(go->hwnd, fi);
@@ -325,7 +325,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     CloseHandle(go->event);
     free(go);
     free(fi);
-    UnregisterClass(CLASS_NAME, hInstance);
+    UnregisterClass(g_class_name, hInstance);
     return 0;
 }
 
@@ -690,7 +690,7 @@ hwndTabs0WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************/
-static int
+static BOOL
 finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     struct finder_info* fi;
@@ -704,17 +704,17 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     (void)lParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
-        return 0;
+        return TRUE;
     }
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     if (hwnd != go->hwnd)
     {
-        return 0;
+        return TRUE;
     }
     /* check if already done */
     if (go->hwndListView != NULL)
     {
-        return 0;
+        return TRUE;
     }
     /* menu */
     go->hMenubar = CreateMenu();
@@ -757,7 +757,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
                                              go->hwndTabControl,
                                              NULL, go->hInstance, NULL);
     }
-    /* so we can catch WM_COMMAND from buttons  on tab0 */
+    /* so we can catch WM_COMMAND from buttons on tab0 */
     SET_FI_TO_WND(go->hwndTabs[0], fi);
     go->hwndTabs0WndProcOrg = (WNDPROC)
         SetWindowLong(go->hwndTabs[0], GWL_WNDPROC, (LPARAM)hwndTabs0WndProc);
@@ -869,7 +869,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     SetTimer(go->hwnd, go->startup_timer, 10, NULL);
     finder_load_from_reg(fi, go);
 
-    return 0;
+    return TRUE;
 }
 
 /*****************************************************************************/
@@ -890,7 +890,7 @@ finder_resize_combobox(HWND hwnd, int x, int y, int width, int height)
 }
 
 /*****************************************************************************/
-static int
+static BOOL
 finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     struct finder_info* fi;
@@ -908,7 +908,7 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     (void)wParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
-        return 0;
+        return TRUE;
     }
     width = LOWORD(lParam);
     height = HIWORD(lParam);
@@ -951,11 +951,11 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
         SendMessage(go->hwndStatusBar, SB_SETPARTS, 2, (LPARAM)iStatusWidths);
 
     }
-    return 0;
+    return TRUE;
 }
 
 /*****************************************************************************/
-static int
+static BOOL
 finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     struct finder_info* fi;
@@ -964,12 +964,12 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
     (void)lParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
-        return 0;
+        return TRUE;
     }
     if (hwnd != go->hwnd)
     {
         LOGLN0((fi, LOG_INFO, LOGS "unknown hwnd %p %p", LOGP, hwnd, go->hwnd));
-        return 0;
+        return TRUE;
     }
     switch (wParam)
     {
@@ -1015,7 +1015,7 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             LOGLN0((fi, LOG_INFO, LOGS "unknown command 0x%4.4x", LOGP, wParam));
             break;
     }
-    return 0;
+    return TRUE;
 }
 
 /*****************************************************************************/
@@ -1142,7 +1142,7 @@ static const PFNLVCOMPARE g_sasc[4] = { sort00, sort01, sort02, sort03 };
 static const PFNLVCOMPARE g_sdesc[4] = { sort10, sort11, sort12, sort13 };
 
 /*****************************************************************************/
-static int
+static BOOL
 finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     struct finder_info* fi;
@@ -1156,11 +1156,11 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     (void)wParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
-        return 0;
+        return TRUE;
     }
     if (hwnd != go->hwnd)
     {
-        return 0;
+        return TRUE;
     }
     nm = (NMHDR*)lParam;
     if (nm->hwndFrom == go->hwndListView)
@@ -1205,11 +1205,11 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                 break;
         }
     }
-    return 0;
+    return TRUE;
 }
 
 /*****************************************************************************/
-static int
+static BOOL
 finder_close(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     struct finder_info* fi;
@@ -1219,14 +1219,18 @@ finder_close(HWND hwnd, WPARAM wParam, LPARAM lParam)
     (void)lParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
-        return 0;
+        return TRUE;
     }
     LOGLN10((fi, LOG_INFO, LOGS, LOGP));
-    return 0;
+    if (MessageBox(hwnd, "Do You want to Exit?", "Finder", MB_YESNO) == IDYES)
+    {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /*****************************************************************************/
-static int
+static BOOL
 finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     struct finder_info* fi;
@@ -1235,7 +1239,7 @@ finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
     (void)lParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
     {
-        return 0;
+        return TRUE;
     }
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     if (wParam == go->startup_timer)
@@ -1244,49 +1248,56 @@ finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
         SendMessage(go->hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Ready");
         SendMessage(go->hwndStatusBar, SB_SETTEXT, 1, (LPARAM)"");
     }
-    return 0;
+    return TRUE;
 }
 
 /*****************************************************************************/
-static int
+static BOOL
 finder_create(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     (void)hwnd;
     (void)wParam;
     (void)lParam;
-    return 0;
+    return TRUE;
 }
 
 /*****************************************************************************/
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    BOOL do_def;
+
+    do_def = TRUE;
     switch (uMsg)
     {
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
         case WM_SHOWWINDOW:
-            finder_show_window(hwnd, wParam, lParam);
+            do_def = finder_show_window(hwnd, wParam, lParam);
             break;
         case WM_SIZE:
-            finder_size(hwnd, wParam, lParam);
+            do_def = finder_size(hwnd, wParam, lParam);
             break;
         case WM_COMMAND:
-            finder_command(hwnd, wParam, lParam);
+            do_def = finder_command(hwnd, wParam, lParam);
             break;
         case WM_NOTIFY:
-            finder_notify(hwnd, wParam, lParam);
+            do_def = finder_notify(hwnd, wParam, lParam);
             break;
         case WM_CLOSE:
-            finder_close(hwnd, wParam, lParam);
+            do_def = finder_close(hwnd, wParam, lParam);
             break;
         case WM_TIMER:
-            finder_timer(hwnd, wParam, lParam);
+            do_def = finder_timer(hwnd, wParam, lParam);
             break;
         case WM_CREATE:
-            finder_create(hwnd, wParam, lParam);
+            do_def = finder_create(hwnd, wParam, lParam);
             break;
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    if (do_def)
+    {
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+    return 0;
 }
