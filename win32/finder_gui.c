@@ -16,11 +16,16 @@
  * limitations under the License.
  */
 
+/* for IMalloc_Release and IMalloc_Free used with SHBrowseForFolder */
+#define COBJMACROS 1
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
 #include <commctrl.h>
+#include <shlobj.h>
+#include <objidl.h>
 
 #include "finder.h"
 #include "finder_event.h"
@@ -955,6 +960,71 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 /*****************************************************************************/
+static INT CALLBACK
+BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lp, LPARAM pData)
+{
+    (void)lp;
+    if (uMsg == BFFM_INITIALIZED)
+    {
+        SendMessage(hwnd, BFFM_SETSELECTION, TRUE, pData);
+    }
+    return 0;
+}
+
+/*****************************************************************************/
+static int
+finder_command_browse(struct finder_info* fi, struct gui_object* go)
+{
+    BROWSEINFO bi;
+    char pszBuffer[MAX_PATH];
+    char text[MAX_PATH];
+    LPITEMIDLIST pidl;
+    LPMALLOC lpMalloc;
+
+    /* Initialize COM */
+    if (CoInitializeEx(0, COINIT_APARTMENTTHREADED) != S_OK)
+    {
+        LOGLN0((fi, LOG_ERROR, LOGS "CoInitializeEx failed", LOGP));
+        return 0;
+    }
+    /*  Get a pointer to the shell memory allocator */
+    if (SHGetMalloc(&lpMalloc) != S_OK)
+    {
+        LOGLN0((fi, LOG_ERROR, LOGS "SHGetMalloc failed", LOGP));
+        CoUninitialize();
+        return 0;
+    }
+    memset(&bi, 0, sizeof(bi));
+    bi.pszDisplayName =   pszBuffer;
+    bi.lpszTitle = "Select a Directory";
+    bi.ulFlags = BIF_RETURNFSANCESTORS | BIF_RETURNONLYFSDIRS | BIF_EDITBOX;
+    if (GetWindowText(go->hwndLookInEdit, text, 255))
+    {
+        if (text[0] != 0)
+        {
+            bi.lpfn = BrowseCallbackProc;
+            bi.lParam = (LPARAM)text;
+        }
+    }
+    pidl = SHBrowseForFolder(&bi);
+    if (pidl != NULL)
+    {
+        // Copy the path directory to the buffer
+        if (SHGetPathFromIDList(pidl, pszBuffer))
+        {
+            /* pszBuffer now holds the directory path */
+            LOGLN0((fi, LOG_INFO, LOGS "Path from dialog [%s]", LOGP, pszBuffer));
+            SendMessage(go->hwndLookInEdit, CB_INSERTSTRING, 0, (LPARAM)pszBuffer);
+            SendMessage(go->hwndLookInEdit, CB_SETCURSEL, 0, 0);
+        }
+        IMalloc_Free(lpMalloc, pidl);
+    }
+    IMalloc_Release(lpMalloc);
+    CoUninitialize();
+    return 0;
+}
+
+/*****************************************************************************/
 static BOOL
 finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
@@ -1004,6 +1074,7 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             break;
         case 0x8804: /* browse */
             LOGLN0((fi, LOG_INFO, LOGS "browser button", LOGP));
+            finder_command_browse(fi, go);
             break;
         case 0x8805: /* about */
             LOGLN0((fi, LOG_INFO, LOGS "about", LOGP));
