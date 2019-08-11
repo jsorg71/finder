@@ -48,6 +48,12 @@ struct gui_object
     HWND hwndSearchInFileCB;
     HWND hwndSearchInFileEdit;
     HWND hwndCaseSensativeSearchCB;
+    HWND hwndStatusBar;
+    HMENU hMenubar;
+    HMENU hMenuFile;
+    HMENU hMenuHelp;
+    WNDPROC hwndTabs0WndProcOrg;
+
     HANDLE event;
     HFONT font;
     DWORD startup_timer;
@@ -90,6 +96,8 @@ int
 gui_find_done(struct finder_info* fi)
 {
     struct gui_object* go;
+    int count;
+    char text[64];
 
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
@@ -99,6 +107,9 @@ gui_find_done(struct finder_info* fi)
     ListView_SetColumnWidth(go->hwndListView, 3, LVSCW_AUTOSIZE_USEHEADER);
     EnableWindow(go->hwndFindButton, TRUE);
     EnableWindow(go->hwndStopButton, FALSE);
+    count = SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
+    snprintf(text, 64, "%d items found", count);
+    SendMessage(go->hwndStatusBar, SB_SETTEXT, 1, (LPARAM)text);
     return 0;
 }
 
@@ -219,7 +230,12 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     /* init common controls */
     memset(&icex, 0, sizeof(icex));
-    icex.dwICC = ICC_WIN95_CLASSES | ICC_LISTVIEW_CLASSES | ICC_TAB_CLASSES;
+    icex.dwSize = sizeof(icex);
+    /* ICC_WIN95_CLASSES
+       Load animate control, header, hot key, list-view, progress bar,
+       status bar, tab, tooltip, toolbar, trackbar, tree-view, and
+       up-down control classes. */
+    icex.dwICC = ICC_WIN95_CLASSES;
     if (!InitCommonControlsEx(&icex))
     {
         lasterror = GetLastError();
@@ -650,6 +666,30 @@ finder_load_from_reg(struct finder_info* fi, struct gui_object* go)
 }
 
 /*****************************************************************************/
+static LRESULT WINAPI
+hwndTabs0WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    struct finder_info* fi;
+    struct gui_object* go;
+
+    if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
+    {
+        /* bad */
+        return 0;
+    }
+    if (uMsg == WM_COMMAND)
+    {
+        LOGLN10((fi, LOG_INFO, LOGS "got WM_COMMAND wParam 0x%4.4x", LOGP, wParam));
+        if (wParam == 0x8804)
+        {
+            /* forward to main window */
+            SendMessage(go->hwnd, uMsg, wParam, lParam);
+        }
+    }
+    return CallWindowProc(go->hwndTabs0WndProcOrg, hwnd, uMsg, wParam, lParam);
+}
+
+/*****************************************************************************/
 static int
 finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
@@ -659,9 +699,6 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     LV_COLUMN col;
     TCITEM tie;
     int index;
-    HMENU hMenubar;
-    HMENU hMenuFile;
-    HMENU hMenuHelp;
 
     (void)wParam;
     (void)lParam;
@@ -680,14 +717,21 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
         return 0;
     }
     /* menu */
-    hMenubar = CreateMenu();
-    hMenuFile = CreateMenu();
-    AppendMenu(hMenuFile, MF_STRING, 0x8801, "&Quit");
-    AppendMenu(hMenubar, MF_POPUP, (UINT_PTR) hMenuFile, "&File");
-    hMenuHelp = CreateMenu();
-    AppendMenu(hMenuHelp, MF_STRING, 0x8805, "&About");
-    AppendMenu(hMenubar, MF_POPUP, (UINT_PTR) hMenuHelp, "&Help");
-    SetMenu(hwnd, hMenubar);
+    go->hMenubar = CreateMenu();
+    go->hMenuFile = CreateMenu();
+    AppendMenu(go->hMenuFile, MF_STRING, 0x8801, "&Quit");
+    AppendMenu(go->hMenubar, MF_POPUP, (UINT_PTR) go->hMenuFile, "&File");
+    go->hMenuHelp = CreateMenu();
+    AppendMenu(go->hMenuHelp, MF_STRING, 0x8806, "&Help...");
+    AppendMenu(go->hMenuHelp, MF_STRING, 0x8805, "&About");
+    AppendMenu(go->hMenubar, MF_POPUP, (UINT_PTR) go->hMenuHelp, "&Help");
+    SetMenu(hwnd, go->hMenubar);
+    /* status bar */
+    flags = WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP;
+    go->hwndStatusBar = CreateWindow(STATUSCLASSNAME, "", flags,
+                                     0, 0, 0, 0,
+                                     hwnd, NULL, go->hInstance, NULL);
+    SendMessage(go->hwndStatusBar, WM_SETFONT, (WPARAM)(go->font), FALSE);
     /* create tab control */
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS;
     go->hwndTabControl = CreateWindowEx(WS_EX_CONTROLPARENT,
@@ -713,6 +757,10 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
                                              go->hwndTabControl,
                                              NULL, go->hInstance, NULL);
     }
+    /* so we can catch WM_COMMAND from buttons  on tab0 */
+    SET_FI_TO_WND(go->hwndTabs[0], fi);
+    go->hwndTabs0WndProcOrg = (WNDPROC)
+        SetWindowLong(go->hwndTabs[0], GWL_WNDPROC, (LPARAM)hwndTabs0WndProc);
     /* create list view */
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
             LVS_REPORT | LVS_SHOWSELALWAYS;
@@ -855,6 +903,7 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
     int cx;
     int cy;
     RECT rect;
+    int iStatusWidths[2];
 
     (void)wParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
@@ -895,6 +944,12 @@ finder_size(HWND hwnd, WPARAM wParam, LPARAM lParam)
         MoveWindow(go->hwndSearchInFileCB, 0, 0, 150, 25, TRUE);
         finder_resize_combobox(go->hwndSearchInFileEdit, 0, 30, width - 190, 150);
         MoveWindow(go->hwndCaseSensativeSearchCB, 0, 60, 150, 25, TRUE);
+
+        SendMessage(go->hwndStatusBar, WM_SIZE, 0, 0);
+        iStatusWidths[0] = width - 200;
+        iStatusWidths[1] = -1;
+        SendMessage(go->hwndStatusBar, SB_SETPARTS, 2, (LPARAM)iStatusWidths);
+
     }
     return 0;
 }
@@ -913,6 +968,7 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
     if (hwnd != go->hwnd)
     {
+        LOGLN0((fi, LOG_INFO, LOGS "unknown hwnd %p %p", LOGP, hwnd, go->hwnd));
         return 0;
     }
     switch (wParam)
@@ -951,6 +1007,12 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             break;
         case 0x8805: /* about */
             LOGLN0((fi, LOG_INFO, LOGS "about", LOGP));
+            break;
+        case 0x8806: /* help */
+            LOGLN0((fi, LOG_INFO, LOGS "help", LOGP));
+            break;
+        default:
+            LOGLN0((fi, LOG_INFO, LOGS "unknown command 0x%4.4x", LOGP, wParam));
             break;
     }
     return 0;
@@ -1179,7 +1241,8 @@ finder_timer(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (wParam == go->startup_timer)
     {
         KillTimer(hwnd, wParam);
-        //finder_load_from_reg(fi, go);
+        SendMessage(go->hwndStatusBar, SB_SETTEXT, 0, (LPARAM)"Ready");
+        SendMessage(go->hwndStatusBar, SB_SETTEXT, 1, (LPARAM)"");
     }
     return 0;
 }
