@@ -74,7 +74,7 @@ struct lv_item
     char* modified;
 };
 
-static const char g_class_name[]  = "Finder Window Class";
+static const char g_class_name[] = "Finder Window Class";
 
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1009,7 +1009,7 @@ finder_command_browse(struct finder_info* fi, struct gui_object* go)
     pidl = SHBrowseForFolder(&bi);
     if (pidl != NULL)
     {
-        // Copy the path directory to the buffer
+        /* Copy the path directory to the buffer */
         if (SHGetPathFromIDList(pidl, pszBuffer))
         {
             /* pszBuffer now holds the directory path */
@@ -1021,6 +1021,136 @@ finder_command_browse(struct finder_info* fi, struct gui_object* go)
     }
     IMalloc_Release(lpMalloc);
     CoUninitialize();
+    return 0;
+}
+
+#define MAX_TEXT1 1024
+#define MAX_TEXT2 1024
+#define MAX_TEXT3 (1024 * 1024)
+
+/*****************************************************************************/
+static int
+finder_listview_to_clipbaord(struct finder_info* fi, struct gui_object* go,
+                             BOOL is_full_path)
+{
+    int index;
+    int text2_cur_len;
+    int text3_cur_len;
+    LVITEM lvi;
+    char* text1;
+    char* text2;
+    char* text3;
+    struct lv_item* lvi1;
+    HGLOBAL hMem;
+    LPVOID locked_mem;
+    BOOL do_free;
+
+    text1 = (char*)malloc(MAX_TEXT1 + MAX_TEXT2 + MAX_TEXT3);
+    if (text1 == NULL)
+    {
+        LOGLN0((fi, LOG_ERROR, LOGS "malloc failed", LOGP));
+        return 1;
+    }
+    text2 = text1 + MAX_TEXT1;
+    text3 = text2 + MAX_TEXT2;
+    text3_cur_len = 0;
+    if (is_full_path)
+    {
+        if (!GetWindowText(go->hwndLookInEdit, text1, MAX_TEXT1))
+        {
+            text1[0] = 0;
+        }
+    }
+    index = -1;
+    while (1)
+    {
+        index = ListView_GetNextItem(go->hwndListView, index, LVNI_SELECTED);
+        if (index == -1)
+        {
+            break;
+        }
+        memset(&lvi, 0, sizeof(lvi));
+        lvi.mask = LVIF_PARAM;
+        lvi.iItem = index;
+        LOGLN10((fi, LOG_INFO, LOGS "  index %d", LOGP, index));
+        if (ListView_GetItem(go->hwndListView, &lvi))
+        {
+            text2[0] = 0;
+            lvi1 = (struct lv_item*)(lvi.lParam);
+            if (is_full_path)
+            {
+                snprintf(text2, MAX_TEXT2, "%s\\%s\\%s", text1, lvi1->in_subfolder, lvi1->filename);
+            }
+            else
+            {
+                snprintf(text2, MAX_TEXT2, "%s", lvi1->filename);
+            }
+            text2_cur_len = strlen(text2);
+            if (text3_cur_len + text2_cur_len + 3 < MAX_TEXT3)
+            {
+                if (text3_cur_len > 0)
+                {
+                    text3[text3_cur_len++] = '\r';
+                    text3[text3_cur_len++] = '\n';
+                }
+                memcpy(text3 + text3_cur_len, text2, text2_cur_len);
+                text3_cur_len += text2_cur_len;
+            }
+            else
+            {
+                LOGLN0((fi, LOG_ERROR, LOGS "text too long text3_cur_len %d text2_cur_len %d", LOGP, text3_cur_len, text2_cur_len));
+            }
+        }
+        else
+        {
+            LOGLN0((fi, LOG_ERROR, LOGS "ListView_GetItem failed index %d", LOGP, index));
+        }
+    }
+    text3[text3_cur_len] = 0;
+    index = text3_cur_len + 1;
+    LOGLN10((fi, LOG_ERROR, LOGS "text3_cur_len + 1 = %d", LOGP, index));
+    hMem =  GlobalAlloc(GMEM_MOVEABLE, index);
+    if (hMem != NULL)
+    {
+        do_free = TRUE;
+        locked_mem = GlobalLock(hMem);
+        if (locked_mem != NULL)
+        {
+            memcpy(locked_mem, text3, index);
+            GlobalUnlock(hMem);
+            if (OpenClipboard(go->hwnd))
+            {
+                EmptyClipboard();
+                if (SetClipboardData(CF_TEXT, hMem) == NULL)
+                {
+                    LOGLN0((fi, LOG_ERROR, LOGS "SetClipboardData failed", LOGP));
+                }
+                else
+                {
+                    /* SetClipboardData success and system owns hMem now */
+                    do_free = FALSE;
+                }
+                CloseClipboard();
+            }
+            else
+            {
+                LOGLN0((fi, LOG_ERROR, LOGS "OpenClipboard failed", LOGP));
+            }
+        }
+        else
+        {
+            LOGLN0((fi, LOG_ERROR, LOGS "GlobalLock failed", LOGP));
+        }
+        if (do_free)
+        {
+            GlobalFree(hMem);
+        }
+    }
+    else
+    {
+        LOGLN0((fi, LOG_ERROR, LOGS "GlobalAlloc failed", LOGP));
+    }
+    free(text1);
     return 0;
 }
 
@@ -1081,6 +1211,14 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             break;
         case 0x8806: /* help */
             LOGLN0((fi, LOG_INFO, LOGS "help", LOGP));
+            break;
+        case 0x8810: /* copy file name */
+            LOGLN0((fi, LOG_INFO, LOGS "copy file name", LOGP));
+            finder_listview_to_clipbaord(fi, go, FALSE);
+            break;
+        case 0x8811: /* copy full path */
+            LOGLN0((fi, LOG_INFO, LOGS "copy full path", LOGP));
+            finder_listview_to_clipbaord(fi, go, TRUE);
             break;
         default:
             LOGLN0((fi, LOG_INFO, LOGS "unknown command 0x%4.4x", LOGP, wParam));
@@ -1223,6 +1361,8 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct lv_item* lvi;
     int iSubItem;
     int index;
+    HMENU hPopupMenu;
+    POINT pt;
 
     (void)wParam;
     if (get_fi_go_from_hwnd(hwnd, &fi, &go) != 0)
@@ -1236,10 +1376,10 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     nm = (NMHDR*)lParam;
     if (nm->hwndFrom == go->hwndListView)
     {
-        nmlv = (NMLISTVIEW*)lParam;
         switch (nm->code)
         {
             case LVN_COLUMNCLICK:
+                nmlv = (NMLISTVIEW*)lParam;
                 iSubItem = nmlv->iSubItem % 4;
                 if ((go->sort_order[iSubItem] % 2) == 0)
                 {
@@ -1252,6 +1392,7 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                 go->sort_order[iSubItem]++;
                 break;
             case LVN_DELETEITEM:
+                nmlv = (NMLISTVIEW*)lParam;
                 lvi = (struct lv_item*)(nmlv->lParam);
                 if (lvi != NULL)
                 {
@@ -1260,6 +1401,21 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                     free(lvi->size_text);
                     free(lvi->modified);
                     free(lvi);
+                }
+                break;
+            case NM_RCLICK:
+                index = ListView_GetNextItem(go->hwndListView, -1, LVNI_SELECTED);
+                LOGLN0((fi, LOG_INFO, LOGS "got NM_RCLICK index %d", LOGP, index));
+                if (index >= 0)
+                {
+                    if (GetCursorPos(&pt))
+                    {
+                        hPopupMenu = CreatePopupMenu();
+                        InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0x8811, "Copy full path");
+                        InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0x8810, "Copy file name");
+                        SetForegroundWindow(go->hwnd);
+                        TrackPopupMenu(hPopupMenu, TPM_TOPALIGN | TPM_LEFTALIGN, pt.x, pt.y, 0, go->hwnd, NULL);
+                    }
                 }
                 break;
         }
