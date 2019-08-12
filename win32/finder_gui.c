@@ -25,7 +25,6 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <shlobj.h>
-#include <objidl.h>
 
 #include "finder.h"
 #include "finder_event.h"
@@ -995,7 +994,8 @@ finder_command_browse(struct finder_info* fi, struct gui_object* go)
         return 0;
     }
     memset(&bi, 0, sizeof(bi));
-    bi.pszDisplayName =   pszBuffer;
+    bi.hwndOwner = go->hwnd;
+    bi.pszDisplayName = pszBuffer;
     bi.lpszTitle = "Select a Directory";
     bi.ulFlags = BIF_RETURNFSANCESTORS | BIF_RETURNONLYFSDIRS | BIF_EDITBOX;
     if (GetWindowText(go->hwndLookInEdit, text, 255))
