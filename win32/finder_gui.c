@@ -1077,13 +1077,23 @@ finder_listview_to_clipbaord(struct finder_info* fi, struct gui_object* go,
         {
             text2[0] = 0;
             lvi1 = (struct lv_item*)(lvi.lParam);
-            if (is_full_path)
+            if (lvi1 != NULL)
             {
-                snprintf(text2, MAX_TEXT2, "%s\\%s\\%s", text1, lvi1->in_subfolder, lvi1->filename);
-            }
-            else
-            {
-                snprintf(text2, MAX_TEXT2, "%s", lvi1->filename);
+                if (is_full_path)
+                {
+                    if ((lvi1->in_subfolder != NULL) && (lvi1->in_subfolder[0] != 0))
+                    {
+                        snprintf(text2, MAX_TEXT2, "%s\\%s\\%s", text1, lvi1->in_subfolder, lvi1->filename);
+                    }
+                    else
+                    {
+                        snprintf(text2, MAX_TEXT2, "%s\\%s", text1, lvi1->filename);
+                    }
+                }
+                else
+                {
+                    snprintf(text2, MAX_TEXT2, "%s", lvi1->filename);
+                }
             }
             text2_cur_len = strlen(text2);
             if (text3_cur_len + text2_cur_len + 3 < MAX_TEXT3)
@@ -1417,6 +1427,9 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                         TrackPopupMenu(hPopupMenu, TPM_TOPALIGN | TPM_LEFTALIGN, pt.x, pt.y, 0, go->hwnd, NULL);
                     }
                 }
+                break;
+            case LVN_BEGINDRAG:
+                LOGLN0((fi, LOG_INFO, LOGS "LVN_BEGINDRAG", LOGP));
                 break;
         }
     }
