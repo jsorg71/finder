@@ -227,7 +227,7 @@ find_in_file(FINDER_FILE_OBJ file_obj, struct finder_info* fi,
         return 1;
     }
     found_in_file = 0;
-    text_bytes = strlen(fi->text);
+    text_bytes = FINDER_STRLEN(fi->text);
     FINDER_FILE_READ(file_obj, data, SEARCH_IN_READ_CHUCK, readed);
     while (readed > 0)
     {
@@ -298,7 +298,7 @@ check_file_name(struct finder_info* fi, const char* filename)
         }
         else
         {
-            len1 = p2 - p1;
+            len1 = (int)(p2 - p1);
             LOGLN10((fi, LOG_INFO, LOGS "len1 %d", len1));
             if (len1 > 1023)
             {
@@ -376,8 +376,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
     const char* entry_file_name;
     FINDER_FILE_OBJ file_obj;
 
-    look_in_bytes = strlen(fi->look_in);
-    dir_name_bytes = strlen(dir_name);
+    look_in_bytes = FINDER_STRLEN(fi->look_in);
+    dir_name_bytes = FINDER_STRLEN(dir_name);
     LOGLN10((fi, LOG_DEBUG, LOGS "%d %d", look_in_bytes, dir_name_bytes));
     if (dir_name_bytes < look_in_bytes)
     {
@@ -391,7 +391,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
         LOGLN0((fi, LOG_ERROR, LOGS "error malloc", LOGP));
         return 1;
     }
-    snprintf(ldir_name, FINDER_MAX_PATH, "%s\\*", dir_name);
+    FINDER_SNPRINTF(ldir_name, FINDER_MAX_PATH, "%s\\*", dir_name);
     LOGLN10((fi, LOG_DEBUG, LOGS "ldir_name [%s]", LOGP, ldir_name));
     find_handle = FindFirstFileA(ldir_name, &entry);
     free(ldir_name);
@@ -437,8 +437,8 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
 
     if (dir_name_bytes > look_in_bytes)
     {
-        snprintf(in_subfolder_text, in_subfolder_text_alloc_bytes, "%s",
-                 dir_name + look_in_bytes + 1);
+        FINDER_SNPRINTF(in_subfolder_text, in_subfolder_text_alloc_bytes, "%s",
+                        dir_name + look_in_bytes + 1);
     }
     while (1)
     {
@@ -451,11 +451,11 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
 #if defined(_WIN32)
         entry_file_name = entry.cFileName;
         is_dir = entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-        snprintf(dir_file_name, FINDER_MAX_PATH, "%s\\%s", dir_name, entry_file_name);
+        FINDER_SNPRINTF(dir_file_name, FINDER_MAX_PATH, "%s\\%s", dir_name, entry_file_name);
 #else
         got_stat = 0;
         entry_file_name = entry->d_name;
-        snprintf(dir_file_name, FINDER_MAX_PATH, "%s/%s", dir_name, entry_file_name);
+        FINDER_SNPRINTF(dir_file_name, FINDER_MAX_PATH, "%s/%s", dir_name, entry_file_name);
         if (entry->d_type == DT_UNKNOWN)
         {
             if ((strcmp(entry_file_name, ".") == 0) ||
@@ -572,11 +572,11 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                         lwi->modified = (char*)malloc(1024);
                         if (lwi->modified != NULL)
                         {
-                            snprintf(lwi->modified, 1024,
-                                     "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
-                                     local_time.wYear, local_time.wMonth,
-                                     local_time.wDay,  local_time.wHour,
-                                     local_time.wMinute, local_time.wSecond);
+                            FINDER_SNPRINTF(lwi->modified, 1024,
+                                            "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
+                                            local_time.wYear, local_time.wMonth,
+                                            local_time.wDay,  local_time.wHour,
+                                            local_time.wMinute, local_time.wSecond);
                         }
                         else
                         {
@@ -610,12 +610,12 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
                     lwi->modified = (char*)malloc(1024);
                     if (lwi->modified != NULL)
                     {
-                        snprintf(lwi->modified, 1024,
-                                 "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
-                                 1900 + local_time->tm_year,
-                                 local_time->tm_mon, local_time->tm_mday,
-                                 local_time->tm_hour, local_time->tm_min,
-                                 local_time->tm_sec);
+                        FINDER_SNPRINTF(lwi->modified, 1024,
+                                        "%4.4d%2.2d%2.2d %2.2d:%2.2d:%2.2d",
+                                        1900 + local_time->tm_year,
+                                        local_time->tm_mon, local_time->tm_mday,
+                                        local_time->tm_hour, local_time->tm_min,
+                                        local_time->tm_sec);
                     }
                 }
 #endif

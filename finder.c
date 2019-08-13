@@ -320,8 +320,8 @@ format_commas(FINDER_I64 n, char* out, int out_bytes)
         return 1;
     }
     out_end = out + out_bytes - 2;
-    snprintf(buf, 64, "%" FINDER_PRId64, n);
-    c = 2 - (strlen(buf) % 3);
+    FINDER_SNPRINTF(buf, 64, "%" FINDER_PRId64, n);
+    c = 2 - (FINDER_STRLEN(buf) % 3);
     for (p = buf; *p != 0; p++)
     {
         if (out >= out_end)
@@ -378,10 +378,10 @@ logln(struct finder_info* fi, int log_level, const char* format, ...)
     {
         log_line = (char*)malloc(2048);
         va_start(ap, format);
-        vsnprintf(log_line, 1024, format, ap);
+        FINDER_VSNPRINTF(log_line, 1024, format, ap);
         va_end(ap);
-        snprintf(log_line + 1024, 1024, "[%10.10u][%s]%s",
-                 get_mstime(), g_log_pre[log_level % 4], log_line);
+        FINDER_SNPRINTF(log_line + 1024, 1024, "[%10.10u][%s]%s",
+                        get_mstime(), g_log_pre[log_level % 4], log_line);
         gui_writeln(fi, log_line + 1024);
         free(log_line);
     }
