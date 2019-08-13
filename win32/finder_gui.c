@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <windowsx.h>
 #include <commctrl.h>
 #include <shlobj.h>
 
@@ -111,7 +112,7 @@ gui_find_done(struct finder_info* fi)
     ListView_SetColumnWidth(go->hwndListView, 3, LVSCW_AUTOSIZE_USEHEADER);
     EnableWindow(go->hwndFindButton, TRUE);
     EnableWindow(go->hwndStopButton, FALSE);
-    count = (int)SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
+    count = ListView_GetItemCount(go->hwndListView);
     FINDER_SNPRINTF(text, 64, "%d items found", count);
     SendMessage(go->hwndStatusBar, SB_SETTEXT, 1, (LPARAM)text);
     return 0;
@@ -169,7 +170,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
     item.pszText = lvi->filename;
     item.cchTextMax = FINDER_STRLEN(item.pszText) + 1;
     item.lParam = (LONG_PTR)lvi;
-    item.iItem = (int)SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
+    item.iItem = ListView_GetItemCount(go->hwndListView);
     SendMessage(go->hwndListView, LVM_INSERTITEM, 0, (LPARAM)&item);
 
     item.mask = LVIF_TEXT;
@@ -387,17 +388,17 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     LOGLN10((fi, LOG_INFO, LOGS "for edit [%s] got text [%s]", LOGP, key_prefix, text));
     if (text[0] != 0)
     {
-        index = (int)SendMessage(hwnd, CB_FINDSTRING, 0, (LPARAM)text);
+        index = ComboBox_FindString(hwnd, 0, text);
         if (index == CB_ERR)
         {
-            SendMessage(hwnd, CB_INSERTSTRING, 0, (LPARAM)text);
+            ComboBox_InsertString(hwnd, 0, text);
         }
         else if (index > 0)
         {
-            SendMessage(hwnd, CB_DELETESTRING, index, 0);
-            SendMessage(hwnd, CB_INSERTSTRING, 0, (LPARAM)text);
+            ComboBox_DeleteString(hwnd, index);
+            ComboBox_InsertString(hwnd, 0, text);
         }
-        SendMessage(hwnd, CB_SETCURSEL, 0, 0);
+        ComboBox_SetCurSel(hwnd, 0);
     }
     for (index = 0; index < 100; index++)
     {
@@ -415,7 +416,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
             }
         }
     }
-    count = (int)SendMessage(hwnd, CB_GETCOUNT, 0, 0);
+    count = ComboBox_GetCount(hwnd);
     LOGLN10((fi, LOG_INFO, LOGS "for edit [%s] got count %d", LOGP, key_prefix, count));
     if (count != CB_ERR)
     {
@@ -425,7 +426,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
         }
         for (index = 0; index < count; index++)
         {
-            cb_text_bytes = (int)SendMessage(hwnd, CB_GETLBTEXTLEN, index, 0);
+            cb_text_bytes = ComboBox_GetLBTextLen(hwnd, index);
             if (cb_text_bytes != CB_ERR)
             {
                 if (cb_text_bytes > 0)
@@ -433,7 +434,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
                     cb_text = (char*)malloc(cb_text_bytes + 1);
                     if (cb_text != NULL)
                     {
-                        cb_text_bytes1 = (int)SendMessage(hwnd, CB_GETLBTEXT, index, (LPARAM)cb_text);
+                        cb_text_bytes1 = ComboBox_GetLBText(hwnd, index, cb_text);
                         if (cb_text_bytes == cb_text_bytes1)
                         {
                             FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
@@ -490,7 +491,7 @@ finder_save_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
         return 1;
     }
 
-    is_checked = (BOOL)SendMessage(hwnd, BM_GETCHECK, 0, 0);
+    is_checked = Button_GetCheck(hwnd);
     if ((!is_checked) == (!def))
     {
         lRes = RegQueryValueEx(hSectionKey, key_prefix, NULL, &key_type, NULL, NULL);
