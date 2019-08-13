@@ -79,9 +79,9 @@ static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 #define GET_FI_FROM_WND(_hwnd) \
-    (struct finder_info*)GetWindowLongPtr(_hwnd, GWL_USERDATA)
+    (struct finder_info*)GetWindowLongPtr(_hwnd, GWLP_USERDATA)
 #define SET_FI_TO_WND(_hwnd, _fi) \
-    SetWindowLongPtr(_hwnd, GWL_USERDATA, (LONG_PTR)_fi);
+    SetWindowLongPtr(_hwnd, GWLP_USERDATA, (LONG_PTR)_fi);
 
 /*****************************************************************************/
 int
@@ -111,8 +111,8 @@ gui_find_done(struct finder_info* fi)
     ListView_SetColumnWidth(go->hwndListView, 3, LVSCW_AUTOSIZE_USEHEADER);
     EnableWindow(go->hwndFindButton, TRUE);
     EnableWindow(go->hwndStopButton, FALSE);
-    count = SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
-    snprintf(text, 64, "%d items found", count);
+    count = (int)SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
+    FINDER_SNPRINTF(text, 64, "%d items found", count);
     SendMessage(go->hwndStatusBar, SB_SETTEXT, 1, (LPARAM)text);
     return 0;
 }
@@ -167,26 +167,26 @@ gui_add_one(struct finder_info* fi, const char* filename,
     memset(&item, 0, sizeof(item));
     item.mask = LVIF_TEXT | LVIF_PARAM;
     item.pszText = lvi->filename;
-    item.cchTextMax = strlen(item.pszText) + 1;
+    item.cchTextMax = FINDER_STRLEN(item.pszText) + 1;
     item.lParam = (LONG_PTR)lvi;
-    item.iItem = SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
+    item.iItem = (int)SendMessage(go->hwndListView, LVM_GETITEMCOUNT, 0, 0);
     SendMessage(go->hwndListView, LVM_INSERTITEM, 0, (LPARAM)&item);
 
     item.mask = LVIF_TEXT;
     item.iSubItem = 1;
     item.pszText = lvi->in_subfolder;
-    item.cchTextMax = strlen(item.pszText) + 1;
+    item.cchTextMax = FINDER_STRLEN(item.pszText) + 1;
     item.lParam = 0;
     SendMessage(go->hwndListView, LVM_SETITEM, 0, (LPARAM)&item);
 
     item.iSubItem = 2;
     item.pszText = lvi->size_text;
-    item.cchTextMax = strlen(item.pszText) + 1;
+    item.cchTextMax = FINDER_STRLEN(item.pszText) + 1;
     SendMessage(go->hwndListView, LVM_SETITEM, 0, (LPARAM)&item);
 
     item.iSubItem = 3;
     item.pszText = lvi->modified;
-    item.cchTextMax = strlen(item.pszText) + 1;
+    item.cchTextMax = FINDER_STRLEN(item.pszText) + 1;
     SendMessage(go->hwndListView, LVM_SETITEM, 0, (LPARAM)&item);
 
     return 0;
@@ -212,11 +212,9 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     int cont;
     HANDLE handles[16];
     struct gui_object* go;
-    RECT rcClient;
     INITCOMMONCONTROLSEX icex;
     struct finder_info* fi;
     ATOM atom;
-    DWORD lasterror;
     NONCLIENTMETRICS non_client_metrics;
 
     (void)hPrevInstance;
@@ -240,11 +238,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
        status bar, tab, tooltip, toolbar, trackbar, tree-view, and
        up-down control classes. */
     icex.dwICC = ICC_WIN95_CLASSES;
-    if (!InitCommonControlsEx(&icex))
-    {
-        lasterror = GetLastError();
-        LOGLN0((fi, LOG_INFO, LOGS "InitCommonControlsEx failed lasterror 0x%8.8x", LOGP, lasterror));
-    }
+    InitCommonControlsEx(&icex);
     fi = (struct finder_info*)calloc(1, sizeof(struct finder_info));
     if (fi == NULL)
     {
@@ -393,7 +387,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     LOGLN10((fi, LOG_INFO, LOGS "for edit [%s] got text [%s]", LOGP, key_prefix, text));
     if (text[0] != 0)
     {
-        index = SendMessage(hwnd, CB_FINDSTRING, 0, (LPARAM)text);
+        index = (int)SendMessage(hwnd, CB_FINDSTRING, 0, (LPARAM)text);
         if (index == CB_ERR)
         {
             SendMessage(hwnd, CB_INSERTSTRING, 0, (LPARAM)text);
@@ -407,7 +401,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     }
     for (index = 0; index < 100; index++)
     {
-        snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
+        FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
         key_bytes = 0;
         lRes = RegQueryValueEx(hSectionKey, key_name, NULL, &key_type, NULL,
                                &key_bytes);
@@ -421,7 +415,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
             }
         }
     }
-    count = SendMessage(hwnd, CB_GETCOUNT, 0, 0);
+    count = (int)SendMessage(hwnd, CB_GETCOUNT, 0, 0);
     LOGLN10((fi, LOG_INFO, LOGS "for edit [%s] got count %d", LOGP, key_prefix, count));
     if (count != CB_ERR)
     {
@@ -431,7 +425,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
         }
         for (index = 0; index < count; index++)
         {
-            cb_text_bytes = SendMessage(hwnd, CB_GETLBTEXTLEN, index, 0);
+            cb_text_bytes = (int)SendMessage(hwnd, CB_GETLBTEXTLEN, index, 0);
             if (cb_text_bytes != CB_ERR)
             {
                 if (cb_text_bytes > 0)
@@ -439,10 +433,10 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
                     cb_text = (char*)malloc(cb_text_bytes + 1);
                     if (cb_text != NULL)
                     {
-                        cb_text_bytes1 = SendMessage(hwnd, CB_GETLBTEXT, index, (LPARAM)cb_text);
+                        cb_text_bytes1 = (int)SendMessage(hwnd, CB_GETLBTEXT, index, (LPARAM)cb_text);
                         if (cb_text_bytes == cb_text_bytes1)
                         {
-                            snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
+                            FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
                             LOGLN10((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], adding [%s]", LOGP, section, key_name, cb_text));
                             lRes = RegSetValueEx(hSectionKey, key_name, 0, REG_SZ, cb_text, cb_text_bytes + 1);
                             if (lRes != ERROR_SUCCESS)
@@ -496,7 +490,7 @@ finder_save_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
         return 1;
     }
 
-    is_checked = SendMessage(hwnd, BM_GETCHECK, 0, 0);
+    is_checked = (BOOL)SendMessage(hwnd, BM_GETCHECK, 0, 0);
     if ((!is_checked) == (!def))
     {
         lRes = RegQueryValueEx(hSectionKey, key_prefix, NULL, &key_type, NULL, NULL);
@@ -574,7 +568,7 @@ finder_load_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     SendMessage(hwnd, CB_RESETCONTENT, 0, 0);
     for (index = 0; index < 100; index++)
     {
-        snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
+        FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
         key_bytes = 255;
         lRes = RegQueryValueEx(hSectionKey, key_name, NULL, &type, key_value,
                                &key_bytes);
@@ -600,7 +594,6 @@ static int
 finder_load_checkbox(struct finder_info* fi, HKEY hKey, HWND hwnd,
                      const char* section, const char* key_prefix, BOOL def)
 {
-    int index;
     LONG lRes;
     DWORD key_bytes;
     DWORD type;
@@ -764,7 +757,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* so we can catch WM_COMMAND from buttons on tab0 */
     SET_FI_TO_WND(go->hwndTabs[0], fi);
     go->hwndTabs0WndProcOrg = (WNDPROC)
-        SetWindowLong(go->hwndTabs[0], GWL_WNDPROC, (LPARAM)hwndTabs0WndProc);
+        SetWindowLongPtr(go->hwndTabs[0], GWLP_WNDPROC, (LPARAM)hwndTabs0WndProc);
     /* create list view */
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
             LVS_REPORT | LVS_SHOWSELALWAYS;
@@ -886,7 +879,7 @@ finder_resize_combobox(HWND hwnd, int x, int y, int width, int height)
     char text[256];
 
     GetWindowText(hwnd, text, 255);
-    combobox_sel = SendMessage(hwnd, CB_GETEDITSEL, 0, 0);
+    combobox_sel = (int)SendMessage(hwnd, CB_GETEDITSEL, 0, 0);
     MoveWindow(hwnd, x, y, width, height, TRUE);
     SetWindowText(hwnd, text);
     SendMessage(hwnd, CB_SETEDITSEL, 0, combobox_sel);
@@ -1083,19 +1076,19 @@ finder_listview_to_clipbaord(struct finder_info* fi, struct gui_object* go,
                 {
                     if ((lvi1->in_subfolder != NULL) && (lvi1->in_subfolder[0] != 0))
                     {
-                        snprintf(text2, MAX_TEXT2, "%s\\%s\\%s", text1, lvi1->in_subfolder, lvi1->filename);
+                        FINDER_SNPRINTF(text2, MAX_TEXT2, "%s\\%s\\%s", text1, lvi1->in_subfolder, lvi1->filename);
                     }
                     else
                     {
-                        snprintf(text2, MAX_TEXT2, "%s\\%s", text1, lvi1->filename);
+                        FINDER_SNPRINTF(text2, MAX_TEXT2, "%s\\%s", text1, lvi1->filename);
                     }
                 }
                 else
                 {
-                    snprintf(text2, MAX_TEXT2, "%s", lvi1->filename);
+                    FINDER_SNPRINTF(text2, MAX_TEXT2, "%s", lvi1->filename);
                 }
             }
-            text2_cur_len = strlen(text2);
+            text2_cur_len = FINDER_STRLEN(text2);
             if (text3_cur_len + text2_cur_len + 3 < MAX_TEXT3)
             {
                 if (text3_cur_len > 0)
@@ -1194,16 +1187,12 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             LOGLN0((fi, LOG_INFO, LOGS "starting search", LOGP));
             GetWindowText(go->hwndNamedEdit, fi->named, 255);
             GetWindowText(go->hwndLookInEdit, fi->look_in, 255);
-            LOGLN0((fi, LOG_INFO, "look in %s", fi->look_in));
-            fi->include_subfolders = SendMessage(go->hwndSubfolderCB, BM_GETCHECK, 0, 0);
-            LOGLN0((fi, LOG_INFO, "include subfolders %d", fi->include_subfolders));
-            fi->case_sensitive = SendMessage(go->hwndCaseSensativeCB, BM_GETCHECK, 0, 0);
-            LOGLN0((fi, LOG_INFO, "case sensative %d", fi->case_sensitive));
-            fi->show_hidden = SendMessage(go->hwndHiddenCB, BM_GETCHECK, 0, 0);
-            LOGLN0((fi, LOG_INFO, "show_hidden %d", fi->show_hidden));
-            fi->search_in_files = SendMessage(go->hwndSearchInFileCB, BM_GETCHECK, 0, 0);
+            fi->include_subfolders = (int)SendMessage(go->hwndSubfolderCB, BM_GETCHECK, 0, 0);
+            fi->case_sensitive = (int)SendMessage(go->hwndCaseSensativeCB, BM_GETCHECK, 0, 0);
+            fi->show_hidden = (int)SendMessage(go->hwndHiddenCB, BM_GETCHECK, 0, 0);
+            fi->search_in_files = (int)SendMessage(go->hwndSearchInFileCB, BM_GETCHECK, 0, 0);
             GetWindowText(go->hwndSearchInFileEdit, fi->text, 255);
-            fi->search_in_case_sensitive = SendMessage(go->hwndCaseSensativeSearchCB, BM_GETCHECK, 0, 0);
+            fi->search_in_case_sensitive = (int)SendMessage(go->hwndCaseSensativeSearchCB, BM_GETCHECK, 0, 0);
             /* save data here */
             finder_save_to_reg(fi, go);
             start_find(fi);
