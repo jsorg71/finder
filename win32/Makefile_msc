@@ -1,0 +1,16 @@
+
+OBJS=finder_gui.obj
+
+CFLAGS=$(FINDER_CFLAGS)
+
+LDFLAGS=$(FINDER_LDFLAGS)
+
+LIBS=$(FINDER_LIBS)
+
+all: finder.exe
+
+finder.exe: $(OBJS) ../finder.lib
+	link /out:finder.exe $(OBJS) $(LDFLAGS) ../finder.lib $(LIBS)
+
+clean:
+	del finder.exe $(OBJS)

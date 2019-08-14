@@ -1,0 +1,12 @@
+
+OBJS=finder.obj finder_event.obj finder_list.obj finder_thread.obj finder_search.obj finder_file.obj
+
+CFLAGS=$(FINDER_CFLAGS)
+
+all: finder.lib
+
+finder.lib: $(OBJS)
+	link /lib /out:finder.lib $(OBJS)
+
+clean:
+	del finder.lib $(OBJS)
