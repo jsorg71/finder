@@ -13,7 +13,4 @@ finder.exe: $(OBJS) ../finder.lib
 	$(CC) -WM -W -efinder.exe $(OBJS) ../finder.lib
 
 clean:
-	del finder.exe $(OBJS)
-
-.c.obj:
-	$(CC) $(CFLAGS) -q -c $?
+	del finder.exe finder.tds $(OBJS)

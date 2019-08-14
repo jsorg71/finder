@@ -1,3 +1,4 @@
+@echo off
 cd ..
 make -fMakefile_bc %1
 cd win32
