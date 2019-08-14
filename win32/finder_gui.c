@@ -391,14 +391,14 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
         index = ComboBox_FindString(hwnd, 0, text);
         if (index == CB_ERR)
         {
-            ComboBox_InsertString(hwnd, 0, text);
+            (void)ComboBox_InsertString(hwnd, 0, text);
         }
         else if (index > 0)
         {
-            ComboBox_DeleteString(hwnd, index);
-            ComboBox_InsertString(hwnd, 0, text);
+            (void)ComboBox_DeleteString(hwnd, index);
+            (void)ComboBox_InsertString(hwnd, 0, text);
         }
-        ComboBox_SetCurSel(hwnd, 0);
+        (void)ComboBox_SetCurSel(hwnd, 0);
     }
     for (index = 0; index < 100; index++)
     {
@@ -566,7 +566,7 @@ finder_load_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
         LOGLN0((fi, LOG_ERROR, LOGS "RegOpenKeyEx [%s] failed", LOGP, section));
         return 1;
     }
-    ComboBox_ResetContent(hwnd);
+    (void)ComboBox_ResetContent(hwnd);
     for (index = 0; index < 100; index++)
     {
         FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
@@ -578,13 +578,13 @@ finder_load_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
             if (type == REG_SZ)
             {
                 LOGLN10((fi, LOG_INFO, LOGS "section [%s] key name [%s] key value [%s]", LOGP, section, key_name, key_value));
-                ComboBox_AddString(hwnd, key_value);
+                (void)ComboBox_AddString(hwnd, key_value);
             }
         }
     }
     if (ComboBox_GetCount(hwnd) > 0)
     {
-        ComboBox_SetCurSel(hwnd, 0);
+        (void)ComboBox_SetCurSel(hwnd, 0);
     }
     RegCloseKey(hSectionKey);
     return 0;
@@ -765,7 +765,7 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
     go->hwndListView = CreateWindow(WC_LISTVIEW, "", flags, 0, 0, 10, 10,
                                     hwnd, NULL, go->hInstance, NULL);
     SetWindowFont(go->hwndListView, go->font, FALSE);
-    ListView_SetExtendedListViewStyle(go->hwndListView, LVS_EX_FULLROWSELECT);
+    (void)ListView_SetExtendedListViewStyle(go->hwndListView, LVS_EX_FULLROWSELECT);
     memset(&col, 0, sizeof(col));
     col.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
     col.cx = 100;
@@ -883,7 +883,7 @@ finder_resize_combobox(HWND hwnd, int x, int y, int width, int height)
     combobox_sel = ComboBox_GetEditSel(hwnd);
     MoveWindow(hwnd, x, y, width, height, TRUE);
     SetWindowText(hwnd, text);
-    ComboBox_SetEditSel(hwnd, LOWORD(combobox_sel), HIWORD(combobox_sel));
+    (void)ComboBox_SetEditSel(hwnd, LOWORD(combobox_sel), HIWORD(combobox_sel));
     return 0;
 }
 
@@ -1008,8 +1008,8 @@ finder_command_browse(struct finder_info* fi, struct gui_object* go)
         {
             /* pszBuffer now holds the directory path */
             LOGLN0((fi, LOG_INFO, LOGS "Path from dialog [%s]", LOGP, pszBuffer));
-            ComboBox_InsertString(go->hwndLookInEdit, 0, pszBuffer);
-            ComboBox_SetCurSel(go->hwndLookInEdit, 0);
+            (void)ComboBox_InsertString(go->hwndLookInEdit, 0, pszBuffer);
+            (void)ComboBox_SetCurSel(go->hwndLookInEdit, 0);
         }
         IMalloc_Free(lpMalloc, pidl);
     }
