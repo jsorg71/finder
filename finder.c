@@ -415,10 +415,14 @@ finder_strdup(const char* src)
 int
 finder_stricmp(const char *string1, const char *string2)
 {
+#if defined(_WIN32)
 #if defined(_MSC_VER)
     return _stricmp(string1, string2);
 #else
     return stricmp(string1, string2);
+#endif
+#else
+    return strcasecmp(string1, string2);
 #endif
 }
 
