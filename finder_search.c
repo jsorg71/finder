@@ -285,6 +285,7 @@ check_file_name(struct finder_info* fi, const char* filename)
     const char* p2;
     char* text;
     int len1;
+    int index;
 
     text = (char*)malloc(1024);
     p1 = fi->named;
@@ -303,7 +304,11 @@ check_file_name(struct finder_info* fi, const char* filename)
             {
                 len1 = 1023;
             }
-            finder_snprintf(text, len1, "%s", p1);
+            for (index = 0; index < len1; index++)
+            {
+                text[index] = p1[index];
+            }
+            text[index] = 0;
             p2++;
         }
         if (text[0] != 0)

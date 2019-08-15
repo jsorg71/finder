@@ -99,8 +99,10 @@ process_work_item(struct finder_info* fi, struct work_item* wi)
         return 0;
     }
     rv = 0;
+    LOGLN10((fi, LOG_INFO, LOGS "cmd %d", LOGP, wi->cmd));
     if (wi->cmd == FINDER_CMD_START)
     {
+        LOGLN10((fi, LOG_INFO, LOGS "fi %p wi %p look_in %p", LOGP, fi, wi, fi->look_in));
         listdir(fi, wi, fi->look_in);
         rv = 1;
         gui_set_event(fi);
@@ -406,6 +408,17 @@ finder_strdup(const char* src)
     return _strdup(src);
 #else
     return strdup(src);
+#endif
+}
+
+/*****************************************************************************/
+int
+finder_stricmp(const char *string1, const char *string2)
+{
+#if defined(_MSC_VER)
+    return _stricmp(string1, string2);
+#else
+    return stricmp(string1, string2);
 #endif
 }
 

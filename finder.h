@@ -94,6 +94,8 @@ finder_vsnprintf(char* buffer, size_t count, const char *format, va_list ap);
 char*
 finder_strdup(const char* src);
 int
+finder_stricmp(const char *string1, const char *string2);
+int
 logln(struct finder_info* fi, int log_level, const char* format, ...);
 
 #define LOG_ERROR 0

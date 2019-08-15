@@ -1237,7 +1237,7 @@ sort00(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return stricmp(obj1->filename, obj2->filename);
+    return finder_stricmp(obj1->filename, obj2->filename);
 }
 
 /*****************************************************************************/
@@ -1250,7 +1250,7 @@ sort01(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return stricmp(obj1->in_subfolder, obj2->in_subfolder);
+    return finder_stricmp(obj1->in_subfolder, obj2->in_subfolder);
 }
 
 /*****************************************************************************/
@@ -1284,7 +1284,7 @@ sort03(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return stricmp(obj1->modified, obj2->modified);
+    return finder_stricmp(obj1->modified, obj2->modified);
 }
 
 /*****************************************************************************/
@@ -1297,7 +1297,7 @@ sort10(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return stricmp(obj2->filename, obj1->filename);
+    return finder_stricmp(obj2->filename, obj1->filename);
 }
 
 /*****************************************************************************/
@@ -1310,7 +1310,7 @@ sort11(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return stricmp(obj2->in_subfolder, obj1->in_subfolder);
+    return finder_stricmp(obj2->in_subfolder, obj1->in_subfolder);
 }
 
 /*****************************************************************************/
@@ -1344,7 +1344,7 @@ sort13(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
     (void)lParamSort;
     obj1 = (struct lv_item*)lParam1;
     obj2 = (struct lv_item*)lParam2;
-    return stricmp(obj2->modified, obj1->modified);
+    return finder_stricmp(obj2->modified, obj1->modified);
 }
 
 static const PFNLVCOMPARE g_sasc[4] = { sort00, sort01, sort02, sort03 };
