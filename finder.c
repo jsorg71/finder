@@ -320,7 +320,7 @@ format_commas(FINDER_I64 n, char* out, int out_bytes)
         return 1;
     }
     out_end = out + out_bytes - 2;
-    FINDER_SNPRINTF(buf, 64, "%" FINDER_PRId64, n);
+    finder_snprintf(buf, 64, "%" FINDER_PRId64, n);
     c = 2 - (FINDER_STRLEN(buf) % 3);
     for (p = buf; *p != 0; p++)
     {
@@ -365,6 +365,52 @@ static const char g_log_pre[][8] =
 
 /*****************************************************************************/
 int
+finder_snprintf(char* buffer, size_t count, const char *format, ...)
+{
+    va_list ap;
+    int rv;
+
+    va_start(ap, format);
+#if defined(_MSC_VER)
+    rv = _vsnprintf_s(buffer, count, count, format, ap);
+#else
+    rv = vsnprintf(buffer, count, format, ap);
+#endif
+    va_end(ap);
+    return rv;
+}
+
+/*****************************************************************************/
+int
+finder_vsnprintf(char* buffer, size_t count, const char *format, va_list ap)
+{
+    int rv;
+
+#if defined(_MSC_VER)
+    rv = _vsnprintf_s(buffer, count, count, format, ap);
+#else
+    rv = vsnprintf(buffer, count, format, ap);
+#endif
+    return rv;
+}
+
+/*****************************************************************************/
+char*
+finder_strdup(const char* src)
+{
+    if (src == NULL)
+    {
+        return NULL;
+    }
+#if defined(_MSC_VER)
+    return _strdup(src);
+#else
+    return strdup(src);
+#endif
+}
+
+/*****************************************************************************/
+int
 logln(struct finder_info* fi, int log_level, const char* format, ...)
 {
     va_list ap;
@@ -378,9 +424,9 @@ logln(struct finder_info* fi, int log_level, const char* format, ...)
     {
         log_line = (char*)malloc(2048);
         va_start(ap, format);
-        FINDER_VSNPRINTF(log_line, 1024, format, ap);
+        finder_vsnprintf(log_line, 1024, format, ap);
         va_end(ap);
-        FINDER_SNPRINTF(log_line + 1024, 1024, "[%10.10u][%s]%s",
+        finder_snprintf(log_line + 1024, 1024, "[%10.10u][%s]%s",
                         get_mstime(), g_log_pre[log_level % 4], log_line);
         gui_writeln(fi, log_line + 1024);
         free(log_line);

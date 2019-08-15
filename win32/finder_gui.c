@@ -113,7 +113,7 @@ gui_find_done(struct finder_info* fi)
     EnableWindow(go->hwndFindButton, TRUE);
     EnableWindow(go->hwndStopButton, FALSE);
     count = ListView_GetItemCount(go->hwndListView);
-    FINDER_SNPRINTF(text, 64, "%d items found", count);
+    finder_snprintf(text, 64, "%d items found", count);
     SendMessage(go->hwndStatusBar, SB_SETTEXT, 1, (LPARAM)text);
     return 0;
 }
@@ -138,16 +138,16 @@ gui_add_one(struct finder_info* fi, const char* filename,
         lvi = (struct lv_item*)calloc(1, sizeof(struct lv_item));
         if (lvi != NULL)
         {
-            lvi->filename = SAFESTRDUP(filename);
+            lvi->filename = finder_strdup(filename);
             if (lvi->filename != NULL)
             {
-                lvi->in_subfolder = SAFESTRDUP(in_subfolder);
+                lvi->in_subfolder = finder_strdup(in_subfolder);
                 if (lvi->in_subfolder != NULL)
                 {
                     lvi->size_text = (char*)calloc(1, 256);
                     if (lvi->size_text != NULL)
                     {
-                        lvi->modified = SAFESTRDUP(modified);
+                        lvi->modified = finder_strdup(modified);
                         if (lvi->modified != NULL)
                         {
                             break;
@@ -402,7 +402,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     }
     for (index = 0; index < 100; index++)
     {
-        FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
+        finder_snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
         key_bytes = 0;
         lRes = RegQueryValueEx(hSectionKey, key_name, NULL, &key_type, NULL,
                                &key_bytes);
@@ -437,7 +437,7 @@ finder_save_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
                         cb_text_bytes1 = ComboBox_GetLBText(hwnd, index, cb_text);
                         if (cb_text_bytes == cb_text_bytes1)
                         {
-                            FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
+                            finder_snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
                             LOGLN10((fi, LOG_INFO, LOGS "for section [%s], found key name [%s], adding [%s]", LOGP, section, key_name, cb_text));
                             lRes = RegSetValueEx(hSectionKey, key_name, 0, REG_SZ, cb_text, cb_text_bytes + 1);
                             if (lRes != ERROR_SUCCESS)
@@ -569,7 +569,7 @@ finder_load_combo(struct finder_info* fi, HKEY hKey, HWND hwnd,
     (void)ComboBox_ResetContent(hwnd);
     for (index = 0; index < 100; index++)
     {
-        FINDER_SNPRINTF(key_name, 255, "%s%2.2d", key_prefix, index);
+        finder_snprintf(key_name, 255, "%s%2.2d", key_prefix, index);
         key_bytes = 255;
         lRes = RegQueryValueEx(hSectionKey, key_name, NULL, &type, key_value,
                                &key_bytes);
@@ -1077,16 +1077,16 @@ finder_listview_to_clipbaord(struct finder_info* fi, struct gui_object* go,
                 {
                     if ((lvi1->in_subfolder != NULL) && (lvi1->in_subfolder[0] != 0))
                     {
-                        FINDER_SNPRINTF(text2, MAX_TEXT2, "%s\\%s\\%s", text1, lvi1->in_subfolder, lvi1->filename);
+                        finder_snprintf(text2, MAX_TEXT2, "%s\\%s\\%s", text1, lvi1->in_subfolder, lvi1->filename);
                     }
                     else
                     {
-                        FINDER_SNPRINTF(text2, MAX_TEXT2, "%s\\%s", text1, lvi1->filename);
+                        finder_snprintf(text2, MAX_TEXT2, "%s\\%s", text1, lvi1->filename);
                     }
                 }
                 else
                 {
-                    FINDER_SNPRINTF(text2, MAX_TEXT2, "%s", lvi1->filename);
+                    finder_snprintf(text2, MAX_TEXT2, "%s", lvi1->filename);
                 }
             }
             text2_cur_len = FINDER_STRLEN(text2);

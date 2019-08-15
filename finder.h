@@ -36,18 +36,7 @@
 #define FINDER_PRId64 "lld"
 #endif
 
-#if defined(_MSC_VER)
-#define FINDER_SNPRINTF _snprintf
-#define FINDER_VSNPRINTF _vsnprintf
-#else
-#define FINDER_SNPRINTF snprintf
-#define FINDER_VSNPRINTF vsnprintf
-#endif
-
 #define FINDER_STRLEN(_str) ((int)strlen(_str))
-
-/* strdup that can handle NULL */
-#define SAFESTRDUP(_str) ((_str) == NULL) ? NULL : strdup(_str)
 
 struct work_item
 {
@@ -97,7 +86,13 @@ int
 format_commas(FINDER_I64 n, char* out, int out_bytes);
 int
 get_mstime(void);
-
+int
+finder_snprintf(char* buffer, size_t count, const char *format, ...);
+int
+finder_vsnprintf(char* buffer, size_t count, const char *format, va_list ap);
+/* strdup that can handle NULL */
+char*
+finder_strdup(const char* src);
 int
 logln(struct finder_info* fi, int log_level, const char* format, ...);
 
