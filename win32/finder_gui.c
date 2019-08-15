@@ -139,25 +139,13 @@ gui_add_one(struct finder_info* fi, const char* filename,
         lvi = (struct lv_item*)calloc(1, sizeof(struct lv_item));
         if (lvi != NULL)
         {
-            lvi->filename = finder_strdup(filename);
-            if (lvi->filename != NULL)
+            lvi->size_text = (char*)calloc(1, 256);
+            if (lvi->size_text != NULL)
             {
+                lvi->filename = finder_strdup(filename);
                 lvi->in_subfolder = finder_strdup(in_subfolder);
-                if (lvi->in_subfolder != NULL)
-                {
-                    lvi->size_text = (char*)calloc(1, 256);
-                    if (lvi->size_text != NULL)
-                    {
-                        lvi->modified = finder_strdup(modified);
-                        if (lvi->modified != NULL)
-                        {
-                            break;
-                        }
-                        free(lvi->size_text);
-                    }
-                    free(lvi->in_subfolder);
-                }
-                free(lvi->filename);
+                lvi->modified = finder_strdup(modified);
+                break;
             }
             free(lvi);
         }
