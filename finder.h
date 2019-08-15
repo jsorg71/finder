@@ -30,7 +30,7 @@
 
 #if defined(_WIN32)
 #define FINDER_I64 __int64
-#define FINDER_PRId64 "Ld"
+#define FINDER_PRId64 "I64d"
 #else
 #define FINDER_I64 long long
 #define FINDER_PRId64 "lld"

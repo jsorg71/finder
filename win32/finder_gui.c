@@ -130,7 +130,8 @@ gui_add_one(struct finder_info* fi, const char* filename,
 
     go = (struct gui_object*)(fi->gui_obj);
     LOGLN10((fi, LOG_INFO, LOGS "filename [%s] subfolder [%s] size "
-            "%Ld modified [%s]", LOGP, filename, in_subfolder, size, modified));
+            "%" FINDER_PRId64 " modified [%s]", LOGP, filename, in_subfolder,
+            size, modified));
 
     /* allocate */
     while (1)
