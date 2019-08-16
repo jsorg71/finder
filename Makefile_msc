@@ -1,7 +1,7 @@
 
 OBJS=finder.obj finder_event.obj finder_list.obj finder_thread.obj finder_search.obj finder_file.obj
 
-CFLAGS=/O2 /W3 $(FINDER_CFLAGS)
+CFLAGS=/O2 /W3 /I"$(INCLUDE)"
 
 all: finder.lib
 

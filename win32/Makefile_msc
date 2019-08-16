@@ -1,11 +1,11 @@
 
 OBJS=finder_gui.obj
 
-CFLAGS=/O2 /W3 /I.. $(FINDER_CFLAGS)
+CFLAGS=/O2 /W3 /I.. /I"$(INCLUDE)"
 
-LDFLAGS=$(FINDER_LDFLAGS)
+LDFLAGS=/libpath:"$(LIB)"
 
-LIBS=$(FINDER_LIBS)
+LIBS=user32.lib advapi32.lib shell32.lib ole32.lib gdi32.lib comctl32.lib
 
 all: finder.exe
 
