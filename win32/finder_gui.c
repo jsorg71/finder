@@ -793,7 +793,8 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
                                        NULL, go->hInstance, NULL);
     SetWindowFont(go->hwndLookInLabel, go->font, FALSE);
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
-            CBS_DROPDOWN | CBS_HASSTRINGS | WS_OVERLAPPED;
+            CBS_DROPDOWN | CBS_HASSTRINGS | WS_OVERLAPPED | CBS_AUTOHSCROLL |
+            WS_HSCROLL | WS_VSCROLL;
     go->hwndNamedEdit = CreateWindow("COMBOBOX", "", flags, 0, 0, 10, 10,
                                      go->hwndTabs[0],
                                      NULL, go->hInstance, NULL);
@@ -833,7 +834,8 @@ finder_show_window(HWND hwnd, WPARAM wParam, LPARAM lParam)
                                           NULL, go->hInstance, NULL);
     SetWindowFont(go->hwndSearchInFileCB, go->font, FALSE);
     flags = WS_TABSTOP | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS |
-            CBS_DROPDOWN | CBS_HASSTRINGS | WS_OVERLAPPED;
+            CBS_DROPDOWN | CBS_HASSTRINGS | WS_OVERLAPPED | CBS_AUTOHSCROLL |
+            WS_HSCROLL | WS_VSCROLL;
     go->hwndSearchInFileEdit = CreateWindow("COMBOBOX", "", flags,
                                             0, 0, 10, 10,
                                             go->hwndTabs[2],
