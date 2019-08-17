@@ -58,6 +58,7 @@ struct gui_object
     HMENU hMenuFile;
     HMENU hMenuHelp;
     WNDPROC hwndTabs0WndProcOrg;
+    HMENU hPopupMenu;
 
     HANDLE event;
     HFONT font;
@@ -1352,7 +1353,6 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
     struct lv_item* lvi;
     int iSubItem;
     int index;
-    HMENU hPopupMenu;
     POINT pt;
 
     (void)wParam;
@@ -1401,11 +1401,18 @@ finder_notify(HWND hwnd, WPARAM wParam, LPARAM lParam)
                 {
                     if (GetCursorPos(&pt))
                     {
-                        hPopupMenu = CreatePopupMenu();
-                        InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0x8811, "Copy full path");
-                        InsertMenu(hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0x8810, "Copy file name");
-                        SetForegroundWindow(go->hwnd);
-                        TrackPopupMenu(hPopupMenu, TPM_TOPALIGN | TPM_LEFTALIGN, pt.x, pt.y, 0, go->hwnd, NULL);
+                        if (go->hPopupMenu != NULL)
+                        {
+                            DestroyMenu(go->hPopupMenu);
+                        }
+                        go->hPopupMenu = CreatePopupMenu();
+                        if (go->hPopupMenu != NULL)
+                        {
+                            InsertMenu(go->hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0x8811, "Copy full path");
+                            InsertMenu(go->hPopupMenu, 0, MF_BYPOSITION | MF_STRING, 0x8810, "Copy file name");
+                            SetForegroundWindow(go->hwnd);
+                            TrackPopupMenu(go->hPopupMenu, TPM_TOPALIGN | TPM_LEFTALIGN, pt.x, pt.y, 0, go->hwnd, NULL);
+                        }
                     }
                 }
                 break;
