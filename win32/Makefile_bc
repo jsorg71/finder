@@ -3,14 +3,14 @@ OBJS=finder_gui.obj
 
 CFLAGS=-O2 -I.. -I$(INCLUDE)
 
-LDFLAGS=-L$(LIB)
+LDFLAGS=-x -Gn -aa -j$(LIB)
 
-LIBS=
+LIBS=import32.lib cw32mt.lib ..\finder.lib
 
 all: finder.exe
 
-finder.exe: $(OBJS) ../finder.lib finder.res
-	ilink32 -x -Gn -j$(LIB) -aa c0w32.obj $(OBJS),finder.exe,,import32.lib cw32mt.lib ..\finder.lib,finder.def,finder.res
+finder.exe: $(OBJS) ..\finder.lib finder.res
+	ilink32 $(LDFLAGS) c0w32.obj $(OBJS),finder.exe,,$(LIBS),finder.def,finder.res
 
 clean:
 	del finder.exe finder.tds finder.res $(OBJS)
