@@ -9,8 +9,8 @@ LIBS=user32.lib advapi32.lib shell32.lib ole32.lib gdi32.lib comctl32.lib
 
 all: finder.exe
 
-finder.exe: $(OBJS) ../finder.lib
-	link /out:finder.exe $(OBJS) $(LDFLAGS) ../finder.lib $(LIBS)
+finder.exe: $(OBJS) ../finder.lib finder.res
+	link /out:finder.exe $(OBJS) $(LDFLAGS) ../finder.lib $(LIBS) finder.res
 
 clean:
-	del finder.exe $(OBJS)
+	del finder.exe finder.res $(OBJS)
