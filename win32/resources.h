@@ -1,5 +1,1 @@
-#define ID_MENU_MAIN	100
 
-#define CMD_FILE_NEW	1001
-#define CMD_FILE_OPEN	1002
-#define CMD_FILE_EXIT	1003
