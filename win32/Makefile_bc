@@ -9,8 +9,8 @@ LIBS=
 
 all: finder.exe
 
-finder.exe: $(OBJS) ../finder.lib
-	$(CC) -WM -W -efinder.exe -l-j$(LIB) $(OBJS) $(LDFLAGS) ../finder.lib $(LIBS)
+finder.exe: $(OBJS) ../finder.lib finder.res
+	ilink32 -x -Gn -j$(LIB) -aa c0w32.obj $(OBJS),finder.exe,,import32.lib cw32mt.lib ..\finder.lib,finder.def,finder.res
 
 clean:
 	del finder.exe finder.tds $(OBJS)

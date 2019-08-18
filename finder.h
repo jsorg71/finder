@@ -103,7 +103,7 @@ logln(struct finder_info* fi, int log_level, const char* format, ...);
 #define LOG_INFO  2
 #define LOG_DEBUG 3
 
-#define LOGS "%s(%d):%s:"
+#define LOGS "[%s][%d][%s]:"
 #define LOGP __FILE__, __LINE__, __FUNCTION__
 
 #if !defined(__FUNCTION__) && defined(__FUNC__)

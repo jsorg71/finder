@@ -6,8 +6,7 @@ CFLAGS=-O2 -I$(INCLUDE)
 all: finder.lib
 
 finder.lib: $(OBJS)
-	del finder.lib
-	tlib finder.lib +finder.obj +finder_event.obj +finder_list.obj +finder_thread.obj +finder_search.obj +finder_file.obj
+	tlib finder.lib /u $(OBJS)
 
 clean:
 	del finder.lib $(OBJS)
