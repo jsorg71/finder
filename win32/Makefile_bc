@@ -1,5 +1,5 @@
 
-OBJS=finder_gui.obj
+OBJS=finder_gui.obj finder_gui_about.obj
 
 CFLAGS=-O2 -I.. -I$(INCLUDE)
 

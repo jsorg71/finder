@@ -29,6 +29,7 @@
 
 #include "finder.h"
 #include "finder_event.h"
+#include "finder_gui_about.h"
 
 #define TAB_NUM_TABS 3
 
@@ -1200,6 +1201,7 @@ finder_command(HWND hwnd, WPARAM wParam, LPARAM lParam)
             break;
         case 0x8805: /* about */
             LOGLN0((fi, LOG_INFO, LOGS "about", LOGP));
+            finder_gui_about(fi, go->hInstance, go->hwnd);
             break;
         case 0x8806: /* help */
             LOGLN0((fi, LOG_INFO, LOGS "help", LOGP));
