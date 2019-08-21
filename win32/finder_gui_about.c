@@ -36,7 +36,7 @@ AboutDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG:
             finder_snprintf(text, 127, "Finder version %d.%d",
                             FINDER_VERSION_MAJOR, FINDER_VERSION_MINOR);
-            SetDlgItemText(hDlg, 104, text);
+            SetDlgItemText(hDlg, IDD_DIALOG_ABOUT_TEXT, text);
             return TRUE;
         case WM_CLOSE:
             EndDialog(hDlg, IDCANCEL);
@@ -50,7 +50,7 @@ AboutDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
     }
-   return FALSE;
+    return FALSE;
 }
 
 /*****************************************************************************/

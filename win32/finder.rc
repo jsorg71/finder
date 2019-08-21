@@ -71,5 +71,5 @@ CAPTION "Finder About"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "&OK", IDOK, 58, 44, 50, 14
-    LTEXT           "", 104, 7, 7, 102, 14
+    LTEXT           "", IDD_DIALOG_ABOUT_TEXT, 7, 7, 102, 14
 END
