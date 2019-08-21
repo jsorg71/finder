@@ -5,7 +5,7 @@
 #include "../finder.h"
 
 #define VER_COMPANYNAME_STR         "jsorg71\0"
-#define VER_FILEDESCRIPTION_STR     "Description\0"
+#define VER_FILEDESCRIPTION_STR     "finder\0"
 #define VER_FILEVERSION             FINDER_VERSION_MAJOR,FINDER_VERSION_MINOR,0,0
 #define VER_FILEVERSION_STR         "0.0.0.0\0"
 #define VER_INTERNALNAME_STR        "finder\0"
