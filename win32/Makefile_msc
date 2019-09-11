@@ -1,5 +1,5 @@
 
-OBJS=finder_gui.obj finder_gui_about.obj
+OBJS=finder_gui.obj finder_gui_about.obj finder_gui_dd.obj
 
 CFLAGS=/O2 /W3 /I.. /I"$(INCLUDE)"
 
