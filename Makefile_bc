@@ -1,5 +1,5 @@
 
-OBJS=finder.obj finder_event.obj finder_list.obj finder_thread.obj finder_search.obj finder_file.obj
+OBJS=finder.obj finder_event.obj finder_list.obj finder_thread.obj finder_search.obj
 
 CFLAGS=-O2 -I$(INCLUDE)
 
