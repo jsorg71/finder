@@ -56,4 +56,5 @@ int
 finder_gui_dd_init(void)
 {
     OleInitialize(NULL);
+    return 0;
 }
