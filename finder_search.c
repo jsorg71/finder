@@ -299,7 +299,7 @@ check_file_name(struct finder_info* fi, const char* filename)
         else
         {
             len1 = (int)(p2 - p1);
-            LOGLN10((fi, LOG_INFO, LOGS "len1 %d", len1));
+            LOGLN10((fi, LOG_INFO, LOGS "len1 %d", LOGP, len1));
             if (len1 > 1023)
             {
                 len1 = 1023;
@@ -313,7 +313,7 @@ check_file_name(struct finder_info* fi, const char* filename)
         }
         if (text[0] != 0)
         {
-            LOGLN10((fi, LOG_INFO, LOGS "%s", text));
+            LOGLN10((fi, LOG_INFO, LOGS "%s", LOGP, text));
             if (fi->case_sensitive)
             {
                 if (myfnmatch(text, filename, 0) == 0)
@@ -381,7 +381,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
 
     look_in_bytes = FINDER_STRLEN(fi->look_in);
     dir_name_bytes = FINDER_STRLEN(dir_name);
-    LOGLN10((fi, LOG_DEBUG, LOGS "%d %d", look_in_bytes, dir_name_bytes));
+    LOGLN10((fi, LOG_DEBUG, LOGS "%d %d", LOGP, look_in_bytes, dir_name_bytes));
     if (dir_name_bytes < look_in_bytes)
     {
         LOGLN0((fi, LOG_ERROR, LOGS "error, dir_name_bytes can not be less then dir_name_bytes", LOGP));
