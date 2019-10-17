@@ -185,6 +185,10 @@ int
 finder_wait(int num_wait_objs, FINDER_WAIT_OBJ* wait_objs)
 {
 #if defined(_WIN32)
+    if (num_wait_objs < 1)
+    {
+        return 0;
+    }
     WaitForMultipleObjects(num_wait_objs, wait_objs, FALSE, INFINITE);
 #else
     int index;
