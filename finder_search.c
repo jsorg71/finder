@@ -55,8 +55,6 @@
         _bytes_read = ReadFile(_file_obj, _ptr, _bytes_to_read, \
                                &lbytes_read, NULL) ? lbytes_read : 0; \
     } while (0)
-#define FINDER_FILE_SEEK_CUR(_file_obj, _bytes_move) \
-    SetFilePointer(_file_obj, _bytes_move, NULL, FILE_CURRENT)
 #else
 #define FINDER_FILE_OBJ int
 #define FINDER_FILE_INVALID -1
@@ -65,8 +63,6 @@
 #define FINDER_FILE_CLOSE(_file_obj) if (_file_obj != -1) close(_file_obj)
 #define FINDER_FILE_READ(_file_obj, _ptr, _bytes_to_read, _bytes_read) \
     _bytes_read = read(_file_obj, _ptr, _bytes_to_read)
-#define FINDER_FILE_SEEK_CUR(_file_obj, _bytes_move) \
-    lseek(_file_obj, SEEK_CUR, _bytes_move);
 #endif
 
 /*****************************************************************************/
@@ -265,10 +261,16 @@ find_in_file(FINDER_FILE_OBJ file_obj, struct finder_info* fi,
         }
         if (readed == SEARCH_IN_READ_CHUCK)
         {
-            /* only rewind a bit when we got a full read last time */
-            FINDER_FILE_SEEK_CUR(file_obj, -text_bytes);
+            memmove(data, data + SEARCH_IN_READ_CHUCK - text_bytes,
+                    text_bytes);
+            FINDER_FILE_READ(file_obj, data + text_bytes,
+                             SEARCH_IN_READ_CHUCK - text_bytes, readed);
+            readed += text_bytes;
         }
-        FINDER_FILE_READ(file_obj, data, SEARCH_IN_READ_CHUCK, readed);
+        else
+        {
+            FINDER_FILE_READ(file_obj, data, SEARCH_IN_READ_CHUCK, readed);
+        }
     }
     free(data);
     *afound_in_file = found_in_file;
