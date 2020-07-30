@@ -26,6 +26,7 @@
 #include "finder_event.h"
 #include "finder_gui.h"
 #include "finder_gui_about.h"
+#include "finder_mainwindow.h"
 
 class ItemObject : public FXObject
 {
@@ -66,8 +67,7 @@ public:
     long onDefault(FXObject* obj, FXSelector sel, void* ptr);
     long onPress(FXObject* obj, FXSelector sel, void* ptr);
     long onTabChange(FXObject* obj, FXSelector sel, void* ptr);
-    long onConfigure(FXObject* obj, FXSelector sel, void* ptr);
-    long onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr);
+    long onCmdConfigure(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdExit(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdHelp(FXObject* obj, FXSelector sel, void* ptr);
     long onCmdAbout(FXObject* obj, FXSelector sel, void* ptr);
@@ -90,7 +90,7 @@ public:
     long onRadioButton(FXObject* obj, FXSelector sel, void* ptr);
     enum _ids
     {
-        ID_BUTTON = 0,
+        ID_BUTTON = 1,
         ID_TABBOOK,
         ID_FOLDINGLIST,
         ID_MAINWINDOW,
@@ -109,7 +109,7 @@ public:
     struct finder_info* m_fi;
     FXApp* m_app;
     FXMutex* m_mutex1;
-    FXMainWindow* m_mw;
+    FXFinderMainWindow* m_mw;
     FXButton* m_but1;
     FXButton* m_but2;
     FXButton* m_but3;
@@ -200,7 +200,7 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     cur = new FXCursor(m_app, FX::CURSOR_ARROW);
     m_app->setDefaultCursor(DEF_RARROW_CURSOR, cur);
     m_app->init(argc, argv);
-    m_mw = new FXMainWindow(m_app, "Finder", NULL, NULL, DECOR_ALL, 0, 0, 640, 480);
+    m_mw = new FXFinderMainWindow(m_app);
     m_mw->setTarget(this);
     m_mw->setSelector(GUIObject::ID_MAINWINDOW);
 
@@ -647,31 +647,29 @@ GUIObject::onPress(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onTabChange(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     return 1;
 }
 
 /*****************************************************************************/
 long
-GUIObject::onConfigure(FXObject* obj, FXSelector sel, void* ptr)
-{
-    m_app->addTimeout(this, GUIObject::ID_MAINWINDOW, 0, NULL);
-    return 0;
-}
-
-/*****************************************************************************/
-long
-GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
+GUIObject::onCmdConfigure(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXint width;
     FXint height;
     FXint lw;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     width = m_mw->getWidth();
     height = m_mw->getHeight();
     if ((width != m_width) || (height != m_height))
     {
         LOGLN10((m_fi, LOG_DEBUG, LOGS "resized to %dx%d, was %dx%d",
-              LOGP, width, height, m_width, m_height));
+                LOGP, width, height, m_width, m_height));
         m_width = width;
         m_height = height;
 
@@ -763,6 +761,9 @@ GUIObject::onResizeTimeout(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     m_mw->close(TRUE);
     return 1;
@@ -772,6 +773,9 @@ GUIObject::onCmdExit(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onCmdHelp(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     return 0;
 }
@@ -783,6 +787,9 @@ GUIObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
     FXbool ok;
     AboutDialog* about;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     about = new AboutDialog(m_app, m_mw, m_fi);
     ok = about->execute(PLACEMENT_OWNER);
@@ -795,6 +802,9 @@ GUIObject::onCmdAbout(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     finder_event_clear(m_gui_event);
     m_app->addTimeout(this, GUIObject::ID_MAINWINDOW1, 0, NULL);
     return 1;
@@ -804,6 +814,9 @@ GUIObject::onEvent1(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onEventTimeout(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     event_callback(m_fi);
     return 1;
 }
@@ -1032,6 +1045,8 @@ GUIObject::onFoldingListHeader(FXObject* obj, FXSelector sel, void* ptr)
     FXFoldingListSortFunc sf1[4] = { sort00, sort10, sort20, sort30 };
     FXFoldingListSortFunc sf2[4] = { sort01, sort11, sort21, sort31 };
 
+    (void)obj;
+    (void)sel;
     index = (int)(FXival)ptr;
     index &= 3;
     if ((m_sort_order & (1 << index)) == 0)
@@ -1122,6 +1137,8 @@ GUIObject::onFoldingListHeaderClick(FXObject* obj, FXSelector sel, void* ptr)
     int diff;
     int index;
 
+    (void)obj;
+    (void)sel;
     time = get_mstime();
     diff = time - m_last_header_click_mstime;
     if ((diff > 0) && (diff < 500))
@@ -1140,6 +1157,8 @@ GUIObject::onFoldingListItemDelete(FXObject* obj, FXSelector sel, void* ptr)
     ItemObject* io;
     FXFoldingItem* item;
 
+    (void)obj;
+    (void)sel;
     item = (FXFoldingItem*)ptr;
     if (item != NULL)
     {
@@ -1159,6 +1178,8 @@ GUIObject::onFLRightMouseUp(FXObject* obj, FXSelector sel, void* ptr)
     FXEvent* event;
     FXFoldingItem* rci;
 
+    (void)obj;
+    (void)sel;
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     event = (FXEvent*)ptr;
     if (event->moved == FALSE)
@@ -1187,6 +1208,9 @@ GUIObject::onCopyFilename(FXObject* obj, FXSelector sel, void* ptr)
     ItemObject* io;
     FXString str1;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
@@ -1216,6 +1240,9 @@ GUIObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
     ItemObject* io;
     FXString str1;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
@@ -1257,6 +1284,9 @@ GUIObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXuint rv;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     rv = FXMessageBox::warning(m_mw, MBOX_YES_NO, "Question", "Do you want to exit?");
     if (rv == MBOX_CLICKED_YES)
@@ -1271,6 +1301,9 @@ GUIObject::onClose(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onClipboardLost(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN10((m_fi, LOG_INFO, LOGS, LOGP));
     return 1;
 }
@@ -1279,6 +1312,9 @@ GUIObject::onClipboardLost(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onClipboardGained(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN10((m_fi, LOG_INFO, LOGS, LOGP));
     return 1;
 }
@@ -1290,6 +1326,9 @@ GUIObject::onClipboardRequest(FXObject* obj, FXSelector sel, void* ptr)
     FXuchar* data;
     FXuint len;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN10((m_fi, LOG_INFO, LOGS, LOGP));
     len = m_dnd_str.length();
     FXMALLOC(&data, FXuchar, len + 8);
@@ -1307,6 +1346,9 @@ GUIObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
     ItemObject* io;
     FXString str1;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN10((m_fi, LOG_INFO, LOGS, LOGP));
     m_dnd_str = "";
     fi = m_fl->getFirstItem();
@@ -1344,6 +1386,9 @@ GUIObject::onBeginDrag(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onEndDrag(FXObject* obj, FXSelector sel, void* ptr)
 {
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN10((m_fi, LOG_INFO, LOGS, LOGP));
     m_mw->endDrag();
     m_fl->setDragCursor(m_app->getDefaultCursor(DEF_ARROW_CURSOR));
@@ -1357,6 +1402,8 @@ GUIObject::onDragged(FXObject* obj, FXSelector sel, void* ptr)
     FXEvent* event;
     FXCursor* cur;
 
+    (void)obj;
+    (void)sel;
     LOGLN10((m_fi, LOG_INFO, LOGS, LOGP));
     event = (FXEvent*)ptr;
     m_mw->handleDrag(event->root_x, event->root_y);
@@ -1383,6 +1430,9 @@ GUIObject::onDNDRequest(FXObject* obj, FXSelector sel, void* ptr)
     FXuchar* data;
     FXuint len;
 
+    (void)obj;
+    (void)sel;
+    (void)ptr;
     LOGLN10((m_fi, LOG_INFO, LOGS, LOGP));
     len = m_dnd_str.length();
     FXMALLOC(&data, FXuchar, len + 8);
@@ -1398,6 +1448,8 @@ GUIObject::onRadioButton(FXObject* obj, FXSelector sel, void* ptr)
 {
     LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
 
+    (void)sel;
+    (void)ptr;
     if (obj == m_date_tab.m_rb1)
     {
         if (m_date_tab.m_rb1->getCheck())
@@ -1443,8 +1495,7 @@ FXDEFMAP(GUIObject) GUIObjectMap[] =
 {
     FXMAPFUNC(SEL_COMMAND, GUIObject::ID_BUTTON, GUIObject::onPress),
     FXMAPFUNC(SEL_COMMAND, GUIObject::ID_TABBOOK, GUIObject::onTabChange),
-    FXMAPFUNC(SEL_CONFIGURE, GUIObject::ID_MAINWINDOW, GUIObject::onConfigure),
-    FXMAPFUNC(SEL_TIMEOUT, GUIObject::ID_MAINWINDOW, GUIObject::onResizeTimeout),
+    FXMAPFUNC(SEL_FINDERCONF, GUIObject::ID_MAINWINDOW, GUIObject::onCmdConfigure),
     FXMAPFUNC(SEL_TIMEOUT, GUIObject::ID_MAINWINDOW1, GUIObject::onEventTimeout),
     FXMAPFUNC(SEL_COMMAND, GUIObject::ID_EXIT, GUIObject::onCmdExit),
     FXMAPFUNC(SEL_COMMAND, GUIObject::ID_HELP, GUIObject::onCmdHelp),
@@ -1559,6 +1610,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
 int
 gui_writeln(struct finder_info* fi, const char* msg)
 {
+    (void)fi;
     printf("%s\n", msg);
     return 0;
 }
