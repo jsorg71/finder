@@ -20,7 +20,7 @@
 #define FINDER_H
 
 #define FINDER_VERSION_MAJOR    0
-#define FINDER_VERSION_MINOR    5
+#define FINDER_VERSION_MINOR    6
 
 /* main to work */
 #define FINDER_CMD_START        1
