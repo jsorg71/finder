@@ -1589,7 +1589,6 @@ gui_find_done(struct finder_info* fi)
     GUIObject* go;
 
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
-    
     go = (GUIObject*)(fi->gui_obj);
     return go->findDone();
 }
