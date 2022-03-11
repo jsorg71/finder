@@ -1446,10 +1446,9 @@ GUIObject::onDNDRequest(FXObject* obj, FXSelector sel, void* ptr)
 long
 GUIObject::onRadioButton(FXObject* obj, FXSelector sel, void* ptr)
 {
-    LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
-
     (void)sel;
     (void)ptr;
+    LOGLN0((m_fi, LOG_INFO, LOGS, LOGP));
     if (obj == m_date_tab.m_rb1)
     {
         if (m_date_tab.m_rb1->getCheck())
