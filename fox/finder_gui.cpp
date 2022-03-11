@@ -1254,20 +1254,20 @@ GUIObject::onCopyFullPath(FXObject* obj, FXSelector sel, void* ptr)
             if (io->in_subfolder.length() < 1)
             {
                 str1 = m_fi->look_in;
-                str1 += "/";
+                str1 += PATHSEP;
                 str1 += io->filename;
             }
             else
             {
                 str1 = m_fi->look_in;
-                str1 += "/";
+                str1 += PATHSEP;
                 str1 += io->in_subfolder;
-                str1 += "/";
+                str1 += PATHSEP;
                 str1 += io->filename;
             }
             if (m_dnd_str.length() > 0)
             {
-                m_dnd_str += "\n";
+                m_dnd_str += ENDLINE;
             }
             m_dnd_str += str1;
         }
