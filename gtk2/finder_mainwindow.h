@@ -27,7 +27,45 @@ struct gui_object
     GtkWidget* but2; /* Stop */
     GtkWidget* but3; /* Exit */
     GtkWidget* notebook;
-    GtkWidget* fixed;
+    GtkWidget* tab1;
+    GtkWidget* tab1_label;
+    struct _name_tab
+    {
+        GtkWidget* label1;
+        GtkWidget* combo1;
+        GtkWidget* label2;
+        GtkWidget* combo2;
+        GtkWidget* but1; /* Browse */
+        GtkWidget* cb1;
+        GtkWidget* cb2;
+        GtkWidget* cb3;
+    } name_tab;
+    GtkWidget* tab2;
+    GtkWidget* tab2_label;
+    struct _date_tab
+    {
+        GtkWidget* rb1;
+        GtkWidget* rb2;
+        GtkWidget* combo1;
+        GtkWidget* rb3;
+        GtkWidget* rb4;
+        GtkWidget* rb5;
+        GtkWidget* spinner1;
+        GtkWidget* spinner2;
+        GtkWidget* label1;
+        GtkWidget* label2;
+    } date_tab;
+    GtkWidget* tab3;
+    GtkWidget* tab3_label;
+    struct _adva_tab
+    {
+        GtkWidget* cb1; /* search in files */
+        GtkWidget* combo1;
+        GtkWidget* cb2; /* case sensitive search */
+    } adva_tab;
+    GtkWidget* tv1;
+    GtkWidget* tv1_scroll;
+    GtkWidget* fixed; /* fixed for mw */
     int width;
     int height;
 };

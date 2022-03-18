@@ -81,6 +81,7 @@ main(int argc, char** argv)
 int
 gui_set_event(struct finder_info* fi)
 {
+    (void)fi;
     return 0;
 }
 
@@ -88,6 +89,7 @@ gui_set_event(struct finder_info* fi)
 int
 gui_find_done(struct finder_info* fi)
 {
+    (void)fi;
     return 0;
 }
 
@@ -97,6 +99,11 @@ gui_add_one(struct finder_info* fi, const char* filename,
             const char* in_subfolder, FINDER_I64 size,
             const char* modified)
 {
+    (void)fi;
+    (void)filename;
+    (void)in_subfolder;
+    (void)size;
+    (void)modified;
     return 0;
 }
 
