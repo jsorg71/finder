@@ -65,7 +65,22 @@ struct gui_object
     } adva_tab;
     GtkWidget* tv1;
     GtkWidget* tv1_scroll;
+
+    GtkWidget* sb;
+    GtkWidget* sb_vbox;
+
     GtkWidget* fixed; /* fixed for mw */
+
+    GtkWidget* menubar;
+    GtkWidget* fileMenu;
+    GtkWidget* helpMenu;
+    GtkWidget* fileMi;
+    GtkWidget* quitMi;
+    GtkWidget* helpMi;
+    GtkWidget* helpDDDMi;
+    GtkWidget* aboutMi;
+    GtkWidget* menu_vbox;
+
     int width;
     int height;
 };

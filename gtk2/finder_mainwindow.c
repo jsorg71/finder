@@ -33,42 +33,89 @@
 
 /*****************************************************************************/
 static void
+browse_button_clicked(GtkWidget *widget, gpointer data)
+{
+    struct gui_object* go;
+    struct finder_info* fi;
+
+    GtkWidget* dialog;
+    GtkFileChooserAction action;
+    gint res;
+    char* filename;
+    GtkFileChooser* chooser;
+
+    fi = (struct finder_info*)data;
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    go = (struct gui_object*)(fi->gui_obj);
+    if (widget == go->name_tab.but1)
+    {
+        LOGLN0((fi, LOG_INFO, LOGS "Browse clicked", LOGP));
+        action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
+        dialog = gtk_file_chooser_dialog_new
+            ("Select Look In directory", GTK_WINDOW(go->mw), action,
+             "_Cancel", GTK_RESPONSE_CANCEL,
+             "_Ok", GTK_RESPONSE_ACCEPT, NULL);
+        res = gtk_dialog_run(GTK_DIALOG(dialog));
+        if (res == GTK_RESPONSE_ACCEPT)
+        {
+            chooser = GTK_FILE_CHOOSER(dialog);
+            filename = gtk_file_chooser_get_filename(chooser);
+            LOGLN0((fi, LOG_INFO, LOGS "Ok clicked, filename %s",
+                    LOGP, filename));
+            g_free(filename);
+        }
+        else
+        {
+            LOGLN0((fi, LOG_INFO, LOGS "Cancel clicked", LOGP));
+        }
+        gtk_widget_destroy (dialog);
+    }
+}
+
+/*****************************************************************************/
+static void
 lmove_size(GtkWidget* fixed, GtkWidget* widget, int x, int y, int cx, int cy)
 {
     gtk_fixed_move(GTK_FIXED(fixed), widget, x, y);
-    gtk_widget_set_size_request(widget, cx, cy);
+    if ((cx > 0) && (cy > 0))
+    {
+        gtk_widget_set_size_request(widget, cx, cy);
+    }
 }
 
 /*****************************************************************************/
 static void
 lmove_size_width_height(struct gui_object* go, int width, int height)
 {
+
+    lmove_size(go->fixed, go->menu_vbox, 0, 0, width, 24);
     lmove_size(go->fixed, go->but1, width - 110, 32, 100, 30);
     lmove_size(go->fixed, go->but2, width - 110, 72, 100, 30);
     lmove_size(go->fixed, go->but3, width - 110, 165, 100, 30);
     lmove_size(go->fixed, go->notebook, 8, 28, width - 126, 168);
-    lmove_size(go->tab1, go->name_tab.label1, 8, 8, 100, 24);
+    lmove_size(go->tab1, go->name_tab.label1, 8, 8, -1, -1);
     lmove_size(go->tab1, go->name_tab.combo1, 85, 8, width - 126 - 100, 24);
-    lmove_size(go->tab1, go->name_tab.label2, 8, 41, 100, 24);
+    lmove_size(go->tab1, go->name_tab.label2, 8, 41, -1, -1);
     lmove_size(go->tab1, go->name_tab.combo2, 85, 41, width - 126 - 165, 24);
     lmove_size(go->tab1, go->name_tab.but1, width - 126 - 75, 41, 60, 24);
-    lmove_size(go->tab1, go->name_tab.cb1, 8, 74, 200, 24);
-    lmove_size(go->tab1, go->name_tab.cb2, 8, 107, 200, 24);
-    lmove_size(go->tab1, go->name_tab.cb3, 216, 74, 200, 24);
-    lmove_size(go->tab2, go->date_tab.rb1, 10, 8, 400, 24);
-    lmove_size(go->tab2, go->date_tab.rb2, 10, 8 + 24, 400, 24);
+    lmove_size(go->tab1, go->name_tab.cb1, 8, 74, -1, -1);
+    lmove_size(go->tab1, go->name_tab.cb2, 8, 107, -1, -1);
+    lmove_size(go->tab1, go->name_tab.cb3, 216, 74, -1, -1);
+    lmove_size(go->tab2, go->date_tab.rb1, 10, 8, -1, -1);
+    lmove_size(go->tab2, go->date_tab.rb2, 10, 8 + 24, -1, -1);
     lmove_size(go->tab2, go->date_tab.combo1, 110, 8 + 24, 100, 24);
-    lmove_size(go->tab2, go->date_tab.rb3, 30, 8 + 48, 400, 24);
-    lmove_size(go->tab2, go->date_tab.rb4, 30, 8 + 72, 400, 24);
-    lmove_size(go->tab2, go->date_tab.label1, 250, 8 + 72, 100, 24);
-    lmove_size(go->tab2, go->date_tab.rb5, 30, 8 + 96, 400, 24);
-    lmove_size(go->tab2, go->date_tab.label2, 250, 8 + 96, 100, 24);
+    lmove_size(go->tab2, go->date_tab.rb3, 30, 8 + 48, -1, -1);
+    lmove_size(go->tab2, go->date_tab.rb4, 30, 8 + 72, -1, -1);
+    lmove_size(go->tab2, go->date_tab.label1, 250, 8 + 72, -1, -1);
+    lmove_size(go->tab2, go->date_tab.rb5, 30, 8 + 96, -1, -1);
+    lmove_size(go->tab2, go->date_tab.label2, 250, 8 + 96, -1, -1);
     lmove_size(go->tab2, go->date_tab.spinner1, 200, 8 + 72, 48, 24);
     lmove_size(go->tab2, go->date_tab.spinner2, 200, 8 + 96, 48, 24);
-    lmove_size(go->tab3, go->adva_tab.cb1, 10, 10, 120, 24);
+    lmove_size(go->tab3, go->adva_tab.cb1, 10, 10, -1, -1);
     lmove_size(go->tab3, go->adva_tab.combo1, 10, 40, width - 126 - 20, 24);
-    lmove_size(go->tab3, go->adva_tab.cb2, 10, 74, 170, 24);
+    lmove_size(go->tab3, go->adva_tab.cb2, 10, 74, -1, -1);
     lmove_size(go->fixed, go->tv1_scroll, 10, 200, width - 20, height - 225);
+    lmove_size(go->fixed, go->sb_vbox, 0, height - 24, width, 24);
 }
 
 /*****************************************************************************/
@@ -221,7 +268,8 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     go->name_tab.cb1 = gtk_check_button_new_with_label("Include subfolders");
     gtk_container_add(GTK_CONTAINER(go->tab1), go->name_tab.cb1);
 
-    go->name_tab.cb2 = gtk_check_button_new_with_label("Case sensitive search");
+    go->name_tab.cb2 = gtk_check_button_new_with_label
+        ("Case sensitive search");
     gtk_container_add(GTK_CONTAINER(go->tab1), go->name_tab.cb2);
 
     go->name_tab.cb3 = gtk_check_button_new_with_label("Show hidden files");
@@ -283,7 +331,8 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     gtk_container_add(GTK_CONTAINER(go->tab3),
                       go->adva_tab.combo1);
 
-    go->adva_tab.cb2 = gtk_check_button_new_with_label("Case sensitive search");
+    go->adva_tab.cb2 = gtk_check_button_new_with_label
+        ("Case sensitive search");
     gtk_container_add(GTK_CONTAINER(go->tab3), go->adva_tab.cb2);
 
     go->tv1 = gtk_tree_view_new();
@@ -305,10 +354,43 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
 
     gtk_container_add(GTK_CONTAINER(go->fixed), go->notebook);
 
+    go->menu_vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(go->fixed), go->menu_vbox);
+
+    go->menubar = gtk_menu_bar_new();
+    go->fileMenu = gtk_menu_new();
+    go->helpMenu = gtk_menu_new();
+    go->fileMi = gtk_menu_item_new_with_label("File");
+    go->quitMi = gtk_menu_item_new_with_label("Exit");
+    go->helpMi = gtk_menu_item_new_with_label("Help");
+    go->helpDDDMi = gtk_menu_item_new_with_label("Help...");
+    go->aboutMi = gtk_menu_item_new_with_label("About");
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(go->fileMi), go->fileMenu);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(go->helpMi), go->helpMenu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(go->fileMenu), go->quitMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(go->helpMenu), go->helpDDDMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(go->helpMenu), go->aboutMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(go->menubar), go->fileMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(go->menubar), go->helpMi);
+    gtk_box_pack_start_defaults(GTK_BOX(go->menu_vbox), go->menubar);
+
+    go->sb_vbox = gtk_vbox_new(FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(go->fixed), go->sb_vbox);
+
+    go->sb = gtk_statusbar_new();
+    gtk_statusbar_set_has_resize_grip(GTK_STATUSBAR(go->sb), TRUE);
+    gtk_box_pack_start_defaults(GTK_BOX(go->sb_vbox), go->sb);
+
     g_signal_connect(G_OBJECT(go->mw), "destroy",
                      G_CALLBACK(gtk_main_quit), NULL);
     g_signal_connect(G_OBJECT(go->mw), "configure-event",
                      G_CALLBACK(configure_callback), fi);
+
+    //g_signal_connect(G_OBJECT(go->quitMi), "activate",
+    //                 G_CALLBACK(gtk_main_quit), NULL);
+
+    g_signal_connect(G_OBJECT(go->name_tab.but1), "clicked",
+                     G_CALLBACK(browse_button_clicked), fi);
 
     memset(&geometry, 0, sizeof(geometry));
     geometry.min_width = 500;
