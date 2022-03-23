@@ -87,8 +87,7 @@ lmove_size(GtkWidget* fixed, GtkWidget* widget, int x, int y, int cx, int cy)
 static void
 lmove_size_width_height(struct gui_object* go, int width, int height)
 {
-
-    lmove_size(go->fixed, go->menu_vbox, 0, 0, width, 24);
+    lmove_size(go->fixed, go->menubar, 0, 0, width, 24);
     lmove_size(go->fixed, go->but1, width - 110, 32, 100, 30);
     lmove_size(go->fixed, go->but2, width - 110, 72, 100, 30);
     lmove_size(go->fixed, go->but3, width - 110, 165, 100, 30);
@@ -115,7 +114,8 @@ lmove_size_width_height(struct gui_object* go, int width, int height)
     lmove_size(go->tab3, go->adva_tab.combo1, 10, 40, width - 126 - 20, 24);
     lmove_size(go->tab3, go->adva_tab.cb2, 10, 74, -1, -1);
     lmove_size(go->fixed, go->tv1_scroll, 10, 200, width - 20, height - 225);
-    lmove_size(go->fixed, go->sb_vbox, 0, height - 24, width, 24);
+    lmove_size(go->fixed, go->sb, 0, height - 24, width - 125, 24);
+    lmove_size(go->fixed, go->sb1, width - 125, height - 24, 125, 24);
 }
 
 /*****************************************************************************/
@@ -147,52 +147,33 @@ configure_callback(GtkWindow* window, GdkEvent* event, gpointer data)
 
 /*****************************************************************************/
 static void
-init_list(GtkWidget* list)
+list_add_column(GtkWidget* list, const gchar* col_name, int index)
 {
     GtkCellRenderer* renderer;
     GtkTreeViewColumn* column;
+
+    renderer = gtk_cell_renderer_text_new();
+    column = gtk_tree_view_column_new_with_attributes
+        (col_name, renderer, "text", index, NULL);
+    gtk_tree_view_column_set_resizable(column, TRUE);
+    gtk_tree_view_column_set_clickable(column, TRUE);
+    gtk_tree_view_column_set_sort_column_id(column, index);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
+}
+
+/*****************************************************************************/
+static void
+init_list(GtkWidget* list)
+{
     GtkListStore* store;
 
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes("Name",
-                                                      renderer, "text",
-                                                      0, NULL);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_set_sort_column_id(column, 0);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes("In Subfolder",
-                                                      renderer, "text",
-                                                      1, NULL);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_set_sort_column_id(column, 1);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes("Size",
-                                                      renderer, "text",
-                                                      2, NULL);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_set_sort_column_id(column, 2);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-
-    renderer = gtk_cell_renderer_text_new();
-    column = gtk_tree_view_column_new_with_attributes("Modified",
-                                                      renderer, "text",
-                                                      3, NULL);
-    gtk_tree_view_column_set_resizable(column, TRUE);
-    gtk_tree_view_column_set_clickable(column, TRUE);
-    gtk_tree_view_column_set_sort_column_id(column, 3);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(list), column);
-
+    list_add_column(list, "Name", 0);
+    list_add_column(list, "In Subfolder", 1);
+    list_add_column(list, "Size", 2);
+    list_add_column(list, "Modified", 3);
     store = gtk_list_store_new(4, G_TYPE_STRING, G_TYPE_STRING,
                                G_TYPE_STRING, G_TYPE_STRING);
     gtk_tree_view_set_model(GTK_TREE_VIEW(list), GTK_TREE_MODEL(store));
-
     g_object_unref(store);
 }
 
@@ -232,10 +213,12 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     go->fixed = gtk_fixed_new();
     gtk_container_add(GTK_CONTAINER(go->mw), go->fixed);
 
-    go->but1 = gtk_button_new_with_label("Find");
+    go->but1 = gtk_button_new_with_label("F_ind");
+    gtk_button_set_use_underline(GTK_BUTTON(go->but1), TRUE);
     gtk_container_add(GTK_CONTAINER(go->fixed), go->but1);
 
-    go->but2 = gtk_button_new_with_label("Stop");
+    go->but2 = gtk_button_new_with_label("_Stop");
+    gtk_button_set_use_underline(GTK_BUTTON(go->but2), TRUE);
     gtk_container_add(GTK_CONTAINER(go->fixed), go->but2);
 
     go->but3 = gtk_button_new_with_label("Exit");
@@ -244,7 +227,8 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     go->notebook = gtk_notebook_new();
 
     go->tab1 = gtk_fixed_new();
-    go->tab1_label = gtk_label_new("Name/Location");
+    go->tab1_label = gtk_label_new("Name/_Location");
+    gtk_label_set_use_underline(GTK_LABEL(go->tab1_label), TRUE);
     gtk_notebook_append_page(GTK_NOTEBOOK(go->notebook),
                              go->tab1, go->tab1_label);
 
@@ -262,7 +246,8 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     go->name_tab.combo2 = gtk_combo_box_new_with_entry();
     gtk_container_add(GTK_CONTAINER(go->tab1), go->name_tab.combo2);
 
-    go->name_tab.but1 = gtk_button_new_with_label("Browse");
+    go->name_tab.but1 = gtk_button_new_with_label("_Browse");
+    gtk_button_set_use_underline(GTK_BUTTON(go->name_tab.but1), TRUE);
     gtk_container_add(GTK_CONTAINER(go->tab1), go->name_tab.but1);
 
     go->name_tab.cb1 = gtk_check_button_new_with_label("Include subfolders");
@@ -276,7 +261,8 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     gtk_container_add(GTK_CONTAINER(go->tab1), go->name_tab.cb3);
 
     go->tab2 = gtk_fixed_new();
-    go->tab2_label = gtk_label_new("Date Modified");
+    go->tab2_label = gtk_label_new("_Date Modified");
+    gtk_label_set_use_underline(GTK_LABEL(go->tab2_label), TRUE);
     gtk_notebook_append_page(GTK_NOTEBOOK(go->notebook),
                              go->tab2, go->tab2_label);
 
@@ -320,7 +306,8 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     gtk_container_add(GTK_CONTAINER(go->tab2), go->date_tab.spinner2);
 
     go->tab3 = gtk_fixed_new();
-    go->tab3_label = gtk_label_new("Advanced");
+    go->tab3_label = gtk_label_new("_Advanced");
+    gtk_label_set_use_underline(GTK_LABEL(go->tab3_label), TRUE);
     gtk_notebook_append_page(GTK_NOTEBOOK(go->notebook),
                              go->tab3, go->tab3_label);
 
@@ -354,9 +341,6 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
 
     gtk_container_add(GTK_CONTAINER(go->fixed), go->notebook);
 
-    go->menu_vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(go->fixed), go->menu_vbox);
-
     go->menubar = gtk_menu_bar_new();
     go->fileMenu = gtk_menu_new();
     go->helpMenu = gtk_menu_new();
@@ -372,14 +356,17 @@ gui_object_create(struct finder_info* fi, struct gui_object** ago,
     gtk_menu_shell_append(GTK_MENU_SHELL(go->helpMenu), go->aboutMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(go->menubar), go->fileMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(go->menubar), go->helpMi);
-    gtk_box_pack_start_defaults(GTK_BOX(go->menu_vbox), go->menubar);
-
-    go->sb_vbox = gtk_vbox_new(FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(go->fixed), go->sb_vbox);
+    gtk_container_add(GTK_CONTAINER(go->fixed), go->menubar);
 
     go->sb = gtk_statusbar_new();
-    gtk_statusbar_set_has_resize_grip(GTK_STATUSBAR(go->sb), TRUE);
-    gtk_box_pack_start_defaults(GTK_BOX(go->sb_vbox), go->sb);
+    gtk_statusbar_set_has_resize_grip(GTK_STATUSBAR(go->sb), FALSE);
+    gtk_container_add(GTK_CONTAINER(go->fixed), go->sb);
+
+    go->sb1 = gtk_statusbar_new();
+    gtk_container_add(GTK_CONTAINER(go->fixed), go->sb1);
+
+    gtk_statusbar_push(GTK_STATUSBAR(go->sb), 0, "Ready.");
+    gtk_statusbar_push(GTK_STATUSBAR(go->sb1), 0, "");
 
     g_signal_connect(G_OBJECT(go->mw), "destroy",
                      G_CALLBACK(gtk_main_quit), NULL);

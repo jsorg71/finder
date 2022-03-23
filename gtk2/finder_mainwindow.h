@@ -67,7 +67,7 @@ struct gui_object
     GtkWidget* tv1_scroll;
 
     GtkWidget* sb;
-    GtkWidget* sb_vbox;
+    GtkWidget* sb1;
 
     GtkWidget* fixed; /* fixed for mw */
 
@@ -79,7 +79,6 @@ struct gui_object
     GtkWidget* helpMi;
     GtkWidget* helpDDDMi;
     GtkWidget* aboutMi;
-    GtkWidget* menu_vbox;
 
     int width;
     int height;
