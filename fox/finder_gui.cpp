@@ -218,14 +218,14 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     m_ti3 = new FXTabItem(m_tab_book, "&Advanced");
     m_tabframe3 = new FXGroupBox(m_tab_book, "", flags);
 
-    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = LABEL_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_name_tab.m_label1 = new FXLabel(m_tabframe1, "&Named:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
     m_name_tab.m_combo1 = new FXComboBox(m_tabframe1, 0, NULL, 0, flags);
     m_name_tab.m_combo1->setNumVisible(10);
 
-    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = LABEL_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_name_tab.m_label2 = new FXLabel(m_tabframe1, "Look &in:", NULL, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
@@ -236,42 +236,42 @@ GUIObject::GUIObject(int argc, char** argv, struct finder_info* fi) : FXObject()
     flags = BUTTON_NORMAL | LAYOUT_EXPLICIT;
     m_name_tab.m_but1 = new FXButton(m_tabframe1, "&Browse", NULL, this, sel, flags);
 
-    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = CHECKBUTTON_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_name_tab.m_cb1 = new FXCheckButton(m_tabframe1, "Include subfolders", NULL, 0, flags);
     m_name_tab.m_cb1->setCheck(TRUE);
     m_name_tab.m_cb2 = new FXCheckButton(m_tabframe1, "Case sensitive search", NULL, 0, flags);
     m_name_tab.m_cb3 = new FXCheckButton(m_tabframe1, "Show hidden files", NULL, 0, flags);
 
     sel = GUIObject::ID_RADIOBUTTON;
-    flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = RADIOBUTTON_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_date_tab.m_rb1 = new FXRadioButton(m_tabframe2, "All files", this, sel, flags);
     m_date_tab.m_rb1->setCheck(TRUE);
     m_date_tab.m_rb2 = new FXRadioButton(m_tabframe2, "Find all files", this, sel, flags);
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT | COMBOBOX_STATIC;
     m_date_tab.m_combo1 = new FXComboBox(m_tabframe2, 0, NULL, 0, flags);
-    flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = RADIOBUTTON_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_date_tab.m_rb3 = new FXRadioButton(m_tabframe2, "between", this, sel, flags);
     m_date_tab.m_rb3->setCheck(TRUE);
     m_date_tab.m_rb4 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
     flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
     m_date_tab.m_spinner1 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
-    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = LABEL_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_date_tab.m_label1 = new FXLabel(m_tabframe2, "months(s)", NULL, flags);
-    flags = RADIOBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = RADIOBUTTON_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_date_tab.m_rb5 = new FXRadioButton(m_tabframe2, "during the previous", this, sel, flags);
     flags = FRAME_SUNKEN | FRAME_THICK | SPIN_NORMAL | LAYOUT_EXPLICIT;
     m_date_tab.m_spinner2 = new FXSpinner(m_tabframe2, 1, NULL, 0, flags);
-    flags = LABEL_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = LABEL_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_date_tab.m_label2 = new FXLabel(m_tabframe2, "days(s)", NULL, flags);
 
-    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = CHECKBUTTON_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_adva_tab.m_cb1 = new FXCheckButton(m_tabframe3, "Search in files", NULL, 0, flags);
 
     flags = FRAME_SUNKEN | FRAME_THICK | LAYOUT_EXPLICIT;
     m_adva_tab.m_combo1 = new FXComboBox(m_tabframe3, 0, NULL, 0, flags);
     m_adva_tab.m_combo1->setNumVisible(10);
 
-    flags = CHECKBUTTON_NORMAL | LAYOUT_EXPLICIT | JUSTIFY_LEFT;
+    flags = CHECKBUTTON_NORMAL | LAYOUT_FIX_X | LAYOUT_FIX_Y | JUSTIFY_LEFT;
     m_adva_tab.m_cb2 = new FXCheckButton(m_tabframe3, "Case sensitive search", NULL, 0, flags);
 
     sel = GUIObject::ID_BUTTON;
@@ -654,12 +654,58 @@ GUIObject::onTabChange(FXObject* obj, FXSelector sel, void* ptr)
 }
 
 /*****************************************************************************/
+static void
+lmove_size(FXWindow* widget, int x, int y, int cx, int cy)
+{
+    widget->move(x, y);
+    if ((cx > 0) && (cy > 0))
+    {
+        widget->resize(cx, cy);
+    }
+}
+
+/*****************************************************************************/
+static void
+lmove_size_width_height(GUIObject* go, int width, int height)
+{
+    FXint lw;
+
+    lmove_size(go->m_gb1, 0, 22, width - 120, 180);
+    lmove_size(go->m_gb2, 0, 200, width, height - 225);
+    lmove_size(go->m_but1, width - 110, 32, 100, 30);
+    lmove_size(go->m_but2, width - 110, 72, 100, 30);
+    lmove_size(go->m_but3, width - 110, 165, 100, 30);
+    lmove_size(go->m_name_tab.m_label1, 8, 8, -1, -1);
+    lw = go->m_tabframe1->getWidth();
+    lmove_size(go->m_name_tab.m_combo1, 85, 8, lw - 100, 24);
+    lmove_size(go->m_name_tab.m_label2, 8, 41, -1, -1);
+    lmove_size(go->m_name_tab.m_combo2, 85, 41, lw - 165, 24);
+    lmove_size(go->m_name_tab.m_but1, lw - 75, 41, 60, 24);
+    lmove_size(go->m_name_tab.m_cb1, 8, 74, -1, -1);
+    lmove_size(go->m_name_tab.m_cb2, 8, 107, -1, -1);
+    lmove_size(go->m_name_tab.m_cb3, 216, 74, -1, -1);
+    lmove_size(go->m_date_tab.m_rb1, 10, 8, -1, -1);
+    lmove_size(go->m_date_tab.m_rb2, 10, 8 + 24, -1, -1);
+    lmove_size(go->m_date_tab.m_rb3, 30, 8 + 48, -1, -1);
+    lmove_size(go->m_date_tab.m_rb4, 30, 8 + 72, -1, -1);
+    lmove_size(go->m_date_tab.m_rb5, 30, 8 + 96, -1, -1);
+    lmove_size(go->m_date_tab.m_spinner1, 200, 8 + 72, 48, 24);
+    lmove_size(go->m_date_tab.m_spinner2, 200, 8 + 96, 48, 24);
+    lmove_size(go->m_date_tab.m_label1, 250, 8 + 72, -1, -1);
+    lmove_size(go->m_date_tab.m_label2, 250, 8 + 96, -1, -1);
+    lmove_size(go->m_date_tab.m_combo1, 110, 8 + 24, 100, 24);
+    lmove_size(go->m_adva_tab.m_cb1, 10, 10, -1, -1);
+    lw = go->m_tabframe3->getWidth();
+    lmove_size(go->m_adva_tab.m_combo1, 10, 40, lw - 20, 24);
+    lmove_size(go->m_adva_tab.m_cb2, 10, 74, -1, -1);
+}
+
+/*****************************************************************************/
 long
 GUIObject::onCmdConfigure(FXObject* obj, FXSelector sel, void* ptr)
 {
     FXint width;
     FXint height;
-    FXint lw;
 
     (void)obj;
     (void)sel;
@@ -672,87 +718,7 @@ GUIObject::onCmdConfigure(FXObject* obj, FXSelector sel, void* ptr)
                 LOGP, width, height, m_width, m_height));
         m_width = width;
         m_height = height;
-
-        m_gb1->move(0, 22);
-        m_gb1->resize(width - 120, 180);
-
-        m_gb2->move(0, 200);
-        m_gb2->resize(width, height - 225);
-
-        m_but1->move(width - 110, 32);
-        m_but1->resize(100, 30);
-
-        m_but2->move(width - 110, 72);
-        m_but2->resize(100, 30);
-
-        m_but3->move(width - 110, 165);
-        m_but3->resize(100, 30);
-
-        m_name_tab.m_label1->move(8, 8);
-        m_name_tab.m_label1->resize(100, 24);
-
-        lw = m_tabframe1->getWidth();
-        m_name_tab.m_combo1->move(85, 8);
-        m_name_tab.m_combo1->resize(lw - 100, 24);
-
-        m_name_tab.m_label2->move(8, 41);
-        m_name_tab.m_label2->resize(100, 24);
-
-        m_name_tab.m_combo2->move(85, 41);
-        m_name_tab.m_combo2->resize(lw - 165, 24);
-
-        m_name_tab.m_but1->move(lw - 75, 41);
-        m_name_tab.m_but1->resize(60, 24);
-
-        m_name_tab.m_cb1->move(8, 74);
-        m_name_tab.m_cb1->resize(200, 24);
-
-        m_name_tab.m_cb2->move(8, 107);
-        m_name_tab.m_cb2->resize(200, 24);
-
-        m_name_tab.m_cb3->move(216, 74);
-        m_name_tab.m_cb3->resize(200, 24);
-
-        m_adva_tab.m_cb1->move(10, 10);
-        m_adva_tab.m_cb1->resize(120, 24);
-
-        lw = m_tabframe3->getWidth();
-        m_adva_tab.m_combo1->move(10, 40);
-        m_adva_tab.m_combo1->resize(lw - 20, 24);
-
-        m_adva_tab.m_cb2->move(10, 74);
-        m_adva_tab.m_cb2->resize(160, 24);
-
-        m_date_tab.m_rb1->move(10, 8);
-        m_date_tab.m_rb1->resize(400, 24);
-
-        m_date_tab.m_rb2->move(10, 8 + 24);
-        m_date_tab.m_rb2->resize(400, 24);
-
-        m_date_tab.m_rb3->move(30, 8 + 48);
-        m_date_tab.m_rb3->resize(400, 24);
-
-        m_date_tab.m_rb4->move(30, 8 + 72);
-        m_date_tab.m_rb4->resize(400, 24);
-
-        m_date_tab.m_rb5->move(30, 8 + 96);
-        m_date_tab.m_rb5->resize(400, 24);
-
-        m_date_tab.m_spinner1->move(200, 8 + 72);
-        m_date_tab.m_spinner1->resize(48, 24);
-
-        m_date_tab.m_spinner2->move(200, 8 + 96);
-        m_date_tab.m_spinner2->resize(48, 24);
-
-        m_date_tab.m_label1->move(250, 8 + 72);
-        m_date_tab.m_label1->resize(100, 24);
-
-        m_date_tab.m_label2->move(250, 8 + 96);
-        m_date_tab.m_label2->resize(100, 24);
-
-        m_date_tab.m_combo1->move(110, 8 + 24);
-        m_date_tab.m_combo1->resize(100, 24);
-
+        lmove_size_width_height(this, width, height);
     }
     return 0;
 }
