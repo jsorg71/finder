@@ -74,7 +74,7 @@ myfnmatch(const char* pattern, const char* string, int flags)
     char chr1;
     char chr2;
 
-    while (1)
+    for (;;)
     {
         switch (c = *(pattern++))
         {
@@ -445,7 +445,7 @@ listdir(struct finder_info* fi, struct work_item* wi, const char* dir_name)
         finder_snprintf(in_subfolder_text, in_subfolder_text_alloc_bytes, "%s",
                         dir_name + look_in_bytes + 1);
     }
-    while (1)
+    for (;;)
     {
         if (finder_event_is_set(fi->work_term_event))
         {
