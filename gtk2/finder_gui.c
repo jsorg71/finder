@@ -78,19 +78,26 @@ main(int argc, char** argv)
 }
 
 /*****************************************************************************/
+/* any thread */
 int
 gui_set_event(struct finder_info* fi)
 {
-    (void)fi;
-    return 0;
+    struct gui_object* go;
+
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
+    go = (struct gui_object*)(fi->gui_obj);
+    return go_set_event(go);
 }
 
 /*****************************************************************************/
 int
 gui_find_done(struct finder_info* fi)
 {
-    (void)fi;
-    return 0;
+    struct gui_object* go;
+
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    go = (struct gui_object*)(fi->gui_obj);
+    return go_find_done(go);
 }
 
 /*****************************************************************************/
@@ -99,12 +106,11 @@ gui_add_one(struct finder_info* fi, const char* filename,
             const char* in_subfolder, FINDER_I64 size,
             const char* modified)
 {
-    (void)fi;
-    (void)filename;
-    (void)in_subfolder;
-    (void)size;
-    (void)modified;
-    return 0;
+    struct gui_object* go;
+
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
+    go = (struct gui_object*)(fi->gui_obj);
+    return go_add_one(go, filename, in_subfolder, size, modified);
 }
 
 /*****************************************************************************/

@@ -82,6 +82,10 @@ struct gui_object
 
     int width;
     int height;
+
+    void* gui_event;
+    void* mutex1;
+
 };
 
 int
@@ -91,5 +95,14 @@ int
 gui_object_mainloop(struct gui_object* go);
 int
 gui_object_delete(struct gui_object* go);
+
+int
+go_set_event(struct gui_object* go);
+int
+go_find_done(struct gui_object* go);
+int
+go_add_one(struct gui_object* go, const char* filename,
+           const char* in_subfolder, FINDER_I64 size,
+           const char* modified);
 
 #endif
