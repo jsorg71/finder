@@ -668,19 +668,16 @@ lmove_size(FXWindow* widget, int x, int y, int cx, int cy)
 static void
 lmove_size_width_height(GUIObject* go, int width, int height)
 {
-    FXint lw;
-
     lmove_size(go->m_gb1, 0, 22, width - 120, 180);
     lmove_size(go->m_gb2, 0, 200, width, height - 225);
     lmove_size(go->m_but1, width - 110, 32, 100, 30);
     lmove_size(go->m_but2, width - 110, 72, 100, 30);
     lmove_size(go->m_but3, width - 110, 165, 100, 30);
     lmove_size(go->m_name_tab.m_label1, 8, 8, -1, -1);
-    lw = go->m_tabframe1->getWidth();
-    lmove_size(go->m_name_tab.m_combo1, 85, 8, lw - 100, 24);
+    lmove_size(go->m_name_tab.m_combo1, 85, 8, width - 136 - 100, 24);
     lmove_size(go->m_name_tab.m_label2, 8, 41, -1, -1);
-    lmove_size(go->m_name_tab.m_combo2, 85, 41, lw - 165, 24);
-    lmove_size(go->m_name_tab.m_but1, lw - 75, 41, 60, 24);
+    lmove_size(go->m_name_tab.m_combo2, 85, 41, width - 136 - 165, 24);
+    lmove_size(go->m_name_tab.m_but1, width - 136 - 75, 41, 60, 24);
     lmove_size(go->m_name_tab.m_cb1, 8, 74, -1, -1);
     lmove_size(go->m_name_tab.m_cb2, 8, 107, -1, -1);
     lmove_size(go->m_name_tab.m_cb3, 216, 74, -1, -1);
@@ -695,8 +692,7 @@ lmove_size_width_height(GUIObject* go, int width, int height)
     lmove_size(go->m_date_tab.m_label2, 250, 8 + 96, -1, -1);
     lmove_size(go->m_date_tab.m_combo1, 110, 8 + 24, 100, 24);
     lmove_size(go->m_adva_tab.m_cb1, 10, 10, -1, -1);
-    lw = go->m_tabframe3->getWidth();
-    lmove_size(go->m_adva_tab.m_combo1, 10, 40, lw - 20, 24);
+    lmove_size(go->m_adva_tab.m_combo1, 10, 40, width - 136 - 20, 24);
     lmove_size(go->m_adva_tab.m_cb2, 10, 74, -1, -1);
 }
 
@@ -1491,7 +1487,7 @@ gui_create(int argc, char** argv, struct finder_info** fi)
 {
     GUIObject* go;
 
-    *fi = (struct finder_info*)calloc(1, sizeof(struct finder_info));
+    FXCALLOC(fi, struct finder_info, 1);
     go = new GUIObject(argc, argv, *fi);
     (*fi)->gui_obj = go;
     return 0;
@@ -1519,7 +1515,7 @@ gui_delete(struct finder_info* fi)
     go = (GUIObject*)(fi->gui_obj);
     go->m_app->exit(); /* close display, write registry */
     delete go;
-    free(fi);
+    FXFREE(&fi);
     return 0;
 }
 
