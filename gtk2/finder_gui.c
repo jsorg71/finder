@@ -35,7 +35,7 @@ gui_create(int argc, char** argv, struct finder_info** fi)
     struct gui_object* go;
 
     *fi = (struct finder_info*)calloc(1, sizeof(struct finder_info));
-    gui_object_create(*fi, &go, argc, argv);
+    mw_create(*fi, &go, argc, argv);
     (*fi)->gui_obj = go;
     return 0;
 }
@@ -48,7 +48,7 @@ gui_main_loop(struct finder_info* fi)
 
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
-    gui_object_mainloop(go);
+    mw_main_loop(go);
     return 0;
 }
 
@@ -60,7 +60,7 @@ gui_delete(struct finder_info* fi)
 
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
-    gui_object_delete(go);
+    mw_delete(go);
     free(fi);
     return 0;
 }
@@ -86,7 +86,7 @@ gui_set_event(struct finder_info* fi)
 
     LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
-    return go_set_event(go);
+    return mw_set_event(go);
 }
 
 /*****************************************************************************/
@@ -97,7 +97,7 @@ gui_find_done(struct finder_info* fi)
 
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
-    return go_find_done(go);
+    return mw_find_done(go);
 }
 
 /*****************************************************************************/
@@ -110,7 +110,7 @@ gui_add_one(struct finder_info* fi, const char* filename,
 
     LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
-    return go_add_one(go, filename, in_subfolder, size, modified);
+    return mw_add_one(go, filename, in_subfolder, size, modified);
 }
 
 /*****************************************************************************/

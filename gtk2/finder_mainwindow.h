@@ -27,7 +27,7 @@ struct gui_object
     GtkWidget* but2; /* Stop */
     GtkWidget* but3; /* Exit */
     GtkWidget* notebook;
-    GtkWidget* tab1;
+    GtkWidget* tab1_fixed;
     GtkWidget* tab1_label;
     struct _name_tab
     {
@@ -40,7 +40,7 @@ struct gui_object
         GtkWidget* cb2;
         GtkWidget* cb3;
     } name_tab;
-    GtkWidget* tab2;
+    GtkWidget* tab2_fixed;
     GtkWidget* tab2_label;
     struct _date_tab
     {
@@ -55,7 +55,7 @@ struct gui_object
         GtkWidget* label1;
         GtkWidget* label2;
     } date_tab;
-    GtkWidget* tab3;
+    GtkWidget* tab3_fixed;
     GtkWidget* tab3_label;
     struct _adva_tab
     {
@@ -69,16 +69,16 @@ struct gui_object
     GtkWidget* sb;
     GtkWidget* sb1;
 
-    GtkWidget* fixed; /* fixed for mw */
+    GtkWidget* mw_fixed; /* fixed for mw */
 
     GtkWidget* menubar;
-    GtkWidget* fileMenu;
-    GtkWidget* helpMenu;
-    GtkWidget* fileMi;
-    GtkWidget* quitMi;
-    GtkWidget* helpMi;
-    GtkWidget* helpDDDMi;
-    GtkWidget* aboutMi;
+    GtkWidget* file_menu;
+    GtkWidget* help_menu;
+    GtkWidget* file_mi;
+    GtkWidget* quit_mi;
+    GtkWidget* help_mi;
+    GtkWidget* helpDDD_mi;
+    GtkWidget* about_mi;
 
     int width;
     int height;
@@ -89,19 +89,18 @@ struct gui_object
 };
 
 int
-gui_object_create(struct finder_info* fi, struct gui_object** ago,
-                  int argc, char** argv);
+mw_create(struct finder_info* fi, struct gui_object** ago,
+          int argc, char** argv);
 int
-gui_object_mainloop(struct gui_object* go);
+mw_main_loop(struct gui_object* go);
 int
-gui_object_delete(struct gui_object* go);
-
+mw_delete(struct gui_object* go);
 int
-go_set_event(struct gui_object* go);
+mw_set_event(struct gui_object* go);
 int
-go_find_done(struct gui_object* go);
+mw_find_done(struct gui_object* go);
 int
-go_add_one(struct gui_object* go, const char* filename,
+mw_add_one(struct gui_object* go, const char* filename,
            const char* in_subfolder, FINDER_I64 size,
            const char* modified);
 
