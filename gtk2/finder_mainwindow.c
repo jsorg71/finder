@@ -44,6 +44,8 @@ mw_find_button_clicked(GtkWidget *widget, gpointer data)
     struct finder_info* fi;
     GtkTreeModel* tm;
     GtkListStore* store;
+    GtkComboBoxText* cbt;
+    GtkToggleButton* tb;
     gchar* text;
     gboolean checked;
 
@@ -54,36 +56,36 @@ mw_find_button_clicked(GtkWidget *widget, gpointer data)
     {
         LOGLN0((fi, LOG_INFO, LOGS "Find clicked", LOGP));
         /* named */
-        text = gtk_combo_box_text_get_active_text
-            (GTK_COMBO_BOX_TEXT(go->name_tab.combo1));
-        snprintf(fi->named, sizeof(fi->named), "%s", text);
+        cbt = GTK_COMBO_BOX_TEXT(go->name_tab.combo1);
+        text = gtk_combo_box_text_get_active_text(cbt);
+        finder_snprintf(fi->named, sizeof(fi->named), "%s", text);
         /* look in */
-        text = gtk_combo_box_text_get_active_text
-            (GTK_COMBO_BOX_TEXT(go->name_tab.combo2));
-        snprintf(fi->look_in, sizeof(fi->look_in), "%s", text);
+        cbt = GTK_COMBO_BOX_TEXT(go->name_tab.combo2);
+        text = gtk_combo_box_text_get_active_text(cbt);
+        finder_snprintf(fi->look_in, sizeof(fi->look_in), "%s", text);
         /* include subfolders */
-        checked = gtk_toggle_button_get_active
-            (GTK_TOGGLE_BUTTON(go->name_tab.cb1));
+        tb = GTK_TOGGLE_BUTTON(go->name_tab.cb1);
+        checked = gtk_toggle_button_get_active(tb);
         fi->include_subfolders = checked;
         /* case sesitive */
-        checked = gtk_toggle_button_get_active
-            (GTK_TOGGLE_BUTTON(go->name_tab.cb2));
+        tb = GTK_TOGGLE_BUTTON(go->name_tab.cb2);
+        checked = gtk_toggle_button_get_active(tb);
         fi->case_sensitive = checked;
         /* hidden */
-        checked = gtk_toggle_button_get_active
-            (GTK_TOGGLE_BUTTON(go->name_tab.cb3));
+        tb = GTK_TOGGLE_BUTTON(go->name_tab.cb3);
+        checked = gtk_toggle_button_get_active(tb);
         fi->show_hidden = checked;
         /* sarch in files */
-        checked = gtk_toggle_button_get_active
-            (GTK_TOGGLE_BUTTON(go->adva_tab.cb1));
+        tb = GTK_TOGGLE_BUTTON(go->adva_tab.cb1);
+        checked = gtk_toggle_button_get_active(tb);
         fi->search_in_files = checked;
         /* search in text */
-        text = gtk_combo_box_text_get_active_text
-            (GTK_COMBO_BOX_TEXT(go->adva_tab.combo1));
-        snprintf(fi->text, sizeof(fi->text), "%s", text);
+        cbt = GTK_COMBO_BOX_TEXT(go->adva_tab.combo1);
+        text = gtk_combo_box_text_get_active_text(cbt);
+        finder_snprintf(fi->text, sizeof(fi->text), "%s", text);
         /* search in case sensitive */
-        checked = gtk_toggle_button_get_active
-            (GTK_TOGGLE_BUTTON(go->adva_tab.cb2));
+        tb = GTK_TOGGLE_BUTTON(go->adva_tab.cb2);
+        checked = gtk_toggle_button_get_active(tb);
         fi->search_in_case_sensitive = checked;
         /* clear list */
         tm = gtk_tree_view_get_model(GTK_TREE_VIEW(go->tv1));
@@ -153,7 +155,8 @@ mw_browse_button_clicked(GtkWidget *widget, gpointer data)
 
 /*****************************************************************************/
 static void
-mw_move_size(GtkWidget* fixed, GtkWidget* widget, int x, int y, int cx, int cy)
+mw_move_size(GtkWidget* fixed, GtkWidget* widget,
+             int x, int y, int cx, int cy)
 {
     gtk_fixed_move(GTK_FIXED(fixed), widget, x, y);
     if ((cx > 0) && (cy > 0))
@@ -207,7 +210,7 @@ mw_configure_callback(GtkWindow* window, GdkEvent* event, gpointer data)
 
     levent = (GdkEventConfigure*)event;
     fi = (struct finder_info*)data;
-    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    LOGLN10((fi, LOG_INFO, LOGS, LOGP));
     go = (struct gui_object*)(fi->gui_obj);
     if (GTK_WIDGET(window) != go->mw)
     {
