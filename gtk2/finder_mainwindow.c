@@ -38,6 +38,130 @@
 
 /*****************************************************************************/
 static void
+mw_remove_combo_box_str(GtkComboBoxText* cbt, const gchar* text)
+{
+    GtkTreeModel* tm;
+    gint ncol;
+    gint index;
+    GtkTreeIter iter;
+    GValue value1;
+    const gchar* item_text;
+    gboolean cont;
+
+    if (text == NULL)
+    {
+        return;
+    }
+    tm = gtk_combo_box_get_model(GTK_COMBO_BOX(cbt));
+    ncol = gtk_tree_model_get_n_columns(tm);
+    cont = ncol > 0;
+    while (cont)
+    {
+        cont = FALSE;
+        index = 0;
+        if (gtk_tree_model_get_iter_first(tm, &iter))
+        {
+            do
+            {
+                memset(&value1, 0, sizeof(value1));
+                gtk_tree_model_get_value(tm, &iter, 0, &value1);
+                item_text = g_value_get_string(&value1);
+                if (item_text != NULL)
+                {
+                    if (finder_stricmp(item_text, text) == 0)
+                    {
+                        g_value_unset(&value1);
+                        gtk_combo_box_text_remove(cbt, index);
+                        cont = TRUE;
+                        break;
+                    }
+                }
+                g_value_unset(&value1);
+                index++;
+            }
+            while (gtk_tree_model_iter_next(tm, &iter));
+        }
+    }
+}
+
+/*****************************************************************************/
+static void
+mw_combo_box_text_set_active_text(GtkComboBoxText* cbt, const gchar* text)
+{
+    GtkWidget* child;
+
+    child = gtk_bin_get_child(GTK_BIN(cbt));
+    gtk_entry_set_text(GTK_ENTRY(child), text);
+}
+
+/*****************************************************************************/
+static void
+mw_save_combo(struct gui_object* go, GtkComboBoxText* cbt,
+              const gchar* section, const gchar* key)
+{
+    const gchar* text;
+    struct finder_info* fi;
+
+    (void)section;
+    (void)key;
+
+    fi = go->fi;
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    text = gtk_combo_box_text_get_active_text(cbt);
+    mw_remove_combo_box_str(cbt, text);
+    gtk_combo_box_text_prepend_text(cbt, text);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(cbt), 0);
+}
+
+/*****************************************************************************/
+static void
+mw_save_check_box(struct gui_object* go, GtkCheckButton* cb,
+                  const gchar* section, const gchar* key,
+                  gboolean default_checked)
+{
+    struct finder_info* fi;
+
+    (void)cb;
+    (void)section;
+    (void)key;
+    (void)default_checked;
+
+    fi = go->fi;
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+}
+
+/*****************************************************************************/
+static void
+mw_save_all(struct gui_object* go)
+{
+    struct finder_info* fi;
+    GtkCheckButton* cb;
+    GtkComboBoxText* cbt;
+
+    fi = go->fi;
+    LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    /* Name/Location tab */
+    cbt = GTK_COMBO_BOX_TEXT(go->name_tab.combo1);
+    mw_save_combo(go, cbt, "NameLocation", "Named");
+    cbt = GTK_COMBO_BOX_TEXT(go->name_tab.combo2);
+    mw_save_combo(go, cbt, "NameLocation", "LookIn");
+    cb = GTK_CHECK_BUTTON(go->name_tab.cb1);
+    mw_save_check_box(go, cb, "NameLocation", "IncludeSubfolders", TRUE);
+    cb = GTK_CHECK_BUTTON(go->name_tab.cb2);
+    mw_save_check_box(go, cb, "NameLocation", "CaseSensitiveSearch", FALSE);
+    cb = GTK_CHECK_BUTTON(go->name_tab.cb3);
+    mw_save_check_box(go, cb, "NameLocation", "ShowHiddenFiles", FALSE);
+    /* Advanced tab */
+    cb = GTK_CHECK_BUTTON(go->adva_tab.cb1);
+    mw_save_check_box(go, cb, "Advanced", "SearchInFiles", FALSE);
+    cbt = GTK_COMBO_BOX_TEXT(go->adva_tab.combo1);
+    mw_save_combo(go, cbt, "Advanced", "SearchInFilesText");
+    cb = GTK_CHECK_BUTTON(go->adva_tab.cb2);
+    mw_save_check_box(go, cb, "Advanced", "CaseSensitiveSearch", FALSE);
+}
+
+/*****************************************************************************/
+static void
 mw_find_button_clicked(GtkWidget *widget, gpointer data)
 {
     struct gui_object* go;
@@ -91,8 +215,14 @@ mw_find_button_clicked(GtkWidget *widget, gpointer data)
         tm = gtk_tree_view_get_model(GTK_TREE_VIEW(go->tv1));
         store = GTK_LIST_STORE(tm);
         gtk_list_store_clear(store);
+
+        mw_save_all(go);
+
         /* start search */
         start_find(fi);
+
+        gtk_widget_set_sensitive(go->but1, FALSE); /* disable Find button */
+        gtk_widget_set_sensitive(go->but2, TRUE); /* enable Stop button */
     }
 }
 
@@ -122,8 +252,9 @@ mw_browse_button_clicked(GtkWidget *widget, gpointer data)
     GtkWidget* dialog;
     GtkFileChooserAction action;
     gint res;
-    char* filename;
+    gchar* filename;
     GtkFileChooser* chooser;
+    GtkComboBoxText* cbt;
 
     fi = (struct finder_info*)data;
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
@@ -136,14 +267,26 @@ mw_browse_button_clicked(GtkWidget *widget, gpointer data)
             ("Select Look In directory", GTK_WINDOW(go->mw), action,
              "_Cancel", GTK_RESPONSE_CANCEL,
              "_Ok", GTK_RESPONSE_ACCEPT, NULL);
+        chooser = GTK_FILE_CHOOSER(dialog);
+        cbt = GTK_COMBO_BOX_TEXT(go->name_tab.combo2);
+        filename = gtk_combo_box_text_get_active_text(cbt);
+        if (filename != NULL)
+        {
+            gtk_file_chooser_set_current_folder(chooser, filename);
+            g_free(filename);
+        }
         res = gtk_dialog_run(GTK_DIALOG(dialog));
         if (res == GTK_RESPONSE_ACCEPT)
         {
-            chooser = GTK_FILE_CHOOSER(dialog);
             filename = gtk_file_chooser_get_filename(chooser);
-            LOGLN0((fi, LOG_INFO, LOGS "Ok clicked, filename %s",
-                    LOGP, filename));
-            g_free(filename);
+            if (filename != NULL)
+            {
+                LOGLN0((fi, LOG_INFO, LOGS "Ok clicked, filename %s",
+                        LOGP, filename));
+                cbt = GTK_COMBO_BOX_TEXT(go->name_tab.combo2);
+                mw_combo_box_text_set_active_text(cbt, filename);
+                g_free(filename);
+            }
         }
         else
         {
@@ -196,8 +339,8 @@ mw_move_size_width_height(struct gui_object* go, int width, int height)
     mw_move_size(go->tab3_fixed, go->adva_tab.combo1, 10, 40, width - 126 - 20, 24);
     mw_move_size(go->tab3_fixed, go->adva_tab.cb2, 10, 74, -1, -1);
     mw_move_size(go->mw_fixed, go->tv1_scroll, 10, 200, width - 20, height - 225);
-    mw_move_size(go->mw_fixed, go->sb, 0, height - 24, width - 125, 24);
-    mw_move_size(go->mw_fixed, go->sb1, width - 125, height - 24, 125, 24);
+    mw_move_size(go->mw_fixed, go->sb, 0, height - 24, width - 200, 24);
+    mw_move_size(go->mw_fixed, go->sb1, width - 200, height - 24, 200, 24);
 }
 
 /*****************************************************************************/
@@ -309,6 +452,7 @@ mw_create(struct finder_info* fi, struct gui_object** ago,
 
     go->but2 = gtk_button_new_with_label("_Stop");
     gtk_button_set_use_underline(GTK_BUTTON(go->but2), TRUE);
+    gtk_widget_set_sensitive(go->but2, FALSE);
     gtk_container_add(GTK_CONTAINER(go->mw_fixed), go->but2);
 
     go->but3 = gtk_button_new_with_label("Exit");
@@ -545,9 +689,18 @@ int
 mw_find_done(struct gui_object* go)
 {
     struct finder_info* fi;
+    GtkTreeModel* tm;
+    gint count;
+    gchar text[64];
 
     fi = go->fi;
     LOGLN0((fi, LOG_INFO, LOGS, LOGP));
+    gtk_widget_set_sensitive(go->but1, TRUE); /* enable Find button */
+    gtk_widget_set_sensitive(go->but2, FALSE); /* disable Stop button */
+    tm = gtk_tree_view_get_model(GTK_TREE_VIEW(go->tv1));
+    count = gtk_tree_model_iter_n_children(tm, NULL);
+    finder_snprintf(text, sizeof(text), "%d Items found", count);
+    gtk_statusbar_push(GTK_STATUSBAR(go->sb1), 0, text);
     return 0;
 }
 
