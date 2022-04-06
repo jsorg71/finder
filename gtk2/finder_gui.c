@@ -72,6 +72,10 @@ main(int argc, char** argv)
     struct finder_info* fi;
 
     gui_create(argc, argv, &fi);
+    LOGLN0((fi, LOG_INFO, LOGS "gtk run time version %d.%d.%d "
+            "compile time version %d.%d.%d", LOGP,
+            gtk_major_version, gtk_minor_version, gtk_micro_version,
+            GTK_MAJOR_VERSION, GTK_MINOR_VERSION, GTK_MICRO_VERSION));
     gui_main_loop(fi);
     gui_delete(fi);
     return 0;
