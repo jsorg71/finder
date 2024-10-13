@@ -9,7 +9,6 @@ LIBS=
 
 finder.a: $(OBJS)
 	$(AR) rvu finder.a $(OBJS)
-	$(RANLIB) finder.a
 
 clean:
 	rm -f finder.a $(OBJS)
